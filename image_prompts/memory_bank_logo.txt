@@ -1,0 +1,19 @@
+Mô tả hình ảnh: Logo Memory Bank
+
+Phong cách: Hiện đại, sắc nét, tổ chức
+Màu sắc chính: Tím (#673AB7) và xanh lá (#4CAF50) - tạo cảm giác sáng tạo và tăng trưởng
+Yếu tố thiết kế:
+- Biểu tượng não bộ stylized kết hợp với biểu tượng ngân hàng/kho báu
+- Các ô lưu trữ hoặc ngăn kéo đang mở ra từ não bộ
+- Các mảnh thông tin (ghi chú, hình ảnh, biểu tượng) đang được lưu trữ hoặc truy xuất
+- Đường kết nối giữa các phần thông tin, tạo thành mạng lưới kiến thức
+- Biểu tượng khóa nhỏ thể hiện tính bảo mật
+- Nền trong suốt hoặc gradient nhẹ
+- Hiệu ứng ánh sáng tạo cảm giác hiện đại và tổ chức
+
+Cảm xúc: Tổ chức, an toàn, trí tuệ, sáng tạo
+Kích thước: 512x512 pixels
+Định dạng: PNG với nền trong suốt
+
+Prompt cho AI:
+"A modern, organized Memory Bank logo featuring a stylized brain combined with vault/bank imagery. Storage compartments or drawers opening from the brain. Information pieces (notes, images, icons) being stored or retrieved. Connection lines between information pieces forming a knowledge network. Small lock icons representing security. Purple and green color scheme for creativity and growth. Modern lighting effects. Suitable for a knowledge management feature in an educational platform. Transparent background."

@@ -1,0 +1,75 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Bài Kiểm Tra - Nền Tảng Học Tập{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1 class="mb-3">Bài Kiểm Tra</h1>
+        <p class="lead">Kiểm tra kiến thức của bạn và củng cố việc học tập</p>
+    </div>
+</div>
+
+<div class="row">
+    {% for quiz in quizzes %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">{{ quiz.title }}</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Bài học:</strong> {{ quiz.lesson.title }}</p>
+                <p><strong>Chủ đề:</strong> {{ quiz.lesson.topic.subject.name }}</p>
+                <p><strong>Số câu hỏi:</strong> {{ quiz.questions.count }}</p>
+                {% if quiz.time_limit %}
+                <p><strong>Thời gian làm bài:</strong> {{ quiz.time_limit }} phút</p>
+                {% endif %}
+                <p><strong>Điểm đậu:</strong> {{ quiz.pass_score }}%</p>
+                <p>{{ quiz.description|truncatewords:20 }}</p>
+            </div>
+            <div class="card-footer bg-white border-top-0">
+                <a href="{% url 'quiz_detail' quiz.id %}" class="btn btn-primary">Làm Bài</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-md-12">
+        <div class="alert alert-info">
+            Hiện tại chưa có bài kiểm tra nào. Vui lòng quay lại sau.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Tại Sao Nên Làm Bài Kiểm Tra?</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-brain text-primary"></i> Hiệu Ứng Kiểm Tra</h5>
+                        <p>Nghiên cứu cho thấy việc kiểm tra kiến thức không chỉ đánh giá mà còn giúp củng cố trí nhớ. Khi bạn cố gắng nhớ lại thông tin để trả lời câu hỏi, bạn đang tăng cường khả năng ghi nhớ dài hạn.</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-search text-primary"></i> Xác Định Điểm Yếu</h5>
+                        <p>Bài kiểm tra giúp bạn xác định những phần kiến thức còn yếu để tập trung ôn tập. Điều này giúp bạn học tập hiệu quả hơn bằng cách tập trung vào những gì bạn cần cải thiện nhất.</p>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-chart-line text-primary"></i> Theo Dõi Tiến Độ</h5>
+                        <p>Làm bài kiểm tra thường xuyên giúp bạn theo dõi tiến độ học tập của mình. Bạn có thể thấy rõ sự tiến bộ qua thời gian và điều chỉnh kế hoạch học tập cho phù hợp.</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-lightbulb text-primary"></i> Áp Dụng Kiến Thức</h5>
+                        <p>Bài kiểm tra yêu cầu bạn áp dụng kiến thức đã học vào các tình huống cụ thể, giúp bạn hiểu sâu hơn và nhớ lâu hơn so với chỉ đọc hoặc nghe.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

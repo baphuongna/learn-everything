@@ -1,0 +1,188 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ quiz.title }} - Nền Tảng Học Tập{% endblock %}
+
+{% block extra_css %}
+<style>
+    .question-container {
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+        background-color: #f8f9fa;
+    }
+    
+    .timer {
+        font-size: 1.5rem;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+    
+    .explanation {
+        margin-top: 1rem;
+        padding: 1rem;
+        background-color: #e9ecef;
+        border-radius: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'subject_list' %}">Chủ Đề</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'subject_detail' quiz.lesson.topic.subject.slug %}">{{ quiz.lesson.topic.subject.name }}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'lesson_detail' quiz.lesson.topic.subject.slug quiz.lesson.topic.slug quiz.lesson.slug %}">{{ quiz.lesson.title }}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ quiz.title }}</li>
+    </ol>
+</nav>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1 class="mb-3">{{ quiz.title }}</h1>
+        <p class="lead">{{ quiz.description }}</p>
+    </div>
+</div>
+
+{% if not quiz_started %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Thông Tin Bài Kiểm Tra</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Bài học:</strong> <a href="{% url 'lesson_detail' quiz.lesson.topic.subject.slug quiz.lesson.topic.slug quiz.lesson.slug %}">{{ quiz.lesson.title }}</a></p>
+                <p><strong>Số lượng câu hỏi:</strong> {{ quiz.questions.count }}</p>
+                {% if quiz.time_limit %}
+                <p><strong>Thời gian làm bài:</strong> {{ quiz.time_limit }} phút</p>
+                {% endif %}
+                <p><strong>Điểm đậu:</strong> {{ quiz.pass_score }}%</p>
+                
+                <form method="post" action="{% url 'start_quiz' quiz.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary mt-3">Bắt Đầu Làm Bài</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        {% if previous_attempts %}
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Lần Làm Trước</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group">
+                    {% for attempt in previous_attempts %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ attempt.created_at|date:"d/m/Y H:i" }}
+                        <span class="badge {% if attempt.passed %}bg-success{% else %}bg-danger{% endif %} rounded-pill">{{ attempt.score }}%</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Mẹo Làm Bài</h5>
+            </div>
+            <div class="card-body">
+                <ul>
+                    <li>Đọc kỹ câu hỏi trước khi trả lời.</li>
+                    <li>Quản lý thời gian hợp lý cho từng câu hỏi.</li>
+                    <li>Nếu không chắc chắn, hãy đánh dấu và quay lại sau.</li>
+                    <li>Kiểm tra lại bài làm trước khi nộp.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="row">
+    <div class="col-md-12">
+        {% if quiz.time_limit %}
+        <div class="timer" id="quiz-timer">
+            <i class="fas fa-clock"></i> <span id="time-remaining">{{ quiz.time_limit }}:00</span>
+        </div>
+        {% endif %}
+        
+        <form method="post" action="{% url 'submit_quiz' quiz.id %}" id="quiz-form">
+            {% csrf_token %}
+            <input type="hidden" name="start_time" value="{{ start_time|date:'c' }}">
+            
+            {% for question in questions %}
+            <div class="question-container">
+                <h4>Câu {{ forloop.counter }}: {{ question.question_text }}</h4>
+                
+                {% if question.question_type == 'single' %}
+                <div class="mt-3">
+                    {% for answer in question.answers.all %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="question_{{ question.id }}" id="answer_{{ answer.id }}" value="{{ answer.id }}" required>
+                        <label class="form-check-label" for="answer_{{ answer.id }}">
+                            {{ answer.answer_text }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% elif question.question_type == 'multiple' %}
+                <div class="mt-3">
+                    {% for answer in question.answers.all %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="question_{{ question.id }}" id="answer_{{ answer.id }}" value="{{ answer.id }}">
+                        <label class="form-check-label" for="answer_{{ answer.id }}">
+                            {{ answer.answer_text }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% elif question.question_type == 'text' %}
+                <div class="mt-3">
+                    <textarea class="form-control" name="question_{{ question.id }}_text" rows="3" required></textarea>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+            
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg">Nộp Bài</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if quiz_started and quiz.time_limit %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const timerEl = document.getElementById('time-remaining');
+        const quizForm = document.getElementById('quiz-form');
+        
+        let timeLimit = {{ quiz.time_limit }} * 60; // Convert to seconds
+        
+        const timer = setInterval(function() {
+            timeLimit--;
+            
+            const minutes = Math.floor(timeLimit / 60);
+            const seconds = timeLimit % 60;
+            
+            timerEl.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            
+            if (timeLimit <= 0) {
+                clearInterval(timer);
+                alert('Hết thời gian! Bài làm của bạn sẽ được nộp tự động.');
+                quizForm.submit();
+            }
+        }, 1000);
+    });
+</script>
+{% endif %}
+{% endblock %}

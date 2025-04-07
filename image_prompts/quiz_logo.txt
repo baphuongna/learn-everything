@@ -1,0 +1,19 @@
+Mô tả hình ảnh: Logo Quiz
+
+Phong cách: Hiện đại, năng động, thử thách
+Màu sắc chính: Đỏ (#F44336) và xanh dương (#2196F3) - tạo cảm giác thử thách và tập trung
+Yếu tố thiết kế:
+- Biểu tượng dấu hỏi lớn ở trung tâm với thiết kế 3D
+- Các biểu tượng trả lời (A, B, C, D hoặc đúng/sai) bay xung quanh
+- Biểu tượng đồng hồ nhỏ thể hiện thời gian làm bài
+- Biểu tượng huy chương hoặc cúp nhỏ thể hiện thành tích
+- Các đường kết nối tạo cảm giác về mạng lưới câu hỏi
+- Nền trong suốt hoặc gradient nhẹ
+- Hiệu ứng ánh sáng tạo cảm giác năng động và thử thách
+
+Cảm xúc: Thử thách, tập trung, thành tích, kiểm tra kiến thức
+Kích thước: 512x512 pixels
+Định dạng: PNG với nền trong suốt
+
+Prompt cho AI:
+"A dynamic, challenging quiz logo featuring a large 3D question mark at the center. Answer options (A, B, C, D or true/false symbols) floating around. Small clock icon representing time limits. Medal or trophy icons representing achievements. Connection lines creating a network of questions. Red and blue color scheme for challenge and focus. Modern lighting effects. Suitable for a quiz and assessment feature in an educational platform. Transparent background."

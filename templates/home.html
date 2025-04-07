@@ -1,0 +1,116 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Trang Chủ - Nền Tảng Học Tập{% endblock %}
+
+{% block content %}
+<div class="jumbotron bg-light p-5 rounded">
+    <h1 class="display-4">Chào mừng đến với Nền Tảng Học Tập!</h1>
+    <p class="lead">Học tập hiệu quả với các phương pháp Active Recall, Spaced Repetition, Kumon, Kaizen, và Zanshin.</p>
+    <hr class="my-4">
+    <p>Khám phá các chủ đề học tập đa dạng từ ngôn ngữ đến lập trình và toán học.</p>
+    <a class="btn btn-primary btn-lg" href="{% url 'subject_list' %}" role="button">Bắt đầu học ngay</a>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-12">
+        <h2 class="text-center mb-4">Phương Pháp Học Tập Hiệu Quả</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-brain fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">Active Recall</h5>
+                <p class="card-text">Chủ động truy xuất thông tin từ trí nhớ thay vì đọc lại nhiều lần. Phương pháp này giúp tăng cường khả năng ghi nhớ dài hạn.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-calendar-alt fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">Spaced Repetition</h5>
+                <p class="card-text">Ôn tập theo các khoảng thời gian tối ưu để tăng cường trí nhớ dài hạn. Hệ thống sẽ lên lịch ôn tập tự động cho bạn.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">Kaizen</h5>
+                <p class="card-text">Cải thiện liên tục mỗi ngày với mục tiêu nhỏ. Dành 6 phút mỗi ngày để ôn tập và cải thiện kỹ năng của bạn.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-12">
+        <h2 class="text-center mb-4">Chủ Đề Học Tập Nổi Bật</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <img src="https://via.placeholder.com/300x200?text=Tiếng+Anh" class="card-img-top" alt="Tiếng Anh">
+            <div class="card-body">
+                <h5 class="card-title">Tiếng Anh</h5>
+                <p class="card-text">Học từ vựng, ngữ pháp và luyện phát âm với công nghệ nhận diện giọng nói.</p>
+                <a href="#" class="btn btn-outline-primary">Khám phá</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <img src="https://via.placeholder.com/300x200?text=Python" class="card-img-top" alt="Python">
+            <div class="card-body">
+                <h5 class="card-title">Python</h5>
+                <p class="card-text">Học lập trình Python từ cơ bản đến nâng cao với các bài tập thực hành.</p>
+                <a href="#" class="btn btn-outline-primary">Khám phá</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <img src="https://via.placeholder.com/300x200?text=Toán+Học" class="card-img-top" alt="Toán Học">
+            <div class="card-body">
+                <h5 class="card-title">Toán Học</h5>
+                <p class="card-text">Học toán với phương pháp Kumon, từ đại số đến giải tích và hình học.</p>
+                <a href="#" class="btn btn-outline-primary">Khám phá</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <img src="https://via.placeholder.com/300x200?text=Tiếng+Trung" class="card-img-top" alt="Tiếng Trung">
+            <div class="card-body">
+                <h5 class="card-title">Tiếng Trung</h5>
+                <p class="card-text">Học từ vựng, ngữ pháp và luyện phát âm tiếng Trung với hệ thống flashcard.</p>
+                <a href="#" class="btn btn-outline-primary">Khám phá</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-12">
+        <div class="card bg-light">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h3>Bắt đầu hành trình học tập của bạn ngay hôm nay</h3>
+                        <p>Đăng ký miễn phí và trải nghiệm phương pháp học tập hiệu quả nhất.</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <a href="{% url 'register' %}" class="btn btn-primary btn-lg">Đăng Ký Ngay</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

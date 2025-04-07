@@ -1,0 +1,150 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Ghi Nhớ Cần Ôn Tập - Memory Bank{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-sync-alt text-danger"></i> Ghi Nhớ Cần Ôn Tập
+        </h1>
+        <p class="lead">Danh sách các ghi nhớ cần ôn tập hôm nay theo phương pháp Spaced Repetition.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'memory_home' %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Quay Lại Memory Bank
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-list"></i> Danh Sách Ghi Nhớ Cần Ôn Tập</h5>
+                <span class="badge bg-light text-dark">{{ total_items }} ghi nhớ</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for item in items %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <a href="{% url 'memory_item_review' item.pk %}" class="text-decoration-none">
+                                    <h5 class="mb-1">{{ item.title }}</h5>
+                                </a>
+                                <p class="mb-1 text-truncate">{{ item.content|striptags|truncatechars:100 }}</p>
+                                <small>
+                                    <span class="badge bg-primary">{{ item.category.name }}</span>
+                                    
+                                    {% if item.is_favorite %}
+                                    <span class="badge bg-warning"><i class="fas fa-star"></i> Yêu thích</span>
+                                    {% endif %}
+                                    
+                                    {% if item.priority == 3 %}
+                                    <span class="badge bg-danger">Ưu tiên cao</span>
+                                    {% elif item.priority == 2 %}
+                                    <span class="badge bg-warning">Ưu tiên trung bình</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Ưu tiên thấp</span>
+                                    {% endif %}
+                                    
+                                    <span class="text-{% if item.review_count == 0 %}primary{% else %}muted{% endif %}">
+                                        {% if item.review_count == 0 %}
+                                        <i class="fas fa-certificate"></i> Lần đầu ôn tập
+                                        {% else %}
+                                        Lần ôn tập thứ {{ item.review_count|add:1 }}
+                                        {% endif %}
+                                    </span>
+                                </small>
+                            </div>
+                            <div>
+                                <a href="{% url 'memory_item_review' item.pk %}" class="btn btn-danger">
+                                    <i class="fas fa-sync-alt"></i> Ôn Tập Ngay
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="list-group-item">
+                        <p class="mb-0 text-center">Không có ghi nhớ nào cần ôn tập hôm nay.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            {% if items.paginator.num_pages > 1 %}
+            <div class="card-footer">
+                <nav aria-label="Phân trang">
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if items.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ items.previous_page_number }}">
+                                <i class="fas fa-angle-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        <li class="page-item disabled">
+                            <span class="page-link">Trang {{ items.number }} / {{ items.paginator.num_pages }}</span>
+                        </li>
+                        
+                        {% if items.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ items.next_page_number }}">
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ items.paginator.num_pages }}">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Về Phương Pháp Spaced Repetition</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-brain text-primary"></i> Spaced Repetition Là Gì?</h5>
+                        <p>Spaced Repetition là phương pháp học tập dựa trên việc ôn tập kiến thức theo các khoảng thời gian tối ưu. Thay vì ôn tập liên tục trong một thời gian ngắn, bạn sẽ ôn tập theo các khoảng thời gian ngày càng dài khi bạn nhớ tốt hơn.</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-chart-line text-primary"></i> Lợi Ích</h5>
+                        <p>Nghiên cứu cho thấy Spaced Repetition giúp tăng cường trí nhớ dài hạn, tiết kiệm thời gian học tập, và giảm thiểu "quên đường cong" - hiện tượng quên thông tin theo thời gian.</p>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <h5><i class="fas fa-calendar-alt text-primary"></i> Lịch Ôn Tập</h5>
+                        <p>Hệ thống của chúng tôi sẽ lên lịch ôn tập dựa trên mức độ nhớ của bạn:</p>
+                        <ul>
+                            <li><strong>Khó nhớ:</strong> Ôn tập lại sau 1 ngày</li>
+                            <li><strong>Nhớ mờ mờ:</strong> Ôn tập lại sau 3 ngày</li>
+                            <li><strong>Nhớ rõ:</strong> Ôn tập lại sau 7 ngày</li>
+                        </ul>
+                        <p>Khi bạn ôn tập nhiều lần và đánh giá "Nhớ rõ", khoảng thời gian giữa các lần ôn tập sẽ tăng lên, giúp bạn ghi nhớ thông tin lâu dài hơn.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

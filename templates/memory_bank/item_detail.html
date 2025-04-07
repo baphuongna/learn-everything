@@ -1,0 +1,229 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ item.title }} - Memory Bank{% endblock %}
+
+{% block extra_css %}
+<style>
+    .memory-content {
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+    
+    .memory-content img {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    .attachment-list {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .attachment-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .attachment-item:last-child {
+        border-bottom: none;
+    }
+    
+    .attachment-icon {
+        font-size: 1.5rem;
+        margin-right: 0.5rem;
+    }
+    
+    .attachment-info {
+        flex-grow: 1;
+    }
+    
+    .attachment-actions {
+        flex-shrink: 0;
+    }
+    
+    .tag-badge {
+        margin-right: 0.25rem;
+        margin-bottom: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">{{ item.title }}</h1>
+        <p class="text-muted">
+            <i class="fas fa-folder" style="color: {{ item.category.color }};"></i> 
+            <a href="{% url 'memory_category_detail' item.category.slug %}">{{ item.category.name }}</a> | 
+            <i class="fas fa-clock"></i> Cập nhật: {{ item.updated_at|date:"d/m/Y H:i" }}
+        </p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'memory_category_detail' item.category.slug %}" class="btn btn-outline-primary me-2">
+            <i class="fas fa-arrow-left"></i> Quay Lại Danh Mục
+        </a>
+        <a href="{% url 'memory_item_edit' item.pk %}" class="btn btn-primary">
+            <i class="fas fa-edit"></i> Chỉnh Sửa
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-file-alt"></i> Nội Dung</h5>
+                <div>
+                    <button id="toggle-favorite" class="btn btn-sm {% if item.is_favorite %}btn-warning{% else %}btn-outline-warning{% endif %}" data-item-id="{{ item.pk }}">
+                        <i class="fas fa-star"></i> {% if item.is_favorite %}Đã yêu thích{% else %}Yêu thích{% endif %}
+                    </button>
+                    <a href="{% url 'memory_item_review' item.pk %}" class="btn btn-sm btn-outline-info ms-1">
+                        <i class="fas fa-sync-alt"></i> Ôn tập
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="memory-content">
+                    {{ item.content|safe }}
+                </div>
+                
+                {% if tags %}
+                <div class="mt-4">
+                    <h5><i class="fas fa-tags"></i> Thẻ</h5>
+                    {% for tag in tags %}
+                    <span class="badge bg-info tag-badge">{{ tag }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="badge {% if item.priority == 3 %}bg-danger{% elif item.priority == 2 %}bg-warning{% else %}bg-secondary{% endif %}">
+                        Ưu tiên: {{ item.get_priority_display }}
+                    </span>
+                </div>
+                <div>
+                    <small class="text-muted">
+                        Tạo: {{ item.created_at|date:"d/m/Y H:i" }} | 
+                        {% if item.review_count > 0 %}
+                        Đã ôn tập {{ item.review_count }} lần | 
+                        {% endif %}
+                        Ôn tập tiếp theo: {{ item.next_review_date|date:"d/m/Y" }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        {% if attachments %}
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-paperclip"></i> Tập Tin Đính Kèm</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="attachment-list">
+                    {% for attachment in attachments %}
+                    <div class="attachment-item">
+                        <div class="d-flex align-items-center">
+                            <div class="attachment-icon">
+                                {% if 'image' in attachment.file_type %}
+                                <i class="fas fa-image text-primary"></i>
+                                {% elif 'pdf' in attachment.file_type %}
+                                <i class="fas fa-file-pdf text-danger"></i>
+                                {% elif 'word' in attachment.file_type or 'document' in attachment.file_type %}
+                                <i class="fas fa-file-word text-primary"></i>
+                                {% elif 'excel' in attachment.file_type or 'sheet' in attachment.file_type %}
+                                <i class="fas fa-file-excel text-success"></i>
+                                {% elif 'zip' in attachment.file_type or 'rar' in attachment.file_type %}
+                                <i class="fas fa-file-archive text-warning"></i>
+                                {% else %}
+                                <i class="fas fa-file text-secondary"></i>
+                                {% endif %}
+                            </div>
+                            <div class="attachment-info">
+                                <div>{{ attachment.file_name }}</div>
+                                <small class="text-muted">{{ attachment.uploaded_at|date:"d/m/Y H:i" }}</small>
+                            </div>
+                        </div>
+                        <div class="attachment-actions">
+                            <a href="{{ attachment.file.url }}" class="btn btn-sm btn-outline-primary me-1" target="_blank">
+                                <i class="fas fa-download"></i>
+                            </a>
+                            <a href="{% url 'memory_attachment_delete' attachment.pk %}" class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-cogs"></i> Thao Tác</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'memory_item_edit' item.pk %}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit"></i> Chỉnh Sửa Ghi Nhớ
+                    </a>
+                    <a href="{% url 'memory_item_review' item.pk %}" class="btn btn-outline-info">
+                        <i class="fas fa-sync-alt"></i> Ôn Tập Ghi Nhớ
+                    </a>
+                    <a href="{% url 'memory_item_delete' item.pk %}" class="btn btn-outline-danger">
+                        <i class="fas fa-trash"></i> Xóa Ghi Nhớ
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Xử lý nút yêu thích
+        const toggleFavoriteBtn = document.getElementById('toggle-favorite');
+        if (toggleFavoriteBtn) {
+            toggleFavoriteBtn.addEventListener('click', function() {
+                const itemId = this.getAttribute('data-item-id');
+                
+                // Gửi yêu cầu AJAX để chuyển đổi trạng thái yêu thích
+                fetch(`/memory/items/${itemId}/toggle-favorite/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Cập nhật giao diện
+                        if (data.is_favorite) {
+                            toggleFavoriteBtn.classList.remove('btn-outline-warning');
+                            toggleFavoriteBtn.classList.add('btn-warning');
+                            toggleFavoriteBtn.innerHTML = '<i class="fas fa-star"></i> Đã yêu thích';
+                        } else {
+                            toggleFavoriteBtn.classList.remove('btn-warning');
+                            toggleFavoriteBtn.classList.add('btn-outline-warning');
+                            toggleFavoriteBtn.innerHTML = '<i class="fas fa-star"></i> Yêu thích';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

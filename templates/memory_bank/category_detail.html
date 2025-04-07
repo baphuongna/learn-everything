@@ -1,0 +1,232 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ category.name }} - Memory Bank{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="{{ category.icon }}" style="color: {{ category.color }};"></i> {{ category.name }}
+        </h1>
+        <p class="lead">{{ category.description }}</p>
+        {% if category.subject %}
+        <p><strong>Chủ đề:</strong> <a href="{% url 'subject_detail' category.subject.slug %}">{{ category.subject.name }}</a></p>
+        {% endif %}
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'memory_category_list' %}" class="btn btn-outline-primary me-2">
+            <i class="fas fa-arrow-left"></i> Quay Lại Danh Mục
+        </a>
+        <a href="{% url 'memory_item_create_in_category' category.slug %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Tạo Ghi Nhớ Mới
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- Tìm kiếm và lọc -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-search"></i> Tìm Kiếm & Lọc</h5>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-6">
+                        {{ search_form.query|as_crispy_field }}
+                    </div>
+                    <div class="col-md-3">
+                        {{ search_form.priority|as_crispy_field }}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="form-check mt-2">
+                            {{ search_form.is_favorite }}
+                            <label class="form-check-label" for="{{ search_form.is_favorite.id_for_label }}">
+                                Chỉ hiển thị yêu thích
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-12 text-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Tìm Kiếm
+                        </button>
+                        <a href="{% url 'memory_category_detail' category.slug %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-redo"></i> Đặt Lại
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Danh sách ghi nhớ -->
+        <div class="card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-list"></i> Danh Sách Ghi Nhớ</h5>
+                <span class="badge bg-light text-dark">{{ items.paginator.count }} ghi nhớ</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for item in items %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <a href="{% url 'memory_item_detail' item.pk %}" class="text-decoration-none">
+                                    <h5 class="mb-1">{{ item.title }}</h5>
+                                </a>
+                                <p class="mb-1 text-truncate">{{ item.content|striptags|truncatechars:100 }}</p>
+                                <small>
+                                    {% if item.is_favorite %}
+                                    <span class="badge bg-warning"><i class="fas fa-star"></i> Yêu thích</span>
+                                    {% endif %}
+                                    
+                                    {% if item.priority == 3 %}
+                                    <span class="badge bg-danger">Ưu tiên cao</span>
+                                    {% elif item.priority == 2 %}
+                                    <span class="badge bg-warning">Ưu tiên trung bình</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Ưu tiên thấp</span>
+                                    {% endif %}
+                                    
+                                    {% if item.tags %}
+                                    {% for tag in item.get_tags_list %}
+                                    <span class="badge bg-info">{{ tag }}</span>
+                                    {% endfor %}
+                                    {% endif %}
+                                    
+                                    <span class="text-muted">Cập nhật: {{ item.updated_at|date:"d/m/Y H:i" }}</span>
+                                </small>
+                            </div>
+                            <div>
+                                <a href="{% url 'memory_item_detail' item.pk %}" class="btn btn-sm btn-outline-primary me-1">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'memory_item_edit' item.pk %}" class="btn btn-sm btn-outline-secondary me-1">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'memory_item_delete' item.pk %}" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="list-group-item">
+                        <p class="mb-0 text-center">Không có ghi nhớ nào trong danh mục này.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            {% if items.paginator.num_pages > 1 %}
+            <div class="card-footer">
+                <nav aria-label="Phân trang">
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if items.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.is_favorite %}&is_favorite=on{% endif %}">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ items.previous_page_number }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.is_favorite %}&is_favorite=on{% endif %}">
+                                <i class="fas fa-angle-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        <li class="page-item disabled">
+                            <span class="page-link">Trang {{ items.number }} / {{ items.paginator.num_pages }}</span>
+                        </li>
+                        
+                        {% if items.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ items.next_page_number }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.is_favorite %}&is_favorite=on{% endif %}">
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ items.paginator.num_pages }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.is_favorite %}&is_favorite=on{% endif %}">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <!-- Chỉnh sửa danh mục -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-edit"></i> Chỉnh Sửa Danh Mục</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <div class="d-flex justify-content-between mt-3">
+                        <button type="submit" class="btn btn-primary">Cập Nhật</button>
+                        <a href="{% url 'memory_category_delete' category.slug %}" class="btn btn-outline-danger">
+                            <i class="fas fa-trash"></i> Xóa
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Thống kê -->
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Thống Kê</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <h2 class="text-primary">{{ items.paginator.count }}</h2>
+                        <p class="mb-0">Tổng số ghi nhớ</p>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <h2 class="text-warning">{{ category.memory_items.filter(is_favorite=True).count }}</h2>
+                        <p class="mb-0">Ghi nhớ yêu thích</p>
+                    </div>
+                </div>
+                <hr>
+                <h6 class="text-center mb-3">Phân bố mức độ ưu tiên</h6>
+                <div class="progress mb-2" style="height: 25px;">
+                    {% with high_count=category.memory_items.filter(priority=3).count %}
+                    {% with medium_count=category.memory_items.filter(priority=2).count %}
+                    {% with low_count=category.memory_items.filter(priority=1).count %}
+                    {% with total_count=items.paginator.count %}
+                    
+                    {% if total_count > 0 %}
+                    <div class="progress-bar bg-danger" role="progressbar" style="width: {{ high_count|floatformat:0 }}%;" aria-valuenow="{{ high_count }}" aria-valuemin="0" aria-valuemax="{{ total_count }}">
+                        {{ high_count }}
+                    </div>
+                    <div class="progress-bar bg-warning" role="progressbar" style="width: {{ medium_count|floatformat:0 }}%;" aria-valuenow="{{ medium_count }}" aria-valuemin="0" aria-valuemax="{{ total_count }}">
+                        {{ medium_count }}
+                    </div>
+                    <div class="progress-bar bg-secondary" role="progressbar" style="width: {{ low_count|floatformat:0 }}%;" aria-valuenow="{{ low_count }}" aria-valuemin="0" aria-valuemax="{{ total_count }}">
+                        {{ low_count }}
+                    </div>
+                    {% endif %}
+                    
+                    {% endwith %}
+                    {% endwith %}
+                    {% endwith %}
+                    {% endwith %}
+                </div>
+                <div class="d-flex justify-content-between small">
+                    <span><i class="fas fa-circle text-danger"></i> Cao</span>
+                    <span><i class="fas fa-circle text-warning"></i> Trung bình</span>
+                    <span><i class="fas fa-circle text-secondary"></i> Thấp</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,203 @@
+/* Custom CSS for Learning Platform */
+
+/* Global Styles */
+body {
+    font-family: 'Roboto', sans-serif;
+    color: #333;
+    line-height: 1.6;
+}
+
+a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+/* Header & Navigation */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+/* Cards */
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    margin-bottom: 1.5rem;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+    font-weight: 600;
+}
+
+/* Buttons */
+.btn {
+    border-radius: 0.25rem;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-primary:hover {
+    background-color: #0069d9;
+    border-color: #0062cc;
+}
+
+/* Footer */
+footer {
+    margin-top: 3rem;
+}
+
+/* Home Page */
+.jumbotron {
+    background-color: #f8f9fa;
+    padding: 3rem;
+    margin-bottom: 2rem;
+    border-radius: 0.3rem;
+}
+
+/* Subject Cards */
+.subject-card {
+    height: 100%;
+}
+
+.subject-card img {
+    height: 200px;
+    object-fit: cover;
+}
+
+/* Lesson Content */
+.lesson-content {
+    font-size: 1.1rem;
+    line-height: 1.8;
+}
+
+.lesson-content h2 {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+.lesson-content img {
+    max-width: 100%;
+    height: auto;
+    margin: 1rem 0;
+}
+
+.lesson-content pre {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    overflow-x: auto;
+}
+
+/* Flashcards */
+.flashcard-container {
+    perspective: 1000px;
+}
+
+/* Quiz */
+.question-container {
+    background-color: #f8f9fa;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-radius: 0.25rem;
+}
+
+/* User Profile */
+.profile-avatar {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+/* Progress Tracking */
+.progress {
+    height: 1.5rem;
+    font-size: 0.9rem;
+    background-color: #e9ecef;
+    border-radius: 0.25rem;
+    margin-bottom: 1rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .jumbotron {
+        padding: 2rem;
+    }
+    
+    .card-deck {
+        display: block;
+    }
+    
+    .card-deck .card {
+        margin-bottom: 1.5rem;
+    }
+}
+
+/* Active Recall & Spaced Repetition UI */
+.recall-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+}
+
+.recall-btn {
+    flex: 1;
+    margin: 0 0.5rem;
+}
+
+/* Study Session Timer */
+.study-timer {
+    font-size: 2rem;
+    font-weight: bold;
+    text-align: center;
+    margin: 1rem 0;
+}
+
+/* Accessibility */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Dark Mode (Optional) */
+.dark-mode {
+    background-color: #343a40;
+    color: #f8f9fa;
+}
+
+.dark-mode .card {
+    background-color: #454d55;
+    color: #f8f9fa;
+}
+
+.dark-mode .jumbotron {
+    background-color: #454d55;
+    color: #f8f9fa;
+}

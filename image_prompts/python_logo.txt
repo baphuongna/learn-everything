@@ -1,0 +1,17 @@
+Mô tả hình ảnh: Logo Python
+
+Phong cách: Hiện đại, sáng tạo, phù hợp với giáo dục
+Màu sắc chính: Xanh dương (#3776AB) và vàng (#FFD43B) - màu chính thức của Python
+Yếu tố thiết kế:
+- Con rắn Python màu xanh dương và vàng uốn lượn tạo thành hình số 8 (biểu tượng vô hạn)
+- Chữ "Python" được thiết kế hiện đại, rõ ràng
+- Các biểu tượng lập trình nhỏ (như dấu ngoặc nhọn, dấu thăng, dấu hỏi) bay xung quanh
+- Nền trong suốt hoặc gradient nhẹ từ trắng sang xanh nhạt
+- Hiệu ứng ánh sáng nhẹ tạo cảm giác 3D
+
+Cảm xúc: Chuyên nghiệp nhưng thân thiện, phù hợp cho người mới học
+Kích thước: 512x512 pixels
+Định dạng: PNG với nền trong suốt
+
+Prompt cho AI:
+"A modern, professional Python programming language logo featuring a stylized blue and yellow snake forming an infinity symbol, with the word 'Python' in a clean, modern font. Small programming symbols floating around. Soft lighting effects giving a 3D feel. Suitable for an educational platform. Transparent background."

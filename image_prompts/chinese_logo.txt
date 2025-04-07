@@ -1,0 +1,19 @@
+Mô tả hình ảnh: Logo Tiếng Trung
+
+Phong cách: Truyền thống kết hợp hiện đại, thanh lịch
+Màu sắc chính: Đỏ (#E53935) và vàng (#FFD700) - màu truyền thống của Trung Quốc
+Yếu tố thiết kế:
+- Chữ Hán "中文" (Zhōngwén - Tiếng Trung) nổi bật ở trung tâm
+- Bút lông truyền thống đang viết chữ Hán
+- Một số chữ Hán cơ bản bay xung quanh với phiên âm pinyin
+- Yếu tố trang trí truyền thống Trung Quốc (như mây, rồng stylized)
+- Kết hợp giữa nét bút lông truyền thống và đường nét hiện đại
+- Nền trong suốt hoặc gradient nhẹ
+- Hiệu ứng ánh sáng nhẹ tạo chiều sâu
+
+Cảm xúc: Thanh lịch, tôn trọng văn hóa, gợi tò mò
+Kích thước: 512x512 pixels
+Định dạng: PNG với nền trong suốt
+
+Prompt cho AI:
+"An elegant Chinese language learning logo featuring the characters '中文' (Zhōngwén) at the center. A traditional calligraphy brush painting Chinese characters. Basic Chinese characters floating around with their pinyin pronunciation. Stylized traditional Chinese decorative elements like clouds or dragons. A blend of traditional brush strokes and modern clean lines. Red and gold color scheme traditional to Chinese culture. Subtle lighting effects for depth. Suitable for a language learning platform. Transparent background."

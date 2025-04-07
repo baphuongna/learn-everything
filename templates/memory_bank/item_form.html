@@ -1,0 +1,199 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if item %}Chỉnh Sửa Ghi Nhớ{% else %}Tạo Ghi Nhớ Mới{% endif %} - Memory Bank{% endblock %}
+
+{% block extra_css %}
+<style>
+    .attachment-list {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .attachment-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .attachment-item:last-child {
+        border-bottom: none;
+    }
+    
+    .attachment-icon {
+        font-size: 1.5rem;
+        margin-right: 0.5rem;
+    }
+    
+    .attachment-info {
+        flex-grow: 1;
+    }
+    
+    .attachment-actions {
+        flex-shrink: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-{% if item %}edit{% else %}plus{% endif %} text-primary"></i> 
+            {% if item %}Chỉnh Sửa Ghi Nhớ{% else %}Tạo Ghi Nhớ Mới{% endif %}
+        </h1>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if item %}
+        <a href="{% url 'memory_item_detail' item.pk %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Quay Lại Chi Tiết
+        </a>
+        {% elif category_slug %}
+        <a href="{% url 'memory_category_detail' category_slug %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Quay Lại Danh Mục
+        </a>
+        {% else %}
+        <a href="{% url 'memory_home' %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Quay Lại Memory Bank
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-{% if item %}edit{% else %}plus{% endif %}"></i> 
+                    {% if item %}Chỉnh Sửa Thông Tin{% else %}Thông Tin Ghi Nhớ{% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            {{ form.title|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.category|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    {{ form.content|as_crispy_field }}
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            {{ form.priority|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.tags|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">&nbsp;</label>
+                                <div class="form-check mt-2">
+                                    {{ form.is_favorite }}
+                                    <label class="form-check-label" for="{{ form.is_favorite.id_for_label }}">
+                                        Đánh dấu là yêu thích
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h5>Tập Tin Đính Kèm</h5>
+                        {{ attachment_form|crispy }}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        {% if item %}
+                        <a href="{% url 'memory_item_delete' item.pk %}" class="btn btn-outline-danger">
+                            <i class="fas fa-trash"></i> Xóa Ghi Nhớ
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Cập Nhật Ghi Nhớ
+                        </button>
+                        {% else %}
+                        <a href="{% if category_slug %}{% url 'memory_category_detail' category_slug %}{% else %}{% url 'memory_home' %}{% endif %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i> Hủy
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Tạo Ghi Nhớ
+                        </button>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    {% if item and attachments %}
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-paperclip"></i> Tập Tin Đã Đính Kèm</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="attachment-list">
+                    {% for attachment in attachments %}
+                    <div class="attachment-item">
+                        <div class="d-flex align-items-center">
+                            <div class="attachment-icon">
+                                {% if 'image' in attachment.file_type %}
+                                <i class="fas fa-image text-primary"></i>
+                                {% elif 'pdf' in attachment.file_type %}
+                                <i class="fas fa-file-pdf text-danger"></i>
+                                {% elif 'word' in attachment.file_type or 'document' in attachment.file_type %}
+                                <i class="fas fa-file-word text-primary"></i>
+                                {% elif 'excel' in attachment.file_type or 'sheet' in attachment.file_type %}
+                                <i class="fas fa-file-excel text-success"></i>
+                                {% elif 'zip' in attachment.file_type or 'rar' in attachment.file_type %}
+                                <i class="fas fa-file-archive text-warning"></i>
+                                {% else %}
+                                <i class="fas fa-file text-secondary"></i>
+                                {% endif %}
+                            </div>
+                            <div class="attachment-info">
+                                <div>{{ attachment.file_name }}</div>
+                                <small class="text-muted">{{ attachment.uploaded_at|date:"d/m/Y H:i" }}</small>
+                            </div>
+                        </div>
+                        <div class="attachment-actions">
+                            <a href="{{ attachment.file.url }}" class="btn btn-sm btn-outline-primary me-1" target="_blank">
+                                <i class="fas fa-download"></i>
+                            </a>
+                            <a href="{% url 'memory_attachment_delete' attachment.pk %}" class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Hiển thị tên file khi chọn file
+        const fileInput = document.getElementById('id_file');
+        if (fileInput) {
+            fileInput.addEventListener('change', function() {
+                const fileName = this.files[0]?.name || 'Không có file nào được chọn';
+                const fileLabel = document.querySelector('label[for="id_file"]');
+                fileLabel.textContent = 'Tập tin đính kèm: ' + fileName;
+            });
+        }
+    });
+</script>
+{% endblock %}

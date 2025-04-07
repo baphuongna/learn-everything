@@ -1,0 +1,90 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Hồ Sơ - {{ user.username }} - Nền Tảng Học Tập{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Thông Tin Cá Nhân</h4>
+            </div>
+            <div class="card-body text-center">
+                {% if user.profile.avatar %}
+                <img src="{{ user.profile.avatar.url }}" alt="{{ user.username }}" class="rounded-circle img-fluid mb-3" style="max-width: 150px;">
+                {% else %}
+                <img src="https://via.placeholder.com/150" alt="{{ user.username }}" class="rounded-circle img-fluid mb-3">
+                {% endif %}
+                <h5>{{ user.get_full_name|default:user.username }}</h5>
+                <p class="text-muted">Thành viên từ: {{ user.date_joined|date:"d/m/Y" }}</p>
+                <p>{{ user.profile.bio }}</p>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Mục Tiêu Học Tập</h4>
+            </div>
+            <div class="card-body">
+                <h5>Mục tiêu hàng ngày: {{ user.profile.daily_goal_minutes }} phút</h5>
+                <div class="progress mb-3">
+                    <div class="progress-bar" role="progressbar" style="width: 75%;" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">75%</div>
+                </div>
+                <p>Hôm nay bạn đã học được 45/60 phút</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Cập Nhật Hồ Sơ</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ user_form|crispy }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ profile_form|crispy }}
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-3">Cập Nhật</button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Chủ Đề Yêu Thích</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for subject in user.profile.preferred_subjects.all %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            {% if subject.icon %}
+                            <img src="{{ subject.icon.url }}" class="card-img-top" alt="{{ subject.name }}">
+                            {% else %}
+                            <img src="https://via.placeholder.com/100?text={{ subject.name }}" class="card-img-top" alt="{{ subject.name }}">
+                            {% endif %}
+                            <div class="card-body">
+                                <h5 class="card-title">{{ subject.name }}</h5>
+                                <a href="{% url 'subject_detail' subject.slug %}" class="btn btn-sm btn-outline-primary">Xem</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12">
+                        <p>Bạn chưa chọn chủ đề yêu thích nào. Hãy cập nhật hồ sơ để chọn chủ đề bạn quan tâm.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

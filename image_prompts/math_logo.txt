@@ -1,0 +1,18 @@
+Mô tả hình ảnh: Logo Toán Học
+
+Phong cách: Hiện đại, sáng tạo, trí tuệ
+Màu sắc chính: Xanh lá (#00BFA5) và tím (#7B1FA2) - tạo cảm giác trí tuệ và sáng tạo
+Yếu tố thiết kế:
+- Các biểu tượng toán học (π, ∑, ∫, √, ∞) sắp xếp theo hình tròn hoặc hình xoắn ốc
+- Một số công thức toán học nổi tiếng (như E=mc², a²+b²=c², eiπ+1=0) bay xung quanh
+- Hình học 3D (khối lập phương, hình cầu, hình nón) với hiệu ứng wireframe
+- Đường thẳng và đường cong kết nối các yếu tố, tạo cảm giác về mạng lưới kiến thức
+- Nền trong suốt hoặc gradient nhẹ
+- Hiệu ứng ánh sáng tạo cảm giác hiện đại và trí tuệ
+
+Cảm xúc: Trí tuệ, logic, khám phá, thử thách
+Kích thước: 512x512 pixels
+Định dạng: PNG với nền trong suốt
+
+Prompt cho AI:
+"A modern, intellectual mathematics logo featuring mathematical symbols (π, ∑, ∫, √, ∞) arranged in a spiral or circular pattern. Famous mathematical equations (like E=mc², a²+b²=c², eiπ+1=0) floating around. 3D geometric shapes (cube, sphere, cone) with wireframe effects. Lines and curves connecting elements to create a network of knowledge. Teal and purple color scheme conveying intelligence and creativity. Modern lighting effects. Suitable for a mathematics learning platform. Transparent background."

@@ -1,0 +1,58 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Chủ Đề Học Tập - Nền Tảng Học Tập{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1 class="mb-3">Chủ Đề Học Tập</h1>
+        <p class="lead">Khám phá các chủ đề học tập đa dạng từ ngôn ngữ đến lập trình và toán học.</p>
+    </div>
+</div>
+
+<div class="row">
+    {% for subject in subjects %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-img-top text-center py-4" style="height: 200px; display: flex; align-items: center; justify-content: center; background-color: #f8f9fa;">
+                {% with subject_key=subject.name|lower|cut:' ' %}
+                    {% if subject_key == 'python' %}
+                    <img src="{% static 'images/subject_icons/python.svg' %}" alt="{{ subject.name }}" style="height: 150px;">
+                    {% elif subject_key == 'java' %}
+                    <img src="{% static 'images/subject_icons/java.svg' %}" alt="{{ subject.name }}" style="height: 150px;">
+                    {% elif subject_key == 'javascript' %}
+                    <img src="{% static 'images/subject_icons/javascript.svg' %}" alt="{{ subject.name }}" style="height: 150px;">
+                    {% elif subject_key == 'english' or subject_key == 'tienganh' %}
+                    <img src="{% static 'images/subject_icons/english.svg' %}" alt="{{ subject.name }}" style="height: 150px;">
+                    {% elif subject_key == 'chinese' or subject_key == 'tiengtrung' %}
+                    <img src="{% static 'images/subject_icons/chinese.svg' %}" alt="{{ subject.name }}" style="height: 150px;">
+                    {% elif subject_key == 'math' or subject_key == 'toanhoc' %}
+                    <img src="{% static 'images/subject_icons/math.svg' %}" alt="{{ subject.name }}" style="height: 150px;">
+                    {% elif subject.icon %}
+                    <img src="{{ subject.icon.url }}" alt="{{ subject.name }}" style="height: 150px; max-width: 100%;">
+                    {% else %}
+                    <div style="width: 150px; height: 150px; background-color: #007bff; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <span style="font-size: 72px; color: white; font-weight: bold;">{{ subject.name|first|upper }}</span>
+                    </div>
+                    {% endif %}
+                {% endwith %}
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">{{ subject.name }}</h5>
+                <p class="card-text">{{ subject.description|truncatewords:20 }}</p>
+            </div>
+            <div class="card-footer bg-white border-top-0">
+                <a href="{% url 'subject_detail' subject.slug %}" class="btn btn-primary">Xem Chi Tiết</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-md-12">
+        <div class="alert alert-info">
+            Hiện tại chưa có chủ đề nào. Vui lòng quay lại sau.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

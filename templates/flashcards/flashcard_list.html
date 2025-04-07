@@ -1,0 +1,91 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Flashcards - Nền Tảng Học Tập{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1 class="mb-3">Flashcards</h1>
+        <p class="lead">Học tập hiệu quả với phương pháp Active Recall và Spaced Repetition</p>
+    </div>
+</div>
+
+{% if user.is_authenticated %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card bg-light">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h4>Flashcards cần ôn tập hôm nay</h4>
+                        <p>Ôn tập các flashcard đến hạn để tăng cường trí nhớ dài hạn.</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <a href="{% url 'due_flashcards' %}" class="btn btn-primary">Xem Flashcards Cần Ôn Tập</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row">
+    {% for flashcard_set in flashcard_sets %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">{{ flashcard_set.title }}</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Bài học:</strong> {{ flashcard_set.lesson.title }}</p>
+                <p><strong>Chủ đề:</strong> {{ flashcard_set.lesson.topic.subject.name }}</p>
+                <p><strong>Số lượng flashcard:</strong> {{ flashcard_set.flashcards.count }}</p>
+                <p>{{ flashcard_set.description|truncatewords:20 }}</p>
+            </div>
+            <div class="card-footer bg-white border-top-0">
+                <a href="{% url 'flashcard_set_detail' flashcard_set.id %}" class="btn btn-primary">Học Ngay</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-md-12">
+        <div class="alert alert-info">
+            Hiện tại chưa có bộ flashcard nào. Vui lòng quay lại sau.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Tại Sao Nên Học Với Flashcards?</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-brain text-primary"></i> Active Recall</h5>
+                        <p>Khi sử dụng flashcard, bạn buộc phải nhớ lại thông tin từ trí nhớ thay vì chỉ đọc lại. Điều này tạo ra các kết nối thần kinh mạnh mẽ hơn và cải thiện khả năng ghi nhớ dài hạn.</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-calendar-alt text-primary"></i> Spaced Repetition</h5>
+                        <p>Hệ thống của chúng tôi sẽ lên lịch ôn tập flashcard dựa trên mức độ nhớ của bạn. Những flashcard khó nhớ sẽ xuất hiện thường xuyên hơn, trong khi những flashcard dễ nhớ sẽ xuất hiện ít thường xuyên hơn.</p>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-clock text-primary"></i> Tiết Kiệm Thời Gian</h5>
+                        <p>Flashcard giúp bạn tập trung vào những thông tin quan trọng và khó nhớ, giúp tối ưu hóa thời gian học tập của bạn.</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-mobile-alt text-primary"></i> Học Mọi Lúc, Mọi Nơi</h5>
+                        <p>Bạn có thể ôn tập flashcard bất cứ khi nào có thời gian rảnh, giúp tận dụng tối đa thời gian trong ngày.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

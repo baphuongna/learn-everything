@@ -1,0 +1,19 @@
+Mô tả hình ảnh: Logo Flashcards
+
+Phong cách: Hiện đại, năng động, giáo dục
+Màu sắc chính: Cam (#FF9800) và xanh dương (#2196F3) - tạo cảm giác năng động và tập trung
+Yếu tố thiết kế:
+- Một tập hợp các thẻ flashcard 3D đang bay hoặc xếp chồng lên nhau
+- Một số thẻ đang lật, thể hiện tính năng hai mặt của flashcard
+- Các biểu tượng nhỏ đại diện cho các chủ đề khác nhau (ngôn ngữ, toán học, khoa học) trên các thẻ
+- Đường cong hoặc mũi tên thể hiện chuyển động xoay vòng, gợi ý về Spaced Repetition
+- Biểu tượng não bộ nhỏ thể hiện việc ghi nhớ
+- Nền trong suốt hoặc gradient nhẹ
+- Hiệu ứng ánh sáng tạo cảm giác hiện đại và năng động
+
+Cảm xúc: Năng động, tương tác, học tập hiệu quả
+Kích thước: 512x512 pixels
+Định dạng: PNG với nền trong suốt
+
+Prompt cho AI:
+"A dynamic, modern flashcard system logo featuring 3D flashcards flying or stacked together. Some cards flipping to show their two-sided nature. Small icons representing different subjects (languages, math, science) on the cards. Curved arrows suggesting rotation and spaced repetition learning method. A small brain icon representing memory. Orange and blue color scheme for energy and focus. Modern lighting effects. Suitable for an educational platform's flashcard feature. Transparent background."

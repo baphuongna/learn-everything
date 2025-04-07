@@ -1,0 +1,166 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ lesson.title }} - Nền Tảng Học Tập{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/themes/prism.css">
+<style>
+    .lesson-navigation {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 2rem;
+        padding-top: 1rem;
+        border-top: 1px solid #dee2e6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'subject_list' %}">Chủ Đề</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'subject_detail' lesson.topic.subject.slug %}">{{ lesson.topic.subject.name }}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ lesson.title }}</li>
+    </ol>
+</nav>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">{{ lesson.title }}</h1>
+        <p class="text-muted">
+            <i class="fas fa-folder-open"></i> {{ lesson.topic.name }} | 
+            <i class="fas fa-calendar-alt"></i> Cập nhật: {{ lesson.updated_at|date:"d/m/Y" }}
+        </p>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if user.is_authenticated %}
+        <form method="post" action="{% url 'mark_lesson_complete' lesson.id %}">
+            {% csrf_token %}
+            {% if user_progress and user_progress.completed %}
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-check-circle"></i> Đã hoàn thành
+            </button>
+            {% else %}
+            <button type="submit" class="btn btn-outline-primary">
+                <i class="far fa-check-circle"></i> Đánh dấu hoàn thành
+            </button>
+            {% endif %}
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-body">
+                {% if lesson.image %}
+                <img src="{{ lesson.image.url }}" alt="{{ lesson.title }}" class="img-fluid mb-4">
+                {% endif %}
+                
+                {% if lesson.video_url %}
+                <div class="ratio ratio-16x9 mb-4">
+                    <iframe src="{{ lesson.video_url }}" title="{{ lesson.title }}" allowfullscreen></iframe>
+                </div>
+                {% endif %}
+                
+                <div class="lesson-content">
+                    {{ lesson.content|safe }}
+                </div>
+                
+                <div class="lesson-navigation">
+                    {% if prev_lesson %}
+                    <a href="{% url 'lesson_detail' lesson.topic.subject.slug lesson.topic.slug prev_lesson.slug %}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left"></i> Bài trước
+                    </a>
+                    {% else %}
+                    <span></span>
+                    {% endif %}
+                    
+                    {% if next_lesson %}
+                    <a href="{% url 'lesson_detail' lesson.topic.subject.slug lesson.topic.slug next_lesson.slug %}" class="btn btn-outline-primary">
+                        Bài tiếp theo <i class="fas fa-arrow-right"></i>
+                    </a>
+                    {% else %}
+                    <span></span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Bài Học Trong Chủ Đề</h5>
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    {% for topic_lesson in lesson.topic.lessons.all %}
+                    <li class="list-group-item {% if topic_lesson.id == lesson.id %}active{% endif %}">
+                        <a href="{% url 'lesson_detail' lesson.topic.subject.slug lesson.topic.slug topic_lesson.slug %}" class="{% if topic_lesson.id == lesson.id %}text-white{% endif %}">
+                            {{ topic_lesson.title }}
+                        </a>
+                        {% if user.is_authenticated %}
+                        {% with progress=topic_lesson.get_user_progress user %}
+                        {% if progress and progress.completed %}
+                        <span class="badge bg-success float-end">✓</span>
+                        {% endif %}
+                        {% endwith %}
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        
+        {% if flashcard_sets %}
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Flashcards</h5>
+            </div>
+            <div class="card-body">
+                <p>Ôn tập kiến thức với flashcards:</p>
+                <ul class="list-group">
+                    {% for flashcard_set in flashcard_sets %}
+                    <li class="list-group-item">
+                        <a href="{% url 'flashcard_set_detail' flashcard_set.id %}">{{ flashcard_set.title }}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if quizzes %}
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Bài Kiểm Tra</h5>
+            </div>
+            <div class="card-body">
+                <p>Kiểm tra kiến thức của bạn:</p>
+                <ul class="list-group">
+                    {% for quiz in quizzes %}
+                    <li class="list-group-item">
+                        <a href="{% url 'quiz_detail' quiz.id %}">{{ quiz.title }}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/prism.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/components/prism-python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/components/prism-java.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/components/prism-javascript.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        Prism.highlightAll();
+    });
+</script>
+{% endblock %}

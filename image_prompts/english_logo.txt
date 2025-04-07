@@ -1,0 +1,19 @@
+Mô tả hình ảnh: Logo Tiếng Anh
+
+Phong cách: Hiện đại, thân thiện, phù hợp với học ngôn ngữ
+Màu sắc chính: Xanh dương (#1E88E5) và đỏ (#E53935) - gợi nhớ đến cờ Anh/Mỹ
+Yếu tố thiết kế:
+- Chữ "ABC" nổi bật ở trung tâm với phong cách 3D
+- Biểu tượng sách mở hoặc từ điển
+- Các từ tiếng Anh thông dụng bay xung quanh với kích thước khác nhau
+- Biểu tượng cờ Anh và Mỹ nhỏ thể hiện cả Anh-Anh và Anh-Mỹ
+- Biểu tượng đám mây hội thoại thể hiện giao tiếp
+- Nền trong suốt hoặc gradient nhẹ
+- Hiệu ứng ánh sáng tạo cảm giác thân thiện
+
+Cảm xúc: Thân thiện, dễ tiếp cận, khuyến khích giao tiếp
+Kích thước: 512x512 pixels
+Định dạng: PNG với nền trong suốt
+
+Prompt cho AI:
+"A friendly, modern English language learning logo featuring 3D 'ABC' letters at the center. An open book or dictionary icon. Common English words of different sizes floating around. Small UK and US flags representing both English variants. Speech bubble icons representing communication. Blue and red color scheme reminiscent of English-speaking countries' flags. Soft lighting for an approachable feel. Suitable for a language learning platform. Transparent background."

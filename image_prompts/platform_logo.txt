@@ -1,0 +1,19 @@
+Mô tả hình ảnh: Logo Nền Tảng Học Tập
+
+Phong cách: Hiện đại, chuyên nghiệp, thân thiện
+Màu sắc chính: Xanh dương (#1976D2), cam (#FF9800), và xanh lá (#4CAF50) - tạo cảm giác cân bằng, năng động và tăng trưởng
+Yếu tố thiết kế:
+- Biểu tượng não bộ kết hợp với biểu tượng sách mở hoặc màn hình
+- Các đường kết nối tạo thành mạng lưới kiến thức
+- Các biểu tượng nhỏ đại diện cho các phương pháp học tập (Active Recall, Spaced Repetition, Kumon, Kaizen, Zanshin)
+- Các biểu tượng nhỏ đại diện cho các chủ đề học tập (ngôn ngữ, lập trình, toán học)
+- Đường cong tạo cảm giác về hành trình học tập
+- Nền trong suốt hoặc gradient nhẹ
+- Hiệu ứng ánh sáng tạo cảm giác hiện đại và chuyên nghiệp
+
+Cảm xúc: Chuyên nghiệp, thân thiện, khuyến khích học tập, tăng trưởng
+Kích thước: 512x512 pixels
+Định dạng: PNG với nền trong suốt
+
+Prompt cho AI:
+"A modern, professional learning platform logo featuring a brain combined with an open book or screen. Connection lines forming a knowledge network. Small icons representing learning methods (Active Recall, Spaced Repetition, Kumon, Kaizen, Zanshin). Small icons representing learning subjects (languages, programming, mathematics). Curved paths suggesting a learning journey. Blue, orange, and green color scheme for balance, energy, and growth. Modern lighting effects. Suitable for a comprehensive educational platform. Transparent background."

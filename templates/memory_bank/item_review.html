@@ -1,0 +1,214 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Ôn Tập Ghi Nhớ - Memory Bank{% endblock %}
+
+{% block extra_css %}
+<style>
+    .memory-content {
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+    
+    .memory-content img {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    .review-card {
+        perspective: 1000px;
+        height: 400px;
+        margin-bottom: 2rem;
+    }
+    
+    .review-card-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        text-align: center;
+        transition: transform 0.6s;
+        transform-style: preserve-3d;
+        cursor: pointer;
+    }
+    
+    .review-card.flipped .review-card-inner {
+        transform: rotateY(180deg);
+    }
+    
+    .review-card-front, .review-card-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        padding: 2rem;
+        border-radius: 0.25rem;
+    }
+    
+    .review-card-front {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+    }
+    
+    .review-card-back {
+        background-color: #e9ecef;
+        border: 1px solid #dee2e6;
+        transform: rotateY(180deg);
+        overflow-y: auto;
+    }
+    
+    .recall-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .tag-badge {
+        margin-right: 0.25rem;
+        margin-bottom: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">Ôn Tập Ghi Nhớ</h1>
+        <p class="text-muted">
+            <i class="fas fa-folder" style="color: {{ item.category.color }};"></i> 
+            <a href="{% url 'memory_category_detail' item.category.slug %}">{{ item.category.name }}</a> | 
+            <i class="fas fa-clock"></i> Lần ôn tập thứ: {{ item.review_count|add:1 }}
+        </p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'memory_item_detail' item.pk %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Quay Lại Chi Tiết
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="review-card" id="review-card">
+            <div class="review-card-inner">
+                <div class="review-card-front">
+                    <h2 class="mb-4">{{ item.title }}</h2>
+                    <p class="text-muted mb-4">Nhấp vào thẻ để xem nội dung ghi nhớ</p>
+                    
+                    {% if tags %}
+                    <div class="mt-4">
+                        {% for tag in tags %}
+                        <span class="badge bg-info tag-badge">{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="review-card-back">
+                    <div class="memory-content w-100 text-start">
+                        {{ item.content|safe }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-question-circle"></i> Mức Độ Nhớ Của Bạn</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-center">Sau khi xem lại ghi nhớ, hãy đánh giá mức độ nhớ của bạn:</p>
+                
+                <form method="post" class="recall-buttons">
+                    {% csrf_token %}
+                    <button type="submit" name="recall_level" value="1" class="btn btn-danger btn-lg">
+                        <i class="fas fa-frown"></i> Khó nhớ
+                    </button>
+                    <button type="submit" name="recall_level" value="2" class="btn btn-warning btn-lg">
+                        <i class="fas fa-meh"></i> Nhớ mờ mờ
+                    </button>
+                    <button type="submit" name="recall_level" value="3" class="btn btn-success btn-lg">
+                        <i class="fas fa-smile"></i> Nhớ rõ
+                    </button>
+                </form>
+                
+                <div class="mt-4">
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle"></i> Lịch Ôn Tập Spaced Repetition:</h6>
+                        <ul class="mb-0">
+                            <li><strong>Khó nhớ:</strong> Ôn tập lại sau 1 ngày</li>
+                            <li><strong>Nhớ mờ mờ:</strong> Ôn tập lại sau 3 ngày</li>
+                            <li><strong>Nhớ rõ:</strong> Ôn tập lại sau 7 ngày</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        {% if attachments %}
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-paperclip"></i> Tập Tin Đính Kèm</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for attachment in attachments %}
+                    <a href="{{ attachment.file.url }}" class="list-group-item list-group-item-action" target="_blank">
+                        {% if 'image' in attachment.file_type %}
+                        <i class="fas fa-image text-primary me-2"></i>
+                        {% elif 'pdf' in attachment.file_type %}
+                        <i class="fas fa-file-pdf text-danger me-2"></i>
+                        {% elif 'word' in attachment.file_type or 'document' in attachment.file_type %}
+                        <i class="fas fa-file-word text-primary me-2"></i>
+                        {% elif 'excel' in attachment.file_type or 'sheet' in attachment.file_type %}
+                        <i class="fas fa-file-excel text-success me-2"></i>
+                        {% elif 'zip' in attachment.file_type or 'rar' in attachment.file_type %}
+                        <i class="fas fa-file-archive text-warning me-2"></i>
+                        {% else %}
+                        <i class="fas fa-file text-secondary me-2"></i>
+                        {% endif %}
+                        {{ attachment.file_name }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-lightbulb"></i> Mẹo Ôn Tập Hiệu Quả</h5>
+            </div>
+            <div class="card-body">
+                <h6><i class="fas fa-brain text-primary"></i> Active Recall</h6>
+                <p>Trước khi xem nội dung, hãy cố gắng nhớ lại thông tin từ trí nhớ. Điều này tạo ra các kết nối thần kinh mạnh mẽ hơn.</p>
+                
+                <h6><i class="fas fa-calendar-alt text-primary"></i> Spaced Repetition</h6>
+                <p>Ôn tập đúng thời điểm sẽ giúp bạn ghi nhớ thông tin lâu hơn với ít nỗ lực hơn.</p>
+                
+                <h6><i class="fas fa-edit text-primary"></i> Elaboration</h6>
+                <p>Sau khi ôn tập, hãy cố gắng giải thích thông tin bằng từ ngữ của riêng bạn hoặc liên kết nó với kiến thức bạn đã biết.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Xử lý lật thẻ
+        const reviewCard = document.getElementById('review-card');
+        if (reviewCard) {
+            reviewCard.addEventListener('click', function() {
+                this.classList.toggle('flipped');
+            });
+        }
+    });
+</script>
+{% endblock %}

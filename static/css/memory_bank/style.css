@@ -1,0 +1,172 @@
+/* Memory Bank CSS */
+
+/* Card styles */
+.memory-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    margin-bottom: 1.5rem;
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.memory-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Category styles */
+.category-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+/* Memory content */
+.memory-content {
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+.memory-content img {
+    max-width: 100%;
+    height: auto;
+    margin: 1rem 0;
+}
+
+.memory-content pre {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    overflow-x: auto;
+}
+
+.memory-content table {
+    width: 100%;
+    margin-bottom: 1rem;
+    border-collapse: collapse;
+}
+
+.memory-content table th,
+.memory-content table td {
+    padding: 0.75rem;
+    border: 1px solid #dee2e6;
+}
+
+.memory-content table thead th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+}
+
+/* Tag styles */
+.tag-badge {
+    margin-right: 0.25rem;
+    margin-bottom: 0.25rem;
+}
+
+/* Attachment styles */
+.attachment-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.attachment-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.attachment-item:last-child {
+    border-bottom: none;
+}
+
+.attachment-icon {
+    font-size: 1.5rem;
+    margin-right: 0.5rem;
+}
+
+.attachment-info {
+    flex-grow: 1;
+}
+
+.attachment-actions {
+    flex-shrink: 0;
+}
+
+/* Review card styles */
+.review-card {
+    perspective: 1000px;
+    height: 400px;
+    margin-bottom: 2rem;
+}
+
+.review-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+    cursor: pointer;
+}
+
+.review-card.flipped .review-card-inner {
+    transform: rotateY(180deg);
+}
+
+.review-card-front, .review-card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 2rem;
+    border-radius: 0.25rem;
+}
+
+.review-card-front {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+}
+
+.review-card-back {
+    background-color: #e9ecef;
+    border: 1px solid #dee2e6;
+    transform: rotateY(180deg);
+    overflow-y: auto;
+}
+
+.recall-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+/* Priority colors */
+.priority-high {
+    color: #dc3545;
+}
+
+.priority-medium {
+    color: #ffc107;
+}
+
+.priority-low {
+    color: #6c757d;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .review-card {
+        height: 300px;
+    }
+    
+    .recall-buttons {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}

@@ -1,0 +1,285 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ flashcard_set.title }} - Nền Tảng Học Tập{% endblock %}
+
+{% block extra_css %}
+<style>
+    .flashcard {
+        perspective: 1000px;
+        height: 300px;
+        margin-bottom: 2rem;
+    }
+    
+    .flashcard-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        text-align: center;
+        transition: transform 0.6s;
+        transform-style: preserve-3d;
+        cursor: pointer;
+    }
+    
+    .flashcard.flipped .flashcard-inner {
+        transform: rotateY(180deg);
+    }
+    
+    .flashcard-front, .flashcard-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        padding: 1rem;
+        border-radius: 0.25rem;
+    }
+    
+    .flashcard-front {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+    }
+    
+    .flashcard-back {
+        background-color: #e9ecef;
+        border: 1px solid #dee2e6;
+        transform: rotateY(180deg);
+    }
+    
+    .flashcard-controls {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 1rem;
+    }
+    
+    .recall-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'subject_list' %}">Chủ Đề</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'subject_detail' flashcard_set.lesson.topic.subject.slug %}">{{ flashcard_set.lesson.topic.subject.name }}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'lesson_detail' flashcard_set.lesson.topic.subject.slug flashcard_set.lesson.topic.slug flashcard_set.lesson.slug %}">{{ flashcard_set.lesson.title }}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ flashcard_set.title }}</li>
+    </ol>
+</nav>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1 class="mb-3">{{ flashcard_set.title }}</h1>
+        <p class="lead">{{ flashcard_set.description }}</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Flashcards</h5>
+                <div>
+                    <span id="current-card">1</span>/<span id="total-cards">{{ flashcards|length }}</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="flashcard-container">
+                    {% for flashcard in flashcards %}
+                    <div class="flashcard {% if forloop.first %}active{% else %}d-none{% endif %}" data-id="{{ flashcard.id }}">
+                        <div class="flashcard-inner">
+                            <div class="flashcard-front">
+                                <h3>{{ flashcard.front }}</h3>
+                                {% if flashcard.image %}
+                                <img src="{{ flashcard.image.url }}" alt="Flashcard image" class="img-fluid mt-3" style="max-height: 150px;">
+                                {% endif %}
+                                <p class="mt-3 text-muted">Nhấp để xem đáp án</p>
+                            </div>
+                            <div class="flashcard-back">
+                                <h3>{{ flashcard.back }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="alert alert-info">
+                        Không có flashcard nào trong bộ này.
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                {% if flashcards %}
+                <div class="flashcard-controls">
+                    <button id="prev-btn" class="btn btn-outline-primary" {% if flashcards|length == 1 %}disabled{% endif %}>
+                        <i class="fas fa-arrow-left"></i> Trước
+                    </button>
+                    <button id="flip-btn" class="btn btn-primary">
+                        <i class="fas fa-sync-alt"></i> Lật
+                    </button>
+                    <button id="next-btn" class="btn btn-outline-primary" {% if flashcards|length == 1 %}disabled{% endif %}>
+                        Tiếp <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+                
+                {% if user.is_authenticated %}
+                <div class="recall-buttons mt-4">
+                    <h5 class="w-100 text-center mb-3">Mức độ nhớ của bạn?</h5>
+                    <button class="btn btn-danger recall-btn" data-level="1">
+                        <i class="fas fa-frown"></i> Khó nhớ
+                    </button>
+                    <button class="btn btn-warning recall-btn" data-level="2">
+                        <i class="fas fa-meh"></i> Nhớ mờ mờ
+                    </button>
+                    <button class="btn btn-success recall-btn" data-level="3">
+                        <i class="fas fa-smile"></i> Nhớ rõ
+                    </button>
+                </div>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Thông Tin</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Bài học:</strong> <a href="{% url 'lesson_detail' flashcard_set.lesson.topic.subject.slug flashcard_set.lesson.topic.slug flashcard_set.lesson.slug %}">{{ flashcard_set.lesson.title }}</a></p>
+                <p><strong>Số lượng flashcard:</strong> {{ flashcards|length }}</p>
+                <p><strong>Ngày tạo:</strong> {{ flashcard_set.created_at|date:"d/m/Y" }}</p>
+                
+                {% if user.is_authenticated %}
+                <div class="mt-3">
+                    <h6>Tiến độ ôn tập</h6>
+                    <div class="progress mb-2">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ mastered_percentage }}%;" aria-valuenow="{{ mastered_percentage }}" aria-valuemin="0" aria-valuemax="100">{{ mastered_percentage }}%</div>
+                    </div>
+                    <small class="text-muted">Đã thuộc: {{ mastered_count }}/{{ flashcards|length }}</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Phương Pháp Học Hiệu Quả</h5>
+            </div>
+            <div class="card-body">
+                <h6><i class="fas fa-brain"></i> Active Recall</h6>
+                <p>Cố gắng nhớ thông tin trước khi lật thẻ để kiểm tra đáp án.</p>
+                
+                <h6><i class="fas fa-calendar-alt"></i> Spaced Repetition</h6>
+                <p>Hệ thống sẽ lên lịch ôn tập dựa trên mức độ nhớ của bạn.</p>
+                
+                <h6><i class="fas fa-chart-line"></i> Kaizen</h6>
+                <p>Học mỗi ngày một ít, đều đặn sẽ hiệu quả hơn học dồn.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const flashcards = document.querySelectorAll('.flashcard');
+        const currentCardEl = document.getElementById('current-card');
+        const totalCardsEl = document.getElementById('total-cards');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const flipBtn = document.getElementById('flip-btn');
+        const recallBtns = document.querySelectorAll('.recall-btn');
+        
+        let currentIndex = 0;
+        
+        // Flip card when clicked
+        flashcards.forEach(card => {
+            card.addEventListener('click', function() {
+                this.classList.toggle('flipped');
+            });
+        });
+        
+        // Flip card with button
+        if (flipBtn) {
+            flipBtn.addEventListener('click', function() {
+                const currentCard = flashcards[currentIndex];
+                currentCard.classList.toggle('flipped');
+            });
+        }
+        
+        // Navigate to previous card
+        if (prevBtn) {
+            prevBtn.addEventListener('click', function() {
+                if (currentIndex > 0) {
+                    flashcards[currentIndex].classList.remove('active');
+                    flashcards[currentIndex].classList.add('d-none');
+                    flashcards[currentIndex].classList.remove('flipped');
+                    
+                    currentIndex--;
+                    
+                    flashcards[currentIndex].classList.add('active');
+                    flashcards[currentIndex].classList.remove('d-none');
+                    currentCardEl.textContent = currentIndex + 1;
+                }
+            });
+        }
+        
+        // Navigate to next card
+        if (nextBtn) {
+            nextBtn.addEventListener('click', function() {
+                if (currentIndex < flashcards.length - 1) {
+                    flashcards[currentIndex].classList.remove('active');
+                    flashcards[currentIndex].classList.add('d-none');
+                    flashcards[currentIndex].classList.remove('flipped');
+                    
+                    currentIndex++;
+                    
+                    flashcards[currentIndex].classList.add('active');
+                    flashcards[currentIndex].classList.remove('d-none');
+                    currentCardEl.textContent = currentIndex + 1;
+                }
+            });
+        }
+        
+        // Handle recall level buttons
+        if (recallBtns.length > 0) {
+            recallBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const level = this.dataset.level;
+                    const flashcardId = flashcards[currentIndex].dataset.id;
+                    
+                    // Send recall level to server
+                    fetch('{% url "update_recall_level" %}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({
+                            flashcard_id: flashcardId,
+                            recall_level: level
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Move to next card automatically
+                            if (currentIndex < flashcards.length - 1) {
+                                nextBtn.click();
+                            }
+                        }
+                    });
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

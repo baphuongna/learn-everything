@@ -1,0 +1,18 @@
+Mô tả hình ảnh: Logo Java
+
+Phong cách: Hiện đại, năng động, phù hợp với giáo dục
+Màu sắc chính: Đỏ cam (#F89820) và xanh dương (#5382A1) - màu chính thức của Java
+Yếu tố thiết kế:
+- Biểu tượng tách cà phê đang bốc hơi (biểu tượng truyền thống của Java)
+- Chữ "Java" được thiết kế mạnh mẽ, rõ ràng
+- Các dòng code Java đơn giản bay xung quanh
+- Một số hình ảnh nhỏ đại diện cho các thiết bị (máy tính, điện thoại, thiết bị IoT) thể hiện tính đa nền tảng
+- Nền trong suốt hoặc gradient nhẹ
+- Hiệu ứng ánh sáng tạo cảm giác hiện đại
+
+Cảm xúc: Mạnh mẽ, đáng tin cậy, phù hợp cho người học muốn phát triển ứng dụng
+Kích thước: 512x512 pixels
+Định dạng: PNG với nền trong suốt
+
+Prompt cho AI:
+"A modern, dynamic Java programming language logo featuring a steaming coffee cup with the Java emblem. Bold 'Java' text in a strong, clear font. Simple Java code snippets floating around. Small icons representing different devices showing cross-platform capability. Warm orange-red and blue color scheme. Lighting effects for a modern feel. Suitable for an educational platform. Transparent background."

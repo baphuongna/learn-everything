@@ -1,0 +1,244 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Nền Tảng Học Tập{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1 class="mb-3">Chào mừng đến với Nền Tảng Học Tập</h1>
+        <p class="lead">Học tập hiệu quả với các phương pháp khoa học: Active Recall, Spaced Repetition, Kumon, Kaizen, và Zanshin.</p>
+    </div>
+</div>
+
+<!-- Giới thiệu các phương pháp học tập -->
+<div class="row mb-5">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Phương Pháp Học Tập Hiệu Quả</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-4">
+                        <div class="text-center mb-3">
+                            <i class="fas fa-brain fa-3x text-primary"></i>
+                        </div>
+                        <h5 class="text-center">Active Recall</h5>
+                        <p>Chủ động truy xuất thông tin từ trí nhớ thay vì đọc đi đọc lại, tạo ra các kết nối thần kinh mạnh mẽ hơn.</p>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="text-center mb-3">
+                            <i class="fas fa-calendar-alt fa-3x text-primary"></i>
+                        </div>
+                        <h5 class="text-center">Spaced Repetition</h5>
+                        <p>Ôn tập theo các khoảng thời gian tối ưu, giúp ghi nhớ lâu dài với ít nỗ lực hơn.</p>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="text-center mb-3">
+                            <i class="fas fa-tasks fa-3x text-primary"></i>
+                        </div>
+                        <h5 class="text-center">Kumon Method</h5>
+                        <p>Chia nhỏ kiến thức thành các phần dễ tiếp thu, xây dựng nền tảng vững chắc trước khi tiến đến các khái niệm phức tạp.</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="text-center mb-3">
+                            <i class="fas fa-chart-line fa-3x text-primary"></i>
+                        </div>
+                        <h5 class="text-center">Kaizen</h5>
+                        <p>Cải thiện liên tục mỗi ngày với mục tiêu nhỏ. Dành 6 phút mỗi ngày để ôn tập và cải thiện kỹ năng của bạn.</p>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="text-center mb-3">
+                            <i class="fas fa-bullseye fa-3x text-primary"></i>
+                        </div>
+                        <h5 class="text-center">Zanshin</h5>
+                        <p>Tập trung tối đa vào việc học, loại bỏ các yếu tố gây xao nhãng để tăng cường hiệu quả học tập.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chủ đề nổi bật -->
+<div class="row mb-5">
+    <div class="col-md-12">
+        <h2 class="mb-4">Chủ Đề Nổi Bật</h2>
+    </div>
+
+    {% for subject in featured_subjects %}
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-img-top text-center py-3 bg-light" style="height: 150px; display: flex; align-items: center; justify-content: center;">
+                {% with subject_key=subject.name|lower|cut:' ' %}
+                    {% if subject_key == 'python' %}
+                    <img src="{% static 'images/subject_icons/python.svg' %}" alt="{{ subject.name }}" style="height: 100px;">
+                    {% elif subject_key == 'java' %}
+                    <img src="{% static 'images/subject_icons/java.svg' %}" alt="{{ subject.name }}" style="height: 100px;">
+                    {% elif subject_key == 'javascript' %}
+                    <img src="{% static 'images/subject_icons/javascript.svg' %}" alt="{{ subject.name }}" style="height: 100px;">
+                    {% elif subject_key == 'english' or subject_key == 'tienganh' %}
+                    <img src="{% static 'images/subject_icons/english.svg' %}" alt="{{ subject.name }}" style="height: 100px;">
+                    {% elif subject_key == 'chinese' or subject_key == 'tiengtrung' %}
+                    <img src="{% static 'images/subject_icons/chinese.svg' %}" alt="{{ subject.name }}" style="height: 100px;">
+                    {% elif subject_key == 'math' or subject_key == 'toanhoc' %}
+                    <img src="{% static 'images/subject_icons/math.svg' %}" alt="{{ subject.name }}" style="height: 100px;">
+                    {% elif subject.icon %}
+                    <img src="{{ subject.icon.url }}" alt="{{ subject.name }}" style="height: 100px; max-width: 100%;">
+                    {% else %}
+                    <div style="width: 100px; height: 100px; background-color: #007bff; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <span style="font-size: 48px; color: white; font-weight: bold;">{{ subject.name|first|upper }}</span>
+                    </div>
+                    {% endif %}
+                {% endwith %}
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">{{ subject.name }}</h5>
+                <p class="card-text">{{ subject.description|truncatechars:100 }}</p>
+            </div>
+            <div class="card-footer bg-white border-top-0">
+                <a href="{% url 'subject_detail' subject.slug %}" class="btn btn-primary btn-sm">Khám Phá</a>
+                {% if user.is_authenticated %}
+                <button class="btn btn-outline-warning btn-sm float-end toggle-favorite" data-subject-id="{{ subject.id }}">
+                    {% if subject in user_favorites %}
+                    <i class="fas fa-star"></i>
+                    {% else %}
+                    <i class="far fa-star"></i>
+                    {% endif %}
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-md-12">
+        <div class="alert alert-info">
+            Chưa có chủ đề nổi bật. Vui lòng quay lại sau.
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="col-md-12 text-center mt-3">
+        <a href="{% url 'subject_list' %}" class="btn btn-outline-primary">Xem Tất Cả Chủ Đề</a>
+    </div>
+</div>
+
+<!-- Tính năng -->
+<div class="row mb-5">
+    <div class="col-md-12">
+        <h2 class="mb-4">Tính Năng</h2>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-clipboard-list fa-4x text-primary mb-3"></i>
+                <h5 class="card-title">Flashcards</h5>
+                <p class="card-text">Học tập hiệu quả với phương pháp Active Recall và Spaced Repetition thông qua hệ thống flashcard.</p>
+                <a href="{% url 'flashcard_list' %}" class="btn btn-primary">Xem Flashcards</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-question-circle fa-4x text-primary mb-3"></i>
+                <h5 class="card-title">Bài Kiểm Tra</h5>
+                <p class="card-text">Kiểm tra kiến thức của bạn với các bài kiểm tra tương tác và nhận phản hồi ngay lập tức.</p>
+                <a href="{% url 'quiz_list' %}" class="btn btn-primary">Làm Bài Kiểm Tra</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-brain fa-4x text-primary mb-3"></i>
+                <h5 class="card-title">Memory Bank</h5>
+                <p class="card-text">Lưu trữ và quản lý các ghi nhớ, ý tưởng, và kiến thức quan trọng của bạn.</p>
+                <a href="{% url 'memory_home' %}" class="btn btn-primary">Mở Memory Bank</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Thống kê -->
+{% if user.is_authenticated %}
+<div class="row">
+    <div class="col-md-12">
+        <h2 class="mb-4">Thống Kê Của Bạn</h2>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h1 class="display-4">{{ completed_lessons_count }}</h1>
+                <p class="mb-0">Bài học đã hoàn thành</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h1 class="display-4">{{ flashcards_due_count }}</h1>
+                <p class="mb-0">Flashcard cần ôn tập</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h1 class="display-4">{{ quiz_attempts_count }}</h1>
+                <p class="mb-0">Bài kiểm tra đã làm</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <h1 class="display-4">{{ study_time_hours }}</h1>
+                <p class="mb-0">Giờ học tập</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-12 text-center mt-3">
+        <a href="{% url 'progress' %}" class="btn btn-outline-primary">Xem Tiến Độ Chi Tiết</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Xử lý nút yêu thích
+        $('.toggle-favorite').click(function() {
+            var subjectId = $(this).data('subject-id');
+            var button = $(this);
+
+            $.ajax({
+                url: '/toggle-favorite-subject/' + subjectId + '/',
+                type: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                success: function(data) {
+                    if (data.is_favorite) {
+                        button.html('<i class="fas fa-star"></i>');
+                    } else {
+                        button.html('<i class="far fa-star"></i>');
+                    }
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

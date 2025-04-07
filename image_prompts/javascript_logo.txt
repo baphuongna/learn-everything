@@ -1,0 +1,19 @@
+Mô tả hình ảnh: Logo JavaScript
+
+Phong cách: Hiện đại, năng động, phù hợp với web development
+Màu sắc chính: Vàng (#F7DF1E) và đen (#000000) - màu chính thức của JavaScript
+Yếu tố thiết kế:
+- Biểu tượng JS trong hình vuông có góc tròn
+- Chữ "JavaScript" được thiết kế hiện đại, rõ ràng
+- Các biểu tượng web (HTML5, CSS3) nhỏ hơn ở xung quanh
+- Các yếu tố UI web (buttons, forms, modals) bay xung quanh
+- Hiệu ứng chuyển động nhẹ thể hiện tính tương tác
+- Nền trong suốt hoặc gradient nhẹ
+- Hiệu ứng ánh sáng tạo cảm giác hiện đại
+
+Cảm xúc: Năng động, tương tác, phù hợp cho người học web development
+Kích thước: 512x512 pixels
+Định dạng: PNG với nền trong suốt
+
+Prompt cho AI:
+"A modern, dynamic JavaScript programming language logo featuring the JS emblem in a rounded square with the classic yellow and black color scheme. Modern 'JavaScript' text in a clean font. Small HTML5 and CSS3 icons nearby. UI elements like buttons, forms, and modals floating around to represent web interactivity. Subtle motion effects. Suitable for a web development educational platform. Transparent background."

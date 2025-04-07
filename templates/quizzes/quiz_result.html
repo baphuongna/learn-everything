@@ -1,0 +1,171 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Kết Quả Bài Kiểm Tra - Nền Tảng Học Tập{% endblock %}
+
+{% block extra_css %}
+<style>
+    .result-summary {
+        text-align: center;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border-radius: 0.25rem;
+    }
+    
+    .result-pass {
+        background-color: #d4edda;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .result-fail {
+        background-color: #f8d7da;
+        border: 1px solid #f5c6cb;
+    }
+    
+    .question-result {
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+    }
+    
+    .question-correct {
+        border-left: 5px solid #28a745;
+    }
+    
+    .question-incorrect {
+        border-left: 5px solid #dc3545;
+    }
+    
+    .answer-correct {
+        color: #28a745;
+        font-weight: bold;
+    }
+    
+    .answer-incorrect {
+        color: #dc3545;
+        text-decoration: line-through;
+    }
+    
+    .answer-selected {
+        font-weight: bold;
+    }
+    
+    .explanation {
+        margin-top: 1rem;
+        padding: 1rem;
+        background-color: #e9ecef;
+        border-radius: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1 class="mb-3">Kết Quả Bài Kiểm Tra: {{ quiz_attempt.quiz.title }}</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="result-summary {% if quiz_attempt.passed %}result-pass{% else %}result-fail{% endif %}">
+            <h2>
+                {% if quiz_attempt.passed %}
+                <i class="fas fa-check-circle text-success"></i> Chúc mừng! Bạn đã đạt {{ quiz_attempt.score }}%
+                {% else %}
+                <i class="fas fa-times-circle text-danger"></i> Bạn đã đạt {{ quiz_attempt.score }}% (Điểm đậu: {{ quiz_attempt.quiz.pass_score }}%)
+                {% endif %}
+            </h2>
+            <p>Thời gian làm bài: {{ duration }} phút</p>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Tổng Kết</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <h4>{{ correct_count }}</h4>
+                        <p class="text-success">Câu đúng</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h4>{{ incorrect_count }}</h4>
+                        <p class="text-danger">Câu sai</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h4>{{ quiz_attempt.score }}%</h4>
+                        <p>Điểm số</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h4>{{ quiz_attempt.quiz.questions.count }}</h4>
+                        <p>Tổng số câu</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <h3 class="mb-4">Chi Tiết Bài Làm</h3>
+        
+        {% for user_answer in user_answers %}
+        <div class="question-result {% if user_answer.is_correct %}question-correct{% else %}question-incorrect{% endif %}">
+            <h4>
+                Câu {{ forloop.counter }}: {{ user_answer.question.question_text }}
+                {% if user_answer.is_correct %}
+                <span class="badge bg-success float-end">Đúng</span>
+                {% else %}
+                <span class="badge bg-danger float-end">Sai</span>
+                {% endif %}
+            </h4>
+            
+            {% if user_answer.question.question_type == 'text' %}
+            <div class="mt-3">
+                <p><strong>Câu trả lời của bạn:</strong></p>
+                <p>{{ user_answer.text_answer }}</p>
+            </div>
+            {% else %}
+            <div class="mt-3">
+                <p><strong>Các đáp án:</strong></p>
+                <ul class="list-group">
+                    {% for answer in user_answer.question.answers.all %}
+                    <li class="list-group-item {% if answer.is_correct %}answer-correct{% endif %} {% if answer in user_answer.selected_answers.all and not answer.is_correct %}answer-incorrect{% endif %}">
+                        {{ answer.answer_text }}
+                        {% if answer in user_answer.selected_answers.all %}
+                        <i class="fas fa-check float-end {% if answer.is_correct %}text-success{% else %}text-danger{% endif %}"></i>
+                        {% elif answer.is_correct %}
+                        <i class="fas fa-check float-end text-success"></i>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            
+            {% if user_answer.question.explanation %}
+            <div class="explanation">
+                <h5><i class="fas fa-info-circle"></i> Giải thích:</h5>
+                <p>{{ user_answer.question.explanation }}</p>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+        
+        <div class="d-flex justify-content-between mt-4">
+            <a href="{% url 'lesson_detail' quiz_attempt.quiz.lesson.topic.subject.slug quiz_attempt.quiz.lesson.topic.slug quiz_attempt.quiz.lesson.slug %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Quay lại bài học
+            </a>
+            <a href="{% url 'quiz_detail' quiz_attempt.quiz.id %}" class="btn btn-primary">
+                Làm lại <i class="fas fa-redo"></i>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
