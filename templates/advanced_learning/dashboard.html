@@ -1,0 +1,665 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Tổng Quan Học Tập Nâng Cao - Nền Tảng Học Tập{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .stats-card {
+        border-radius: 15px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .stats-card .card-body {
+        padding: 20px;
+    }
+
+    .stats-icon {
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+    }
+
+    .stats-value {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+
+    .stats-label {
+        font-size: 1rem;
+        color: #6c757d;
+    }
+
+    .pomodoro-card {
+        border-left: 5px solid #dc3545;
+    }
+
+    .pomodoro-icon {
+        color: #dc3545;
+    }
+
+    .cornell-card {
+        border-left: 5px solid #0d6efd;
+    }
+
+    .cornell-icon {
+        color: #0d6efd;
+    }
+
+    .mindmap-card {
+        border-left: 5px solid #198754;
+    }
+
+    .mindmap-icon {
+        color: #198754;
+    }
+
+    .feynman-card {
+        border-left: 5px solid #ffc107;
+    }
+
+    .feynman-icon {
+        color: #ffc107;
+    }
+
+    .project-card {
+        border-left: 5px solid #17a2b8;
+    }
+
+    .project-icon {
+        color: #17a2b8;
+    }
+
+    .competition-card {
+        border-left: 5px solid #fd7e14;
+    }
+
+    .competition-icon {
+        color: #fd7e14;
+    }
+
+    .activity-card {
+        border-radius: 15px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+
+    .activity-header {
+        padding: 15px 20px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .activity-list {
+        padding: 0;
+        margin: 0;
+        list-style: none;
+    }
+
+    .activity-item {
+        padding: 15px 20px;
+        border-bottom: 1px solid #f5f5f5;
+        transition: all 0.2s ease;
+    }
+
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+
+    .activity-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+    }
+
+    .activity-icon.pomodoro {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    .activity-icon.cornell {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+    }
+
+    .activity-icon.mindmap {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+
+    .activity-icon.feynman {
+        background-color: rgba(255, 193, 7, 0.1);
+        color: #ffc107;
+    }
+
+    .activity-icon.project {
+        background-color: rgba(23, 162, 184, 0.1);
+        color: #17a2b8;
+    }
+
+    .activity-icon.competition {
+        background-color: rgba(253, 126, 20, 0.1);
+        color: #fd7e14;
+    }
+
+    .notification-feature-pomodoro {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    .notification-feature-cornell {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+    }
+
+    .notification-feature-mindmap {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+
+    .notification-feature-feynman {
+        background-color: rgba(255, 193, 7, 0.1);
+        color: #ffc107;
+    }
+
+    .notification-feature-project {
+        background-color: rgba(23, 162, 184, 0.1);
+        color: #17a2b8;
+    }
+
+    .notification-feature-exercise {
+        background-color: rgba(111, 66, 193, 0.1);
+        color: #6f42c1;
+    }
+
+    .notification-feature-competition {
+        background-color: rgba(253, 126, 20, 0.1);
+        color: #fd7e14;
+    }
+
+    .notification-feature-system {
+        background-color: rgba(108, 117, 125, 0.1);
+        color: #6c757d;
+    }
+
+    .activity-content {
+        flex: 1;
+    }
+
+    .activity-title {
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .activity-time {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    .progress-card {
+        border-radius: 15px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+
+    .progress-header {
+        padding: 15px 20px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .progress-item {
+        padding: 15px 20px;
+        border-bottom: 1px solid #f5f5f5;
+    }
+
+    .progress-item:last-child {
+        border-bottom: none;
+    }
+
+    .progress-label {
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .progress-bar {
+        height: 8px;
+        border-radius: 4px;
+    }
+
+    .feature-card {
+        border-radius: 15px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        margin-bottom: 20px;
+        overflow: hidden;
+        height: 100%;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .feature-icon {
+        font-size: 2rem;
+        margin-bottom: 15px;
+    }
+
+    .feature-title {
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+
+    .feature-description {
+        color: #6c757d;
+        margin-bottom: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-tachometer-alt text-primary"></i> Tổng Quan Học Tập Nâng Cao
+            </h1>
+            <p class="lead">Theo dõi tiến độ học tập và quản lý các công cụ học tập nâng cao của bạn.</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'advanced_learning:learning_analytics' %}" class="btn btn-outline-primary me-2">
+                <i class="fas fa-chart-line"></i> Phân Tích Học Tập
+            </a>
+            <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-home"></i> Trang Chủ
+            </a>
+        </div>
+    </div>
+
+    <!-- Thống kê -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-4">
+            <div class="card stats-card pomodoro-card h-100">
+                <div class="card-body text-center">
+                    <div class="stats-icon pomodoro-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stats-value">{{ total_pomodoro_sessions }}</div>
+                    <div class="stats-label">Phiên Pomodoro</div>
+                    <div class="mt-2">Tổng thời gian: {{ total_pomodoro_minutes }} phút</div>
+                    <a href="{% url 'advanced_learning:pomodoro_timer' %}" class="btn btn-outline-danger mt-3">
+                        <i class="fas fa-play"></i> Bắt Đầu Phiên Mới
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card stats-card cornell-card h-100">
+                <div class="card-body text-center">
+                    <div class="stats-icon cornell-icon">
+                        <i class="fas fa-sticky-note"></i>
+                    </div>
+                    <div class="stats-value">{{ total_cornell_notes }}</div>
+                    <div class="stats-label">Ghi Chú Cornell</div>
+                    <div class="mt-2">Phương pháp ghi chú hiệu quả</div>
+                    <a href="{% url 'advanced_learning:cornell_note_list' %}" class="btn btn-outline-primary mt-3">
+                        <i class="fas fa-list"></i> Xem Ghi Chú
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card stats-card mindmap-card h-100">
+                <div class="card-body text-center">
+                    <div class="stats-icon mindmap-icon">
+                        <i class="fas fa-project-diagram"></i>
+                    </div>
+                    <div class="stats-value">{{ total_mind_maps }}</div>
+                    <div class="stats-label">Mind Maps</div>
+                    <div class="mt-2">Sơ đồ tư duy trực quan</div>
+                    <a href="{% url 'advanced_learning:mind_map_list' %}" class="btn btn-outline-success mt-3">
+                        <i class="fas fa-list"></i> Xem Mind Maps
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card stats-card feynman-card h-100">
+                <div class="card-body text-center">
+                    <div class="stats-icon feynman-icon">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <div class="stats-value">{{ total_feynman_notes }}</div>
+                    <div class="stats-label">Feynman Notes</div>
+                    <div class="mt-2">Hiểu sâu thông qua giải thích đơn giản</div>
+                    <a href="{% url 'advanced_learning:feynman_note_list' %}" class="btn btn-outline-warning mt-3">
+                        <i class="fas fa-list"></i> Xem Feynman Notes
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card stats-card project-card h-100">
+                <div class="card-body text-center">
+                    <div class="stats-icon project-icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="stats-value">{{ total_projects }}</div>
+                    <div class="stats-label">Dự Án</div>
+                    <div class="mt-2">
+                        <span class="badge bg-success">{{ completed_projects }} hoàn thành</span>
+                        <span class="badge bg-primary">{{ in_progress_projects }} đang thực hiện</span>
+                    </div>
+                    <a href="{% url 'advanced_learning:my_projects' %}" class="btn btn-outline-info mt-3">
+                        <i class="fas fa-list"></i> Xem Dự Án
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card stats-card competition-card h-100">
+                <div class="card-body text-center">
+                    <div class="stats-icon competition-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="stats-value">{{ total_competitions }}</div>
+                    <div class="stats-label">Cuộc Thi</div>
+                    <div class="mt-2">
+                        <span class="badge bg-success">{{ completed_competitions }} hoàn thành</span>
+                        {% if best_rank %}
+                        <span class="badge bg-warning">Xếp hạng cao nhất: {{ best_rank.rank }}</span>
+                        {% endif %}
+                    </div>
+                    <a href="{% url 'advanced_learning:my_competitions' %}" class="btn btn-outline-orange mt-3">
+                        <i class="fas fa-list"></i> Xem Cuộc Thi
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Hoạt động gần đây -->
+        <div class="col-md-8 mb-4">
+            <div class="card activity-card">
+                <div class="activity-header">
+                    <h5 class="mb-0"><i class="fas fa-history"></i> Hoạt Động Gần Đây</h5>
+                </div>
+                <ul class="activity-list">
+                    {% if recent_activities %}
+                        {% for activity in recent_activities %}
+                            <li class="activity-item d-flex align-items-center">
+                                <div class="activity-icon {{ activity.type }}">
+                                    <i class="{{ activity.icon }}"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">{{ activity.title }}</div>
+                                    <div class="activity-time">{{ activity.date|date:"d/m/Y H:i" }}</div>
+                                </div>
+                                <a href="{{ activity.url }}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </li>
+                        {% endfor %}
+                    {% else %}
+                        <li class="activity-item text-center py-4">
+                            <p class="text-muted mb-0">Chưa có hoạt động nào gần đây.</p>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <!-- Thông báo mới -->
+            {% if unread_notifications_count > 0 %}
+            <div class="card activity-card mt-4">
+                <div class="activity-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bell text-warning"></i> Thông Báo Mới
+                        <span class="badge bg-danger">{{ unread_notifications_count }}</span>
+                    </h5>
+                    <a href="{% url 'advanced_learning:notifications' %}" class="btn btn-sm btn-outline-primary">
+                        Xem Tất Cả
+                    </a>
+                </div>
+                <ul class="activity-list">
+                    {% for notification in unread_notifications %}
+                        <li class="activity-item d-flex align-items-center">
+                            <div class="activity-icon notification-feature-{{ notification.related_feature }}">
+                                {% if notification.related_feature == 'pomodoro' %}
+                                    <i class="fas fa-clock"></i>
+                                {% elif notification.related_feature == 'cornell' %}
+                                    <i class="fas fa-sticky-note"></i>
+                                {% elif notification.related_feature == 'mindmap' %}
+                                    <i class="fas fa-project-diagram"></i>
+                                {% elif notification.related_feature == 'feynman' %}
+                                    <i class="fas fa-lightbulb"></i>
+                                {% elif notification.related_feature == 'project' %}
+                                    <i class="fas fa-tasks"></i>
+                                {% elif notification.related_feature == 'exercise' %}
+                                    <i class="fas fa-laptop-code"></i>
+                                {% elif notification.related_feature == 'competition' %}
+                                    <i class="fas fa-trophy"></i>
+                                {% else %}
+                                    <i class="fas fa-info-circle"></i>
+                                {% endif %}
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">{{ notification.title }}</div>
+                                <div class="activity-time">{{ notification.created_at|date:"d/m/Y H:i" }}</div>
+                            </div>
+                            <a href="{% url 'advanced_learning:mark_notification_read' notification.id %}" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Tiến độ học tập -->
+        <div class="col-md-4 mb-4">
+            <div class="card progress-card">
+                <div class="progress-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-line"></i> Tiến Độ Học Tập</h5>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-label">Pomodoro Sessions</div>
+                    <div class="progress">
+                        <div class="progress-bar bg-danger" role="progressbar" style="width: {{ total_pomodoro_sessions }}%;" aria-valuenow="{{ total_pomodoro_sessions }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-label">Cornell Notes</div>
+                    <div class="progress">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ total_cornell_notes }}%;" aria-valuenow="{{ total_cornell_notes }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-label">Mind Maps</div>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ total_mind_maps }}%;" aria-valuenow="{{ total_mind_maps }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-label">Feynman Notes</div>
+                    <div class="progress">
+                        <div class="progress-bar bg-warning" role="progressbar" style="width: {{ total_feynman_notes }}%;" aria-valuenow="{{ total_feynman_notes }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-label">Dự Án</div>
+                    <div class="progress">
+                        <div class="progress-bar bg-info" role="progressbar" style="width: {{ total_projects }}%;" aria-valuenow="{{ total_projects }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-label">Cuộc Thi</div>
+                    <div class="progress">
+                        <div class="progress-bar bg-orange" role="progressbar" style="width: {{ total_competitions }}%;" aria-valuenow="{{ total_competitions }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Các tính năng học tập nâng cao -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2 class="mb-3">Các Tính Năng Học Tập Nâng Cao</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card feature-card">
+                <div class="card-body text-center">
+                    <div class="feature-icon pomodoro-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h5 class="feature-title">Pomodoro Timer</h5>
+                    <p class="feature-description">Tăng năng suất học tập với kỹ thuật Pomodoro, giúp bạn tập trung và nghỉ ngơi hợp lý.</p>
+                    <a href="{% url 'advanced_learning:pomodoro_timer' %}" class="btn btn-outline-danger">
+                        <i class="fas fa-play"></i> Bắt Đầu Ngay
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card feature-card">
+                <div class="card-body text-center">
+                    <div class="feature-icon cornell-icon">
+                        <i class="fas fa-sticky-note"></i>
+                    </div>
+                    <h5 class="feature-title">Ghi Chú Cornell</h5>
+                    <p class="feature-description">Áp dụng phương pháp ghi chú Cornell có cấu trúc để tổ chức thông tin và cải thiện khả năng ghi nhớ.</p>
+                    <a href="{% url 'advanced_learning:cornell_note_list' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-plus"></i> Tạo Ghi Chú
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card feature-card">
+                <div class="card-body text-center">
+                    <div class="feature-icon mindmap-icon">
+                        <i class="fas fa-project-diagram"></i>
+                    </div>
+                    <h5 class="feature-title">Mind Mapping</h5>
+                    <p class="feature-description">Tạo sơ đồ tư duy trực quan để kết nối các ý tưởng và khái niệm, giúp hiểu sâu và nhớ lâu.</p>
+                    <a href="{% url 'advanced_learning:mind_map_list' %}" class="btn btn-outline-success">
+                        <i class="fas fa-plus"></i> Tạo Mind Map
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card feature-card">
+                <div class="card-body text-center">
+                    <div class="feature-icon feynman-icon">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <h5 class="feature-title">Phương Pháp Feynman</h5>
+                    <p class="feature-description">Hiểu sâu sắc các khái niệm phức tạp bằng cách giải thích chúng bằng ngôn ngữ đơn giản.</p>
+                    <a href="{% url 'advanced_learning:feynman_note_list' %}" class="btn btn-outline-warning">
+                        <i class="fas fa-plus"></i> Tạo Feynman Note
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card feature-card">
+                <div class="card-body text-center">
+                    <div class="feature-icon project-icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <h5 class="feature-title">Học Tập Dựa Trên Dự Án</h5>
+                    <p class="feature-description">Học tập thông qua các dự án thực tế, giúp bạn áp dụng kiến thức vào thực tiễn.</p>
+                    <a href="{% url 'advanced_learning:project_list' %}" class="btn btn-outline-info">
+                        <i class="fas fa-list"></i> Xem Dự Án
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card feature-card">
+                <div class="card-body text-center">
+                    <div class="feature-icon competition-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <h5 class="feature-title">Chế Độ Thi Đấu</h5>
+                    <p class="feature-description">Tham gia các cuộc thi đấu với người học khác, tăng cường động lực và cải thiện kết quả học tập.</p>
+                    <a href="{% url 'advanced_learning:competition_list' %}" class="btn btn-outline-orange">
+                        <i class="fas fa-list"></i> Xem Cuộc Thi
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Thêm CSS cho màu cam
+        const style = document.createElement('style');
+        style.textContent = `
+            .btn-orange {
+                background-color: #fd7e14;
+                border-color: #fd7e14;
+                color: white;
+            }
+            .btn-orange:hover {
+                background-color: #e76b00;
+                border-color: #e76b00;
+                color: white;
+            }
+            .btn-outline-orange {
+                color: #fd7e14;
+                border-color: #fd7e14;
+            }
+            .btn-outline-orange:hover {
+                background-color: #fd7e14;
+                color: white;
+            }
+            .bg-orange {
+                background-color: #fd7e14 !important;
+            }
+            .text-orange {
+                color: #fd7e14 !important;
+            }
+        `;
+        document.head.appendChild(style);
+    });
+</script>
+{% endblock %}

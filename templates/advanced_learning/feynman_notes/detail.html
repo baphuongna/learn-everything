@@ -1,0 +1,140 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ note.title }} - Phương Pháp Feynman{% endblock %}
+
+{% block extra_css %}
+<style>
+    .feynman-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    .note-section {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+    }
+    
+    .note-section h5 {
+        margin-bottom: 15px;
+        color: #fd7e14;
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 10px;
+    }
+    
+    .note-content {
+        white-space: pre-wrap;
+        line-height: 1.6;
+    }
+    
+    .note-meta {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .action-buttons {
+        margin-top: 30px;
+        text-align: center;
+    }
+    
+    .step-number {
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+        background-color: #fd7e14;
+        color: white;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 30px;
+        margin-right: 10px;
+        font-weight: bold;
+    }
+    
+    @media print {
+        .no-print {
+            display: none;
+        }
+        
+        body {
+            font-size: 12pt;
+        }
+        
+        .note-section {
+            box-shadow: none;
+            border: 1px solid #dee2e6;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4 no-print">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-lightbulb text-warning"></i> {{ note.title }}
+        </h1>
+        <p class="note-meta">
+            {% if note.subject %}
+            <span class="badge bg-primary">{{ note.subject.name }}</span>
+            {% endif %}
+            <span class="ms-2"><i class="far fa-calendar-alt"></i> Tạo: {{ note.created_at|date:"d/m/Y H:i" }}</span>
+            {% if note.updated_at != note.created_at %}
+            <span class="ms-2"><i class="far fa-edit"></i> Cập nhật: {{ note.updated_at|date:"d/m/Y H:i" }}</span>
+            {% endif %}
+        </p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:feynman_note_list' %}" class="btn btn-outline-warning">
+            <i class="fas fa-arrow-left"></i> Quay Lại Danh Sách
+        </a>
+        <button onclick="window.print()" class="btn btn-outline-secondary ms-2">
+            <i class="fas fa-print"></i> In
+        </button>
+    </div>
+</div>
+
+<div class="feynman-container">
+    <div class="note-section">
+        <h5><i class="fas fa-heading"></i> {{ note.title }}</h5>
+        <p class="note-meta">
+            {% if note.subject %}Chủ đề: <strong>{{ note.subject.name }}</strong>{% endif %}
+        </p>
+    </div>
+    
+    <div class="note-section">
+        <h5><span class="step-number">1</span> Khái Niệm</h5>
+        <div class="note-content">{{ note.concept|linebreaks }}</div>
+    </div>
+    
+    <div class="note-section">
+        <h5><span class="step-number">2</span> Giải Thích Bằng Ngôn Ngữ Đơn Giản</h5>
+        <div class="note-content">{{ note.explanation|linebreaks }}</div>
+    </div>
+    
+    {% if note.gaps_identified %}
+    <div class="note-section">
+        <h5><span class="step-number">3</span> Lỗ Hổng Kiến Thức Đã Xác Định</h5>
+        <div class="note-content">{{ note.gaps_identified|linebreaks }}</div>
+    </div>
+    {% endif %}
+    
+    {% if note.refined_explanation %}
+    <div class="note-section">
+        <h5><span class="step-number">4</span> Giải Thích Đã Cải Thiện</h5>
+        <div class="note-content">{{ note.refined_explanation|linebreaks }}</div>
+    </div>
+    {% endif %}
+    
+    <div class="action-buttons no-print">
+        <a href="{% url 'advanced_learning:feynman_note_edit' note_id=note.id %}" class="btn btn-warning">
+            <i class="fas fa-edit"></i> Chỉnh Sửa
+        </a>
+        <a href="{% url 'advanced_learning:feynman_note_delete' note_id=note.id %}" class="btn btn-danger ms-2">
+            <i class="fas fa-trash"></i> Xóa
+        </a>
+    </div>
+</div>
+{% endblock %}

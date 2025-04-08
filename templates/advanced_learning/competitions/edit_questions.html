@@ -1,0 +1,218 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Quản Lý Câu Hỏi - {{ competition.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .competition-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .competition-header {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+    }
+    
+    .competition-title {
+        color: #fd7e14;
+        margin-bottom: 10px;
+    }
+    
+    .form-section {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+    }
+    
+    .form-section h5 {
+        color: #fd7e14;
+        margin-bottom: 15px;
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 10px;
+    }
+    
+    .form-buttons {
+        margin-top: 20px;
+        text-align: right;
+    }
+    
+    .question-list {
+        margin-top: 20px;
+    }
+    
+    .question-card {
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        padding: 15px;
+        margin-bottom: 15px;
+        border-left: 4px solid #fd7e14;
+    }
+    
+    .question-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    
+    .question-title {
+        font-weight: 600;
+        color: #fd7e14;
+    }
+    
+    .question-text {
+        margin-bottom: 10px;
+    }
+    
+    .question-meta {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 30px 20px;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        color: #dee2e6;
+        margin-bottom: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-question-circle text-orange"></i> Quản Lý Câu Hỏi
+        </h1>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:competition_detail' competition_id=competition.id %}" class="btn btn-outline-orange">
+            <i class="fas fa-arrow-left"></i> Quay Lại Chi Tiết
+        </a>
+    </div>
+</div>
+
+<div class="competition-container">
+    <div class="competition-header">
+        <h2 class="competition-title">{{ competition.title }}</h2>
+        <p>{{ competition.description|truncatechars:100 }}</p>
+    </div>
+    
+    <div class="form-section">
+        <h5><i class="fas fa-plus-circle"></i> Thêm Câu Hỏi Mới</h5>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_question">
+            
+            {{ form|crispy }}
+            
+            <div class="form-buttons">
+                <button type="submit" class="btn btn-orange">
+                    <i class="fas fa-plus"></i> Thêm Câu Hỏi
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <div class="question-list">
+        <h5><i class="fas fa-list"></i> Danh Sách Câu Hỏi ({{ questions.count }})</h5>
+        
+        {% if questions %}
+            {% for question in questions %}
+            <div class="question-card">
+                <div class="question-header">
+                    <div class="question-title">Câu hỏi {{ question.order|add:1 }}</div>
+                    <div>
+                        <a href="{% url 'advanced_learning:edit_question_answers' competition_id=competition.id question_id=question.id %}" class="btn btn-sm btn-outline-orange">
+                            <i class="fas fa-edit"></i> Quản lý đáp án
+                        </a>
+                        <form method="post" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="delete_question">
+                            <input type="hidden" name="question_id" value="{{ question.id }}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn có chắc chắn muốn xóa câu hỏi này?')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <div class="question-text">{{ question.question_text|linebreaks }}</div>
+                <div class="question-meta">
+                    <span class="badge bg-orange">{{ question.points }} điểm</span>
+                    <span class="ms-2">{{ question.competitionanswer_set.count }} đáp án</span>
+                    <span class="ms-2">{{ question.competitionanswer_set.filter.is_correct.count }} đáp án đúng</span>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-question-circle"></i>
+                <h4>Chưa có câu hỏi nào</h4>
+                <p class="text-muted">Hãy thêm câu hỏi cho cuộc thi này bằng cách sử dụng biểu mẫu ở trên.</p>
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="text-center mt-4 mb-5">
+        <form method="post" class="d-inline">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="finish">
+            <button type="submit" class="btn btn-orange btn-lg">
+                <i class="fas fa-check"></i> Hoàn Thành
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Thêm CSS cho màu cam
+        const style = document.createElement('style');
+        style.textContent = `
+            .btn-orange {
+                background-color: #fd7e14;
+                border-color: #fd7e14;
+                color: white;
+            }
+            .btn-orange:hover {
+                background-color: #e76b00;
+                border-color: #e76b00;
+                color: white;
+            }
+            .btn-outline-orange {
+                color: #fd7e14;
+                border-color: #fd7e14;
+            }
+            .btn-outline-orange:hover {
+                background-color: #fd7e14;
+                color: white;
+            }
+            .bg-orange {
+                background-color: #fd7e14 !important;
+            }
+            .text-orange {
+                color: #fd7e14 !important;
+            }
+        `;
+        document.head.appendChild(style);
+    });
+</script>
+{% endblock %}

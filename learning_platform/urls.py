@@ -75,8 +75,23 @@ urlpatterns = [
     # Memory Bank
     path("memory/", include("memory_bank.urls")),
 
+    # Advanced Learning Features
+    path("advanced/", include("advanced_learning.urls")),
+
+    # Content API
+    path("", include("content.urls")),
+
     # Summernote Editor
     path('summernote/', include('django_summernote.urls')),
+
+    # Notifications
+    path('notifications/', include('notifications.urls')),
+
+    # Learning Goals
+    path('learning-goals/', include('learning_goals.urls')),
+
+    # Achievements
+    path('achievements/', include('achievements.urls')),
 ]
 
 # Serve media files in development

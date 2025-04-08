@@ -5,6 +5,7 @@ crispy-bootstrap4==2022.1
 markdown==3.5.2
 django-summernote==0.8.20.0
 python-dotenv==1.0.0
+icalendar==5.0.11
 
 # Bảo mật
 django-csp==3.7

@@ -1,0 +1,390 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Làm Bài Thi - {{ competition.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .competition-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .competition-header {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+    }
+    
+    .competition-title {
+        color: #fd7e14;
+        margin-bottom: 10px;
+    }
+    
+    .competition-meta {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 15px;
+    }
+    
+    .timer-container {
+        position: sticky;
+        top: 20px;
+        z-index: 100;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 15px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .timer {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #fd7e14;
+    }
+    
+    .timer.warning {
+        color: #ffc107;
+    }
+    
+    .timer.danger {
+        color: #dc3545;
+        animation: pulse 1s infinite;
+    }
+    
+    @keyframes pulse {
+        0% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.5;
+        }
+        100% {
+            opacity: 1;
+        }
+    }
+    
+    .question-card {
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .question-number {
+        font-weight: bold;
+        color: #fd7e14;
+        margin-bottom: 10px;
+    }
+    
+    .question-text {
+        font-size: 1.1rem;
+        margin-bottom: 15px;
+    }
+    
+    .question-points {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 15px;
+    }
+    
+    .answer-option {
+        margin-bottom: 10px;
+    }
+    
+    .answer-option label {
+        display: block;
+        padding: 10px 15px;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .answer-option label:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .answer-option input[type="radio"]:checked + label {
+        background-color: #e9ecef;
+        border-color: #fd7e14;
+    }
+    
+    .form-buttons {
+        margin-top: 30px;
+        text-align: center;
+    }
+    
+    .progress-container {
+        margin-bottom: 20px;
+    }
+    
+    .progress {
+        height: 10px;
+        border-radius: 5px;
+    }
+    
+    .progress-bar {
+        background-color: #fd7e14;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="competition-container">
+    <div class="timer-container">
+        <div>
+            <h5 class="mb-0">{{ competition.title }}</h5>
+        </div>
+        <div class="timer" id="timer">
+            <i class="fas fa-clock"></i> <span id="time-remaining">{{ time_remaining }}</span> phút còn lại
+        </div>
+        <div>
+            <button type="button" class="btn btn-orange" id="submit-button" form="quiz-form">
+                <i class="fas fa-paper-plane"></i> Nộp Bài
+            </button>
+        </div>
+    </div>
+    
+    <div class="progress-container">
+        <div class="progress">
+            <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="progress-bar"></div>
+        </div>
+        <div class="d-flex justify-content-between mt-1">
+            <small>Câu trả lời: <span id="answered-count">0</span>/<span id="total-questions">{{ questions|length }}</span></small>
+            <small>Tiến độ: <span id="progress-percentage">0</span>%</small>
+        </div>
+    </div>
+    
+    <form id="quiz-form" method="post">
+        {% csrf_token %}
+        
+        {% for question in questions %}
+        <div class="question-card" id="question-{{ question.id }}">
+            <div class="question-number">Câu hỏi {{ forloop.counter }}</div>
+            <div class="question-text">{{ question.question_text|linebreaks }}</div>
+            <div class="question-points"><i class="fas fa-star text-orange"></i> {{ question.points }} điểm</div>
+            
+            <div class="answer-options">
+                {% for answer in question.competitionanswer_set.all %}
+                <div class="answer-option">
+                    <input type="radio" name="question_{{ question.id }}" id="answer_{{ answer.id }}" value="{{ answer.id }}" class="answer-radio">
+                    <label for="answer_{{ answer.id }}">{{ answer.answer_text }}</label>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+        
+        <div class="form-buttons">
+            <button type="submit" class="btn btn-orange btn-lg">
+                <i class="fas fa-paper-plane"></i> Nộp Bài
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Modal xác nhận nộp bài -->
+<div class="modal fade" id="submitConfirmModal" tabindex="-1" aria-labelledby="submitConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="submitConfirmModalLabel">Xác nhận nộp bài</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn nộp bài?</p>
+                <p>Số câu đã trả lời: <span id="modal-answered-count">0</span>/<span id="modal-total-questions">{{ questions|length }}</span></p>
+                <p>Thời gian còn lại: <span id="modal-time-remaining">0</span> phút</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-orange" id="confirm-submit">Nộp Bài</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal hết thời gian -->
+<div class="modal fade" id="timeUpModal" tabindex="-1" aria-labelledby="timeUpModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="timeUpModalLabel">Hết thời gian</h5>
+            </div>
+            <div class="modal-body">
+                <p>Thời gian làm bài đã hết. Bài làm của bạn sẽ được nộp tự động.</p>
+                <p>Số câu đã trả lời: <span id="timeup-answered-count">0</span>/<span id="timeup-total-questions">{{ questions|length }}</span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-orange" id="timeup-submit">Nộp Bài</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Thêm CSS cho màu cam
+        const style = document.createElement('style');
+        style.textContent = `
+            .btn-orange {
+                background-color: #fd7e14;
+                border-color: #fd7e14;
+                color: white;
+            }
+            .btn-orange:hover {
+                background-color: #e76b00;
+                border-color: #e76b00;
+                color: white;
+            }
+            .btn-outline-orange {
+                color: #fd7e14;
+                border-color: #fd7e14;
+            }
+            .btn-outline-orange:hover {
+                background-color: #fd7e14;
+                color: white;
+            }
+            .bg-orange {
+                background-color: #fd7e14 !important;
+            }
+            .text-orange {
+                color: #fd7e14 !important;
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Khởi tạo các biến
+        const form = document.getElementById('quiz-form');
+        const submitButton = document.getElementById('submit-button');
+        const confirmSubmitButton = document.getElementById('confirm-submit');
+        const timeupSubmitButton = document.getElementById('timeup-submit');
+        const timerElement = document.getElementById('timer');
+        const timeRemainingElement = document.getElementById('time-remaining');
+        const progressBar = document.getElementById('progress-bar');
+        const answeredCountElement = document.getElementById('answered-count');
+        const totalQuestionsElement = document.getElementById('total-questions');
+        const progressPercentageElement = document.getElementById('progress-percentage');
+        const modalAnsweredCountElement = document.getElementById('modal-answered-count');
+        const modalTotalQuestionsElement = document.getElementById('modal-total-questions');
+        const modalTimeRemainingElement = document.getElementById('modal-time-remaining');
+        const timeupAnsweredCountElement = document.getElementById('timeup-answered-count');
+        const timeupTotalQuestionsElement = document.getElementById('timeup-total-questions');
+        const answerRadios = document.querySelectorAll('.answer-radio');
+        
+        // Khởi tạo modal
+        const submitConfirmModal = new bootstrap.Modal(document.getElementById('submitConfirmModal'));
+        const timeUpModal = new bootstrap.Modal(document.getElementById('timeUpModal'));
+        
+        // Khởi tạo thời gian còn lại
+        let timeRemaining = {{ time_remaining }} * 60; // Chuyển đổi phút thành giây
+        
+        // Cập nhật thời gian còn lại
+        function updateTimer() {
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            
+            timeRemainingElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            modalTimeRemainingElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            
+            // Thêm class cảnh báo khi thời gian còn ít
+            if (timeRemaining <= 300 && timeRemaining > 60) { // 5 phút
+                timerElement.classList.add('warning');
+                timerElement.classList.remove('danger');
+            } else if (timeRemaining <= 60) { // 1 phút
+                timerElement.classList.add('danger');
+                timerElement.classList.remove('warning');
+            }
+            
+            // Hiển thị modal khi hết thời gian
+            if (timeRemaining <= 0) {
+                clearInterval(timerInterval);
+                timeUpModal.show();
+            }
+            
+            timeRemaining--;
+        }
+        
+        // Cập nhật tiến độ
+        function updateProgress() {
+            const totalQuestions = answerRadios.length / {{ question.competitionanswer_set.count }};
+            let answeredQuestions = 0;
+            
+            // Tạo một Set để lưu trữ các câu hỏi đã trả lời
+            const answeredQuestionIds = new Set();
+            
+            // Kiểm tra các câu hỏi đã trả lời
+            answerRadios.forEach(radio => {
+                if (radio.checked) {
+                    // Lấy ID câu hỏi từ name của radio (format: question_X)
+                    const questionId = radio.name.split('_')[1];
+                    answeredQuestionIds.add(questionId);
+                }
+            });
+            
+            answeredQuestions = answeredQuestionIds.size;
+            
+            // Cập nhật số câu đã trả lời
+            answeredCountElement.textContent = answeredQuestions;
+            modalAnsweredCountElement.textContent = answeredQuestions;
+            timeupAnsweredCountElement.textContent = answeredQuestions;
+            
+            // Cập nhật tổng số câu hỏi
+            totalQuestionsElement.textContent = totalQuestions;
+            modalTotalQuestionsElement.textContent = totalQuestions;
+            timeupTotalQuestionsElement.textContent = totalQuestions;
+            
+            // Cập nhật phần trăm tiến độ
+            const progressPercentage = Math.round((answeredQuestions / totalQuestions) * 100);
+            progressPercentageElement.textContent = progressPercentage;
+            progressBar.style.width = `${progressPercentage}%`;
+            progressBar.setAttribute('aria-valuenow', progressPercentage);
+        }
+        
+        // Khởi tạo timer
+        updateTimer();
+        const timerInterval = setInterval(updateTimer, 1000);
+        
+        // Khởi tạo tiến độ
+        updateProgress();
+        
+        // Cập nhật tiến độ khi người dùng trả lời câu hỏi
+        answerRadios.forEach(radio => {
+            radio.addEventListener('change', updateProgress);
+        });
+        
+        // Xử lý nút nộp bài
+        submitButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            submitConfirmModal.show();
+        });
+        
+        // Xử lý nút xác nhận nộp bài
+        confirmSubmitButton.addEventListener('click', function() {
+            form.submit();
+        });
+        
+        // Xử lý nút nộp bài khi hết thời gian
+        timeupSubmitButton.addEventListener('click', function() {
+            form.submit();
+        });
+        
+        // Ngăn chặn người dùng rời khỏi trang
+        window.addEventListener('beforeunload', function(e) {
+            const confirmationMessage = 'Bạn có chắc chắn muốn rời khỏi trang? Bài làm của bạn sẽ không được lưu.';
+            e.returnValue = confirmationMessage;
+            return confirmationMessage;
+        });
+    });
+</script>
+{% endblock %}

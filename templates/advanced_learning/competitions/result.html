@@ -1,0 +1,368 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Kết Quả Thi Đấu - {{ competition.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .result-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .result-header {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+    }
+
+    .competition-title {
+        color: #fd7e14;
+        margin-bottom: 10px;
+    }
+
+    .result-card {
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .result-title {
+        color: #fd7e14;
+        margin-bottom: 15px;
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 10px;
+    }
+
+    .score-container {
+        text-align: center;
+        padding: 20px;
+    }
+
+    .score-value {
+        font-size: 3rem;
+        font-weight: bold;
+        color: #fd7e14;
+    }
+
+    .score-label {
+        font-size: 1.2rem;
+        color: #6c757d;
+    }
+
+    .score-percentage {
+        font-size: 1.5rem;
+        color: #28a745;
+        margin-top: 10px;
+    }
+
+    .score-percentage.low {
+        color: #dc3545;
+    }
+
+    .score-percentage.medium {
+        color: #ffc107;
+    }
+
+    .progress {
+        height: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+
+    .progress-bar {
+        background-color: #fd7e14;
+    }
+
+    .progress-bar.low {
+        background-color: #dc3545;
+    }
+
+    .progress-bar.medium {
+        background-color: #ffc107;
+    }
+
+    .progress-bar.high {
+        background-color: #28a745;
+    }
+
+    .result-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-top: 20px;
+    }
+
+    .result-stat {
+        flex: 1;
+        min-width: 150px;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        text-align: center;
+    }
+
+    .result-stat-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #fd7e14;
+    }
+
+    .result-stat-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+
+    .leaderboard {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+    }
+
+    .leaderboard-title {
+        color: #fd7e14;
+        margin-bottom: 15px;
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 10px;
+    }
+
+    .leaderboard-item {
+        display: flex;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .leaderboard-rank {
+        font-size: 1.2rem;
+        font-weight: bold;
+        width: 40px;
+        text-align: center;
+    }
+
+    .leaderboard-user {
+        flex-grow: 1;
+        padding-left: 10px;
+    }
+
+    .leaderboard-score {
+        font-weight: bold;
+        color: #fd7e14;
+    }
+
+    .rank-1 {
+        color: #ffc107;
+    }
+
+    .rank-2 {
+        color: #adb5bd;
+    }
+
+    .rank-3 {
+        color: #cd7f32;
+    }
+
+    .certificate {
+        background-color: #fff;
+        border: 2px solid #fd7e14;
+        border-radius: 10px;
+        padding: 30px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .certificate-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #fd7e14;
+        margin-bottom: 20px;
+    }
+
+    .certificate-content {
+        font-size: 1.2rem;
+        margin-bottom: 20px;
+    }
+
+    .certificate-signature {
+        font-style: italic;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-chart-bar text-orange"></i> Kết Quả Thi Đấu
+        </h1>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:create_feynman_from_competition' competition_id=competition.id %}" class="btn btn-warning me-2">
+            <i class="fas fa-lightbulb"></i> Tạo Feynman Note
+        </a>
+        <a href="{% url 'advanced_learning:competition_detail' competition_id=competition.id %}" class="btn btn-outline-orange">
+            <i class="fas fa-arrow-left"></i> Quay Lại Chi Tiết
+        </a>
+    </div>
+</div>
+
+<div class="result-container">
+    <div class="result-header">
+        <h2 class="competition-title">{{ competition.title }}</h2>
+        <p>{{ competition.description|truncatechars:100 }}</p>
+    </div>
+
+    <div class="result-card">
+        <h3 class="result-title"><i class="fas fa-star text-orange"></i> Điểm Số Của Bạn</h3>
+
+        <div class="score-container">
+            <div class="score-value">{{ user_participation.score }}</div>
+            <div class="score-label">/ {{ total_possible_score }} điểm</div>
+
+            {% with score_percentage=user_participation.score|floatformat:0|add:0 %}
+            <div class="progress mt-3">
+                <div class="progress-bar {% if score_percentage < 50 %}low{% elif score_percentage < 80 %}medium{% else %}high{% endif %}" role="progressbar" style="width: {{ score_percentage }}%;" aria-valuenow="{{ score_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            <div class="score-percentage {% if score_percentage < 50 %}low{% elif score_percentage < 80 %}medium{% endif %}">
+                {{ score_percentage }}%
+            </div>
+            {% endwith %}
+        </div>
+
+        <div class="result-stats">
+            <div class="result-stat">
+                <div class="result-stat-value">{{ user_participation.rank|default:"N/A" }}</div>
+                <div class="result-stat-label">Xếp hạng</div>
+            </div>
+            <div class="result-stat">
+                <div class="result-stat-value">
+                    {% with time_taken=user_participation.end_time|timeuntil:user_participation.start_time %}
+                        {{ time_taken }}
+                    {% endwith %}
+                </div>
+                <div class="result-stat-label">Thời gian làm bài</div>
+            </div>
+            <div class="result-stat">
+                <div class="result-stat-value">
+                    {% with score_percentage=user_participation.score|floatformat:0|add:0 %}
+                        {% if score_percentage >= 80 %}
+                            Xuất sắc
+                        {% elif score_percentage >= 70 %}
+                            Giỏi
+                        {% elif score_percentage >= 60 %}
+                            Khá
+                        {% elif score_percentage >= 50 %}
+                            Trung bình
+                        {% else %}
+                            Cần cải thiện
+                        {% endif %}
+                    {% endwith %}
+                </div>
+                <div class="result-stat-label">Đánh giá</div>
+            </div>
+        </div>
+    </div>
+
+    {% with score_percentage=user_participation.score|floatformat:0|add:0 %}
+        {% if score_percentage >= 70 %}
+            <div class="certificate">
+                <div class="certificate-title">Chứng Nhận Hoàn Thành</div>
+                <div class="certificate-content">
+                    Chứng nhận {{ request.user.username }} đã hoàn thành xuất sắc<br>
+                    cuộc thi "{{ competition.title }}"<br>
+                    với số điểm {{ user_participation.score }}/{{ total_possible_score }} ({{ score_percentage }}%)
+                </div>
+                <div class="certificate-signature">
+                    Ngày {{ user_participation.end_time|date:"d/m/Y" }}
+                </div>
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="leaderboard">
+        <h3 class="leaderboard-title"><i class="fas fa-crown text-orange"></i> Bảng Xếp Hạng</h3>
+
+        {% if leaderboard %}
+            <div class="leaderboard-list">
+                {% for participant in leaderboard %}
+                <div class="leaderboard-item">
+                    <div class="leaderboard-rank {% if participant.rank == 1 %}rank-1{% elif participant.rank == 2 %}rank-2{% elif participant.rank == 3 %}rank-3{% endif %}">
+                        {% if participant.rank == 1 %}
+                            <i class="fas fa-trophy"></i>
+                        {% elif participant.rank == 2 %}
+                            <i class="fas fa-medal"></i>
+                        {% elif participant.rank == 3 %}
+                            <i class="fas fa-award"></i>
+                        {% else %}
+                            {{ participant.rank }}
+                        {% endif %}
+                    </div>
+                    <div class="leaderboard-user">
+                        {{ participant.user.username }}
+                        {% if participant.user == request.user %}
+                            <span class="badge bg-info">Bạn</span>
+                        {% endif %}
+                    </div>
+                    <div class="leaderboard-score">
+                        {{ participant.score }} điểm
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> Chưa có người tham gia nào hoàn thành cuộc thi này.
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="text-center mt-4 mb-5">
+        <a href="{% url 'advanced_learning:competition_list' %}" class="btn btn-orange btn-lg">
+            <i class="fas fa-list"></i> Xem Các Cuộc Thi Khác
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Thêm CSS cho màu cam
+        const style = document.createElement('style');
+        style.textContent = `
+            .btn-orange {
+                background-color: #fd7e14;
+                border-color: #fd7e14;
+                color: white;
+            }
+            .btn-orange:hover {
+                background-color: #e76b00;
+                border-color: #e76b00;
+                color: white;
+            }
+            .btn-outline-orange {
+                color: #fd7e14;
+                border-color: #fd7e14;
+            }
+            .btn-outline-orange:hover {
+                background-color: #fd7e14;
+                color: white;
+            }
+            .bg-orange {
+                background-color: #fd7e14 !important;
+            }
+            .text-orange {
+                color: #fd7e14 !important;
+            }
+        `;
+        document.head.appendChild(style);
+    });
+</script>
+{% endblock %}

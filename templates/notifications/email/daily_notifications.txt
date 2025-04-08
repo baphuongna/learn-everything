@@ -1,0 +1,31 @@
+Thông Báo Hàng Ngày Từ Nền Tảng Học Tập
+===============================
+
+Xin chào {{ user.username }},
+
+TÓM TẮT THÔNG BÁO HÔM NAY
+--------------------------
+Bạn có {{ notifications|length }} thông báo mới trong 24 giờ qua.
+
+{% for notification in notifications %}
+{{ notification.title }}
+-------------------------------
+{{ notification.message }}
+
+Thời gian: {{ notification.created_at|date:"d/m/Y H:i" }}
+{% if notification.related_feature != 'system' %}• {% if notification.related_feature == 'pomodoro' %}Pomodoro Timer{% elif notification.related_feature == 'cornell' %}Cornell Notes{% elif notification.related_feature == 'mindmap' %}Mind Mapping{% elif notification.related_feature == 'feynman' %}Feynman Technique{% elif notification.related_feature == 'project' %}Project-Based Learning{% elif notification.related_feature == 'exercise' %}Interactive Exercises{% elif notification.related_feature == 'competition' %}Competition Mode{% endif %}{% endif %}
+
+{% if notification.url %}Xem chi tiết: {{ site_url }}{{ notification.url }}{% endif %}
+
+{% endfor %}
+
+Để xem tất cả thông báo của bạn, vui lòng truy cập: {{ site_url }}{% url 'notifications:list' %}
+
+Để quản lý tùy chọn thông báo của bạn, vui lòng truy cập: {{ site_url }}{% url 'notifications:preferences' %}
+
+Trân trọng,
+Đội ngũ Nền Tảng Học Tập
+
+---
+Email này được gửi tự động. Vui lòng không trả lời.
+© {% now "Y" %} Nền Tảng Học Tập. Tất cả các quyền được bảo lưu.

@@ -1,0 +1,63 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Xóa Ghi Chú Cornell - Nền Tảng Học Tập{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-trash text-danger"></i> Xóa Ghi Chú Cornell
+        </h1>
+        <p class="lead">Bạn có chắc chắn muốn xóa ghi chú này không? Hành động này không thể hoàn tác.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:cornell_note_detail' note_id=note.id %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Quay Lại
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Xác nhận xóa</h5>
+            </div>
+            <div class="card-body">
+                <h5>Bạn sắp xóa ghi chú sau:</h5>
+                <p><strong>Tiêu đề:</strong> {{ note.title }}</p>
+                <p>
+                    <strong>Thông tin:</strong>
+                    {% if note.subject %}
+                    <span class="badge bg-primary">{{ note.subject.name }}</span>
+                    {% endif %}
+                    {% if note.topic %}
+                    <span class="badge bg-secondary">{{ note.topic.name }}</span>
+                    {% endif %}
+                    {% if note.lesson %}
+                    <span class="badge bg-info">{{ note.lesson.title }}</span>
+                    {% endif %}
+                </p>
+                <p><strong>Ngày tạo:</strong> {{ note.created_at|date:"d/m/Y H:i" }}</p>
+                
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-exclamation-circle"></i> Cảnh báo: Khi xóa ghi chú này, tất cả nội dung sẽ bị mất vĩnh viễn và không thể khôi phục.
+                </div>
+                
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-center">
+                        <button type="submit" class="btn btn-danger btn-lg">
+                            <i class="fas fa-trash"></i> Xác Nhận Xóa
+                        </button>
+                        <a href="{% url 'advanced_learning:cornell_note_detail' note_id=note.id %}" class="btn btn-outline-secondary btn-lg ms-3">
+                            <i class="fas fa-times"></i> Hủy
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

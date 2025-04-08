@@ -1,0 +1,133 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }} - Nền Tảng Học Tập{% endblock %}
+
+{% block extra_css %}
+<style>
+    .feynman-form-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    .form-section {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+    }
+    
+    .form-section h5 {
+        margin-bottom: 15px;
+        color: #fd7e14;
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 10px;
+    }
+    
+    .form-buttons {
+        margin-top: 30px;
+        text-align: center;
+    }
+    
+    .step-number {
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+        background-color: #fd7e14;
+        color: white;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 30px;
+        margin-right: 10px;
+        font-weight: bold;
+    }
+    
+    .step-description {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-top: 5px;
+        margin-bottom: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-lightbulb text-warning"></i> {{ title }}
+        </h1>
+        <p class="lead">Sử dụng phương pháp Feynman để hiểu sâu sắc các khái niệm phức tạp.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:feynman_note_list' %}" class="btn btn-outline-warning">
+            <i class="fas fa-arrow-left"></i> Quay Lại Danh Sách
+        </a>
+    </div>
+</div>
+
+<div class="feynman-form-container">
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-section">
+            <h5><i class="fas fa-heading"></i> Thông Tin Chung</h5>
+            <div class="row">
+                <div class="col-md-8 mb-3">
+                    {{ form.title|as_crispy_field }}
+                </div>
+                <div class="col-md-4 mb-3">
+                    {{ form.subject|as_crispy_field }}
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <h5>
+                <span class="step-number">1</span>
+                Chọn Một Khái Niệm
+            </h5>
+            <p class="step-description">Xác định khái niệm hoặc chủ đề bạn muốn hiểu sâu sắc.</p>
+            {{ form.concept|as_crispy_field }}
+        </div>
+        
+        <div class="form-section">
+            <h5>
+                <span class="step-number">2</span>
+                Giải Thích Bằng Ngôn Ngữ Đơn Giản
+            </h5>
+            <p class="step-description">Viết ra giải thích về khái niệm đó bằng ngôn ngữ đơn giản như thể bạn đang dạy cho một đứa trẻ 12 tuổi.</p>
+            {{ form.explanation|as_crispy_field }}
+        </div>
+        
+        <div class="form-section">
+            <h5>
+                <span class="step-number">3</span>
+                Xác Định Lỗ Hổng Kiến Thức
+            </h5>
+            <p class="step-description">Xem xét giải thích của bạn và xác định những phần bạn còn chưa hiểu rõ hoặc không thể giải thích một cách đơn giản.</p>
+            {{ form.gaps_identified|as_crispy_field }}
+        </div>
+        
+        <div class="form-section">
+            <h5>
+                <span class="step-number">4</span>
+                Cải Thiện Và Đơn Giản Hóa
+            </h5>
+            <p class="step-description">Quay lại tài liệu gốc, học lại những phần còn thiếu, và cải thiện giải thích của bạn cho đến khi bạn có thể diễn đạt khái niệm một cách đơn giản và rõ ràng.</p>
+            {{ form.refined_explanation|as_crispy_field }}
+        </div>
+        
+        <div class="form-buttons">
+            <button type="submit" class="btn btn-warning btn-lg">
+                <i class="fas fa-save"></i> {{ button_text }}
+            </button>
+            <a href="{% url 'advanced_learning:feynman_note_list' %}" class="btn btn-outline-secondary btn-lg ms-2">
+                <i class="fas fa-times"></i> Hủy
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

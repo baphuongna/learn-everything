@@ -1,0 +1,173 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Phần Thưởng{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-gift text-success"></i> Phần Thưởng
+            </h1>
+            <p class="lead">Đổi điểm thưởng lấy các phần thưởng hấp dẫn</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'achievements:dashboard' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Quay Lại
+            </a>
+        </div>
+    </div>
+
+    <!-- Thông tin điểm thưởng -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h3 class="mb-0">
+                                <i class="fas fa-coins text-warning"></i> Điểm Thưởng: <span class="text-primary">{{ reward_point.points }}</span>
+                            </h3>
+                            <p class="text-muted mb-0">Tổng điểm đã nhận: {{ reward_point.lifetime_points }}</p>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <a href="{% url 'achievements:point_history' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-history"></i> Lịch Sử Điểm
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phần thưởng có thể đổi -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-gift"></i> Phần Thưởng Có Thể Đổi</h5>
+                </div>
+                <div class="card-body">
+                    {% if available_rewards %}
+                        <div class="row">
+                            {% for reward in available_rewards %}
+                                <div class="col-md-4 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-header bg-light">
+                                            <h5 class="mb-0">{{ reward.name }}</h5>
+                                        </div>
+                                        <div class="card-body text-center">
+                                            <div class="mb-3">
+                                                <i class="{{ reward.get_icon_class }}" style="font-size: 4rem; color: #28a745;"></i>
+                                            </div>
+                                            <p class="card-text">{{ reward.description }}</p>
+                                            <div class="alert alert-primary mb-3">
+                                                <i class="fas fa-coins me-2"></i> {{ reward.points_required }} điểm
+                                            </div>
+                                            <form method="post" action="{% url 'achievements:redeem_reward' reward.id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-success w-100" {% if reward_point.points < reward.points_required %}disabled{% endif %}>
+                                                    <i class="fas fa-exchange-alt me-2"></i> Đổi Ngay
+                                                </button>
+                                                {% if reward_point.points < reward.points_required %}
+                                                    <div class="small text-danger mt-2">
+                                                        <i class="fas fa-exclamation-circle"></i> Bạn cần thêm {{ reward.points_required|add:"-"|add:reward_point.points }} điểm
+                                                    </div>
+                                                {% endif %}
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> Hiện tại không có phần thưởng nào có thể đổi.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phần thưởng của tôi -->
+    <div class="row">
+        <!-- Phần thưởng chưa sử dụng -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-box-open"></i> Phần Thưởng Chưa Sử Dụng</h5>
+                </div>
+                <div class="card-body">
+                    {% if unused_rewards %}
+                        <div class="list-group">
+                            {% for user_reward in unused_rewards %}
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">
+                                            <i class="{{ user_reward.reward.get_icon_class }} me-2"></i>
+                                            {{ user_reward.reward.name }}
+                                        </h5>
+                                        <small class="text-muted">{{ user_reward.redeemed_at|date:"d/m/Y" }}</small>
+                                    </div>
+                                    <p class="mb-1">{{ user_reward.reward.description }}</p>
+                                    <div class="d-flex justify-content-between align-items-center mt-2">
+                                        <span class="badge bg-primary">{{ user_reward.reward.points_required }} điểm</span>
+                                        <form method="post" action="{% url 'achievements:use_reward' user_reward.id %}">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-success">
+                                                <i class="fas fa-check me-1"></i> Sử Dụng
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> Bạn chưa có phần thưởng nào chưa sử dụng.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Phần thưởng đã sử dụng -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-box"></i> Phần Thưởng Đã Sử Dụng</h5>
+                </div>
+                <div class="card-body">
+                    {% if used_rewards %}
+                        <div class="list-group">
+                            {% for user_reward in used_rewards %}
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">
+                                            <i class="{{ user_reward.reward.get_icon_class }} me-2"></i>
+                                            {{ user_reward.reward.name }}
+                                        </h5>
+                                        <small class="text-muted">{{ user_reward.redeemed_at|date:"d/m/Y" }}</small>
+                                    </div>
+                                    <p class="mb-1">{{ user_reward.reward.description }}</p>
+                                    <div class="d-flex justify-content-between align-items-center mt-2">
+                                        <span class="badge bg-primary">{{ user_reward.reward.points_required }} điểm</span>
+                                        <small class="text-muted">Sử dụng: {{ user_reward.used_at|date:"d/m/Y H:i" }}</small>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> Bạn chưa có phần thưởng nào đã sử dụng.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,387 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Tổng Quan Mục Tiêu Học Tập{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-bullseye text-primary"></i> Tổng Quan Mục Tiêu Học Tập
+            </h1>
+            <p class="lead">Theo dõi và quản lý các mục tiêu học tập của bạn</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'learning_goals:goal_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Tạo Mục Tiêu Mới
+            </a>
+            <a href="{% url 'learning_goals:goal_list' %}" class="btn btn-outline-primary ms-2">
+                <i class="fas fa-list"></i> Xem Tất Cả
+            </a>
+        </div>
+    </div>
+
+    <!-- Thống kê tổng quan -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Tổng Số Mục Tiêu</h5>
+                    <h2 class="display-4">{{ total_goals }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Đã Hoàn Thành</h5>
+                    <h2 class="display-4">{{ completed_goals }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Đang Thực Hiện</h5>
+                    <h2 class="display-4">{{ active_goals }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Quá Hạn</h5>
+                    <h2 class="display-4">{{ overdue_goals }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tỷ lệ hoàn thành -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Tỷ Lệ Hoàn Thành Mục Tiêu</h5>
+                </div>
+                <div class="card-body">
+                    <div class="progress" style="height: 30px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ completion_rate }}%;" aria-valuenow="{{ completion_rate }}" aria-valuemin="0" aria-valuemax="100">{{ completion_rate }}%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Mục tiêu đang hoạt động -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-tasks"></i> Mục Tiêu Đang Hoạt Động</h5>
+                </div>
+                <div class="card-body">
+                    {% if active_goals_list %}
+                        <div class="list-group">
+                            {% for goal in active_goals_list %}
+                                <a href="{% url 'learning_goals:goal_detail' goal_id=goal.id %}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">{{ goal.title }}</h5>
+                                        <small>{{ goal.get_goal_type_display }}</small>
+                                    </div>
+                                    <div class="progress mt-2 mb-1" style="height: 10px;">
+                                        <div class="progress-bar {% if goal.is_behind_schedule %}bg-warning{% else %}bg-success{% endif %}" role="progressbar" style="width: {{ goal.progress_percentage }}%;" aria-valuenow="{{ goal.progress_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <small>Tiến độ: {{ goal.progress_percentage }}%</small>
+                                        <small>Còn {{ goal.days_remaining }} ngày</small>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                        {% if active_goals > 5 %}
+                            <div class="text-center mt-3">
+                                <a href="{% url 'learning_goals:goal_list' %}?status=in_progress" class="btn btn-sm btn-outline-primary">Xem tất cả</a>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> Bạn chưa có mục tiêu đang hoạt động nào.
+                            <a href="{% url 'learning_goals:goal_create' %}" class="alert-link">Tạo mục tiêu mới</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Mục tiêu gần đến hạn -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-clock"></i> Mục Tiêu Gần Đến Hạn</h5>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_deadlines %}
+                        <div class="list-group">
+                            {% for goal in upcoming_deadlines %}
+                                <a href="{% url 'learning_goals:goal_detail' goal_id=goal.id %}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">{{ goal.title }}</h5>
+                                        <small class="{% if goal.days_remaining < 3 %}text-danger{% elif goal.days_remaining < 7 %}text-warning{% else %}text-muted{% endif %}">
+                                            {% if goal.days_remaining == 0 %}
+                                                <strong>Hôm nay</strong>
+                                            {% elif goal.days_remaining == 1 %}
+                                                <strong>Ngày mai</strong>
+                                            {% else %}
+                                                Còn {{ goal.days_remaining }} ngày
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                    <div class="progress mt-2 mb-1" style="height: 10px;">
+                                        <div class="progress-bar {% if goal.is_behind_schedule %}bg-warning{% else %}bg-success{% endif %}" role="progressbar" style="width: {{ goal.progress_percentage }}%;" aria-valuenow="{{ goal.progress_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                    <small>Tiến độ: {{ goal.progress_percentage }}%</small>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> Bạn không có mục tiêu nào sắp đến hạn.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Biểu đồ thống kê mục tiêu theo danh mục -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Mục Tiêu Theo Danh Mục</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="categoryChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Biểu đồ thống kê hoàn thành mục tiêu -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Hoàn Thành Mục Tiêu</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <select id="completionPeriod" class="form-select form-select-sm">
+                            <option value="week">Theo tuần</option>
+                            <option value="month" selected>Theo tháng</option>
+                            <option value="year">Theo năm</option>
+                        </select>
+                    </div>
+                    <canvas id="completionChart" width="400" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Mục tiêu theo loại -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> Mục Tiêu Theo Thời Gian</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h3>{{ daily_goals.count }}</h3>
+                                    <p class="mb-0">Hàng ngày</p>
+                                </div>
+                            </div>
+                            <a href="{% url 'learning_goals:goal_list' %}?type=daily" class="btn btn-sm btn-outline-primary">Xem</a>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h3>{{ weekly_goals.count }}</h3>
+                                    <p class="mb-0">Hàng tuần</p>
+                                </div>
+                            </div>
+                            <a href="{% url 'learning_goals:goal_list' %}?type=weekly" class="btn btn-sm btn-outline-primary">Xem</a>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h3>{{ monthly_goals.count }}</h3>
+                                    <p class="mb-0">Hàng tháng</p>
+                                </div>
+                            </div>
+                            <a href="{% url 'learning_goals:goal_list' %}?type=monthly" class="btn btn-sm btn-outline-primary">Xem</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mục tiêu mới hoàn thành -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-check-circle"></i> Mục Tiêu Mới Hoàn Thành</h5>
+                </div>
+                <div class="card-body">
+                    {% if recently_completed %}
+                        <div class="list-group">
+                            {% for goal in recently_completed %}
+                                <a href="{% url 'learning_goals:goal_detail' goal_id=goal.id %}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">{{ goal.title }}</h5>
+                                        <small class="text-muted">{{ goal.updated_at|date:"d/m/Y" }}</small>
+                                    </div>
+                                    <p class="mb-1">{{ goal.get_category_display }}</p>
+                                </a>
+                            {% endfor %}
+                        </div>
+                        {% if completed_goals > 5 %}
+                            <div class="text-center mt-3">
+                                <a href="{% url 'learning_goals:goal_list' %}?status=completed" class="btn btn-sm btn-outline-success">Xem tất cả</a>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> Bạn chưa hoàn thành mục tiêu nào.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Biểu đồ thống kê mục tiêu theo danh mục
+        fetch('{% url "learning_goals:api_goal_category_stats" %}')
+            .then(response => response.json())
+            .then(data => {
+                const ctxCategory = document.getElementById('categoryChart').getContext('2d');
+                const categoryChart = new Chart(ctxCategory, {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels,
+                        datasets: data.datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                stacked: true,
+                                title: {
+                                    display: true,
+                                    text: 'Số lượng mục tiêu'
+                                }
+                            },
+                            x: {
+                                stacked: true,
+                                title: {
+                                    display: true,
+                                    text: 'Danh mục'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Lỗi khi lấy dữ liệu thống kê danh mục:', error);
+                document.getElementById('categoryChart').parentNode.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i> Không thể tải biểu đồ thống kê danh mục.
+                    </div>
+                `;
+            });
+
+        // Biểu đồ thống kê hoàn thành mục tiêu
+        function loadCompletionChart(period = 'month') {
+            fetch(`{% url "learning_goals:api_goal_completion_stats" %}?period=${period}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Xóa biểu đồ cũ nếu có
+                    const completionChartElement = document.getElementById('completionChart');
+                    if (window.completionChart) {
+                        window.completionChart.destroy();
+                    }
+
+                    // Tạo biểu đồ mới
+                    const ctxCompletion = completionChartElement.getContext('2d');
+                    window.completionChart = new Chart(ctxCompletion, {
+                        type: 'bar',
+                        data: {
+                            labels: data.labels,
+                            datasets: data.datasets
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    title: {
+                                        display: true,
+                                        text: 'Số lượng mục tiêu hoàn thành'
+                                    }
+                                },
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'Thời gian'
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            }
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Lỗi khi lấy dữ liệu thống kê hoàn thành:', error);
+                    document.getElementById('completionChart').parentNode.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle me-2"></i> Không thể tải biểu đồ thống kê hoàn thành.
+                        </div>
+                    `;
+                });
+        }
+
+        // Tải biểu đồ hoàn thành mục tiêu lần đầu
+        loadCompletionChart();
+
+        // Xử lý sự kiện thay đổi khoảng thời gian
+        document.getElementById('completionPeriod').addEventListener('change', function() {
+            loadCompletionChart(this.value);
+        });
+    });
+</script>
+{% endblock %}

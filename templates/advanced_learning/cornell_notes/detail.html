@@ -1,0 +1,155 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ note.title }} - Ghi Chú Cornell{% endblock %}
+
+{% block extra_css %}
+<style>
+    .cornell-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    .cornell-layout {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        grid-template-rows: auto 1fr auto;
+        grid-template-areas:
+            "header header"
+            "cue main"
+            "summary summary";
+        gap: 15px;
+        margin-top: 20px;
+    }
+    
+    .cornell-header {
+        grid-area: header;
+    }
+    
+    .cornell-cue {
+        grid-area: cue;
+    }
+    
+    .cornell-main {
+        grid-area: main;
+    }
+    
+    .cornell-summary {
+        grid-area: summary;
+    }
+    
+    .note-section {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    
+    .note-section h5 {
+        margin-bottom: 15px;
+        color: #007bff;
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 10px;
+    }
+    
+    .note-content {
+        white-space: pre-wrap;
+        line-height: 1.6;
+    }
+    
+    .note-meta {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .action-buttons {
+        margin-top: 30px;
+        text-align: center;
+    }
+    
+    @media print {
+        .no-print {
+            display: none;
+        }
+        
+        body {
+            font-size: 12pt;
+        }
+        
+        .note-section {
+            box-shadow: none;
+            border: 1px solid #dee2e6;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4 no-print">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-edit text-primary"></i> {{ note.title }}
+        </h1>
+        <p class="note-meta">
+            {% if note.subject %}
+            <span class="badge bg-primary">{{ note.subject.name }}</span>
+            {% endif %}
+            {% if note.topic %}
+            <span class="badge bg-secondary">{{ note.topic.name }}</span>
+            {% endif %}
+            {% if note.lesson %}
+            <span class="badge bg-info">{{ note.lesson.title }}</span>
+            {% endif %}
+            <span class="ms-2"><i class="far fa-calendar-alt"></i> Tạo: {{ note.created_at|date:"d/m/Y H:i" }}</span>
+            {% if note.updated_at != note.created_at %}
+            <span class="ms-2"><i class="far fa-edit"></i> Cập nhật: {{ note.updated_at|date:"d/m/Y H:i" }}</span>
+            {% endif %}
+        </p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:cornell_note_list' %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Quay Lại Danh Sách
+        </a>
+        <button onclick="window.print()" class="btn btn-outline-secondary ms-2">
+            <i class="fas fa-print"></i> In
+        </button>
+    </div>
+</div>
+
+<div class="cornell-container">
+    <div class="cornell-layout">
+        <div class="note-section cornell-header">
+            <h5><i class="fas fa-heading"></i> {{ note.title }}</h5>
+            <p class="note-meta">
+                {% if note.subject %}Chủ đề: <strong>{{ note.subject.name }}</strong>{% endif %}
+                {% if note.topic %} | Chủ đề con: <strong>{{ note.topic.name }}</strong>{% endif %}
+                {% if note.lesson %} | Bài học: <strong>{{ note.lesson.title }}</strong>{% endif %}
+            </p>
+        </div>
+        
+        <div class="note-section cornell-cue">
+            <h5><i class="fas fa-question-circle"></i> Cột Gợi Ý</h5>
+            <div class="note-content">{{ note.cue_column|linebreaks }}</div>
+        </div>
+        
+        <div class="note-section cornell-main">
+            <h5><i class="fas fa-pen"></i> Ghi Chú Chính</h5>
+            <div class="note-content">{{ note.main_notes|linebreaks }}</div>
+        </div>
+        
+        <div class="note-section cornell-summary">
+            <h5><i class="fas fa-compress-alt"></i> Tóm Tắt</h5>
+            <div class="note-content">{{ note.summary|linebreaks }}</div>
+        </div>
+    </div>
+    
+    <div class="action-buttons no-print">
+        <a href="{% url 'advanced_learning:cornell_note_edit' note_id=note.id %}" class="btn btn-primary">
+            <i class="fas fa-edit"></i> Chỉnh Sửa
+        </a>
+        <a href="{% url 'advanced_learning:cornell_note_delete' note_id=note.id %}" class="btn btn-danger ms-2">
+            <i class="fas fa-trash"></i> Xóa
+        </a>
+    </div>
+</div>
+{% endblock %}

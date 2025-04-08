@@ -1,0 +1,203 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Sơ Đồ Tư Duy - Nền Tảng Học Tập{% endblock %}
+
+{% block extra_css %}
+<style>
+    .mindmap-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        margin-bottom: 15px;
+        border-left: 4px solid #28a745;
+    }
+    
+    .mindmap-card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .mindmap-title {
+        font-weight: 600;
+        color: #28a745;
+    }
+    
+    .mindmap-meta {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    
+    .mindmap-preview {
+        height: 100px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    
+    .mindmap-preview img {
+        max-width: 100%;
+        max-height: 100%;
+    }
+    
+    .search-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: #dee2e6;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-project-diagram text-success"></i> Sơ Đồ Tư Duy
+        </h1>
+        <p class="lead">Tạo sơ đồ tư duy trực quan để tổ chức và kết nối các ý tưởng, khái niệm một cách hiệu quả.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:mind_map_create' %}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Tạo Sơ Đồ Mới
+        </a>
+    </div>
+</div>
+
+<!-- Tìm kiếm và lọc -->
+<div class="card search-card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <input type="text" class="form-control" name="search" placeholder="Tìm kiếm sơ đồ tư duy..." value="{{ search_query }}">
+                    <button class="btn btn-success" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select class="form-select" name="subject" onchange="this.form.submit()">
+                    <option value="">Tất cả chủ đề</option>
+                    {% for subject in subjects %}
+                    <option value="{{ subject.id }}" {% if selected_subject == subject.id|stringformat:"i" %}selected{% endif %}>
+                        {{ subject.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                {% if search_query or selected_subject %}
+                <a href="{% url 'advanced_learning:mind_map_list' %}" class="btn btn-outline-secondary w-100">
+                    <i class="fas fa-times"></i> Xóa bộ lọc
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Danh sách sơ đồ tư duy -->
+<div class="row">
+    <div class="col-md-12">
+        {% if mind_maps %}
+            {% for mind_map in mind_maps %}
+            <div class="card mindmap-card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5 class="mindmap-title">{{ mind_map.title }}</h5>
+                            <p class="mindmap-meta">
+                                {% if mind_map.subject %}
+                                <span class="badge bg-primary">{{ mind_map.subject.name }}</span>
+                                {% endif %}
+                                <span class="ms-2"><i class="far fa-calendar-alt"></i> {{ mind_map.created_at|date:"d/m/Y H:i" }}</span>
+                            </p>
+                            <p class="card-text">
+                                <strong>Chủ đề trung tâm:</strong> {{ mind_map.central_topic }}
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-end d-flex align-items-center justify-content-end">
+                            <a href="{% url 'advanced_learning:mind_map_detail' map_id=mind_map.id %}" class="btn btn-outline-success me-2">
+                                <i class="fas fa-eye"></i> Xem
+                            </a>
+                            <a href="{% url 'advanced_learning:mind_map_edit' map_id=mind_map.id %}" class="btn btn-outline-secondary me-2">
+                                <i class="fas fa-edit"></i> Sửa
+                            </a>
+                            <a href="{% url 'advanced_learning:mind_map_delete' map_id=mind_map.id %}" class="btn btn-outline-danger">
+                                <i class="fas fa-trash"></i> Xóa
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="card">
+                <div class="card-body empty-state">
+                    <i class="fas fa-project-diagram"></i>
+                    <h4>Không có sơ đồ tư duy nào</h4>
+                    <p class="text-muted">Bạn chưa có sơ đồ tư duy nào. Hãy tạo sơ đồ đầu tiên của bạn!</p>
+                    <a href="{% url 'advanced_learning:mind_map_create' %}" class="btn btn-success mt-3">
+                        <i class="fas fa-plus"></i> Tạo Sơ Đồ Mới
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Thông tin về Mind Mapping -->
+<div class="row mt-5">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Về Sơ Đồ Tư Duy</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Sơ đồ tư duy là gì?</h5>
+                        <p>Sơ đồ tư duy (Mind Map) là một công cụ trực quan để tổ chức thông tin. Nó bắt đầu với một ý tưởng trung tâm và phát triển thành các nhánh phụ, giúp bạn thấy được mối quan hệ giữa các khái niệm và ý tưởng.</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Cách tạo sơ đồ tư duy hiệu quả:</h5>
+                        <ol>
+                            <li><strong>Bắt đầu từ trung tâm:</strong> Đặt ý tưởng chính ở giữa.</li>
+                            <li><strong>Sử dụng từ khóa:</strong> Mỗi nhánh chỉ nên có một từ khóa hoặc cụm từ ngắn gọn.</li>
+                            <li><strong>Sử dụng màu sắc:</strong> Màu sắc giúp phân loại và nhóm các ý tưởng liên quan.</li>
+                            <li><strong>Thêm hình ảnh:</strong> Hình ảnh giúp tăng cường trí nhớ và sự sáng tạo.</li>
+                            <li><strong>Tạo kết nối:</strong> Kết nối các ý tưởng liên quan với nhau.</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <h5>Lợi ích:</h5>
+                        <ul>
+                            <li>Giúp tổ chức thông tin một cách trực quan</li>
+                            <li>Tăng cường khả năng ghi nhớ và hiểu biết</li>
+                            <li>Phát triển tư duy sáng tạo và giải quyết vấn đề</li>
+                            <li>Cải thiện khả năng tổng hợp và phân tích thông tin</li>
+                            <li>Giúp nhìn thấy bức tranh tổng thể và mối quan hệ giữa các ý tưởng</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

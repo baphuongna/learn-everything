@@ -1,0 +1,350 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Thông Báo - Nền Tảng Học Tập{% endblock %}
+
+{% block extra_css %}
+<style>
+    .notifications-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .notification-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        margin-bottom: 15px;
+        overflow: hidden;
+    }
+    
+    .notification-card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .notification-header {
+        padding: 15px;
+        border-bottom: 1px solid #f5f5f5;
+    }
+    
+    .notification-title {
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    .notification-meta {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    
+    .notification-body {
+        padding: 15px;
+    }
+    
+    .notification-message {
+        margin-bottom: 15px;
+    }
+    
+    .notification-actions {
+        display: flex;
+        justify-content: flex-end;
+    }
+    
+    .notification-unread {
+        border-left: 4px solid #007bff;
+        background-color: rgba(0, 123, 255, 0.05);
+    }
+    
+    .notification-read {
+        border-left: 4px solid #6c757d;
+    }
+    
+    .notification-type-info {
+        border-left-color: #007bff;
+    }
+    
+    .notification-type-success {
+        border-left-color: #28a745;
+    }
+    
+    .notification-type-warning {
+        border-left-color: #ffc107;
+    }
+    
+    .notification-type-danger {
+        border-left-color: #dc3545;
+    }
+    
+    .notification-icon {
+        margin-right: 10px;
+        font-size: 1.2rem;
+    }
+    
+    .notification-icon-info {
+        color: #007bff;
+    }
+    
+    .notification-icon-success {
+        color: #28a745;
+    }
+    
+    .notification-icon-warning {
+        color: #ffc107;
+    }
+    
+    .notification-icon-danger {
+        color: #dc3545;
+    }
+    
+    .notification-feature-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 10px;
+    }
+    
+    .notification-feature-pomodoro {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+    
+    .notification-feature-cornell {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+    }
+    
+    .notification-feature-mindmap {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+    
+    .notification-feature-feynman {
+        background-color: rgba(255, 193, 7, 0.1);
+        color: #ffc107;
+    }
+    
+    .notification-feature-project {
+        background-color: rgba(23, 162, 184, 0.1);
+        color: #17a2b8;
+    }
+    
+    .notification-feature-exercise {
+        background-color: rgba(111, 66, 193, 0.1);
+        color: #6f42c1;
+    }
+    
+    .notification-feature-competition {
+        background-color: rgba(253, 126, 20, 0.1);
+        color: #fd7e14;
+    }
+    
+    .notification-feature-system {
+        background-color: rgba(108, 117, 125, 0.1);
+        color: #6c757d;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: #dee2e6;
+        margin-bottom: 20px;
+    }
+    
+    .pagination {
+        margin-top: 20px;
+        justify-content: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="notifications-container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-bell text-primary"></i> Thông Báo
+                {% if unread_count > 0 %}
+                    <span class="badge bg-danger">{{ unread_count }}</span>
+                {% endif %}
+            </h1>
+            <p class="lead">Quản lý thông báo và cập nhật từ hệ thống học tập nâng cao.</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="btn-group">
+                <a href="{% url 'advanced_learning:notifications' %}?mark_all_read=1" class="btn btn-outline-primary">
+                    <i class="fas fa-check-double"></i> Đánh Dấu Tất Cả Đã Đọc
+                </a>
+                <a href="{% url 'advanced_learning:notifications' %}?delete_read=1" class="btn btn-outline-danger">
+                    <i class="fas fa-trash"></i> Xóa Đã Đọc
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    {% if notifications %}
+        {% for notification in notifications %}
+            <div class="notification-card {% if notification.is_read %}notification-read{% else %}notification-unread{% endif %} notification-type-{{ notification.notification_type }}">
+                <div class="notification-header d-flex align-items-center">
+                    <div class="notification-feature-icon notification-feature-{{ notification.related_feature }}">
+                        {% if notification.related_feature == 'pomodoro' %}
+                            <i class="fas fa-clock"></i>
+                        {% elif notification.related_feature == 'cornell' %}
+                            <i class="fas fa-sticky-note"></i>
+                        {% elif notification.related_feature == 'mindmap' %}
+                            <i class="fas fa-project-diagram"></i>
+                        {% elif notification.related_feature == 'feynman' %}
+                            <i class="fas fa-lightbulb"></i>
+                        {% elif notification.related_feature == 'project' %}
+                            <i class="fas fa-tasks"></i>
+                        {% elif notification.related_feature == 'exercise' %}
+                            <i class="fas fa-laptop-code"></i>
+                        {% elif notification.related_feature == 'competition' %}
+                            <i class="fas fa-trophy"></i>
+                        {% else %}
+                            <i class="fas fa-info-circle"></i>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <div class="notification-title">
+                            {% if notification.notification_type == 'info' %}
+                                <i class="fas fa-info-circle notification-icon notification-icon-info"></i>
+                            {% elif notification.notification_type == 'success' %}
+                                <i class="fas fa-check-circle notification-icon notification-icon-success"></i>
+                            {% elif notification.notification_type == 'warning' %}
+                                <i class="fas fa-exclamation-triangle notification-icon notification-icon-warning"></i>
+                            {% elif notification.notification_type == 'danger' %}
+                                <i class="fas fa-exclamation-circle notification-icon notification-icon-danger"></i>
+                            {% endif %}
+                            {{ notification.title }}
+                        </div>
+                        <div class="notification-meta">
+                            {{ notification.created_at|date:"d/m/Y H:i" }}
+                            {% if not notification.is_read %}
+                                <span class="badge bg-primary">Mới</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="notification-body">
+                    <div class="notification-message">{{ notification.message }}</div>
+                    <div class="notification-actions">
+                        {% if notification.url %}
+                            <a href="{% url 'advanced_learning:mark_notification_read' notification.id %}" class="btn btn-sm btn-primary me-2">
+                                <i class="fas fa-external-link-alt"></i> Xem Chi Tiết
+                            </a>
+                        {% endif %}
+                        <a href="{% url 'advanced_learning:delete_notification' notification.id %}" class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-trash"></i> Xóa
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+        
+        <!-- Phân trang -->
+        {% if notifications.has_other_pages %}
+            <nav aria-label="Phân trang">
+                <ul class="pagination">
+                    {% if notifications.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1" aria-label="Đầu tiên">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ notifications.previous_page_number }}" aria-label="Trước">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" aria-label="Đầu tiên">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" aria-label="Trước">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for i in notifications.paginator.page_range %}
+                        {% if notifications.number == i %}
+                            <li class="page-item active">
+                                <a class="page-link" href="#">{{ i }}</a>
+                            </li>
+                        {% elif i > notifications.number|add:'-3' and i < notifications.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if notifications.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ notifications.next_page_number }}" aria-label="Tiếp">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ notifications.paginator.num_pages }}" aria-label="Cuối cùng">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" aria-label="Tiếp">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" aria-label="Cuối cùng">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="card">
+            <div class="card-body empty-state">
+                <i class="fas fa-bell-slash"></i>
+                <h4>Không có thông báo nào</h4>
+                <p class="text-muted">Bạn sẽ nhận được thông báo khi có cập nhật mới về các tính năng học tập nâng cao.</p>
+                <a href="{% url 'advanced_learning:dashboard' %}" class="btn btn-primary mt-3">
+                    <i class="fas fa-tachometer-alt"></i> Quay Lại Tổng Quan
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tự động đánh dấu thông báo là đã đọc khi người dùng xem trang
+        const unreadNotifications = document.querySelectorAll('.notification-unread');
+        if (unreadNotifications.length > 0) {
+            setTimeout(function() {
+                fetch('{% url "advanced_learning:notifications" %}?mark_all_read=1', {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+            }, 5000); // Đánh dấu đã đọc sau 5 giây
+        }
+    });
+</script>
+{% endblock %}

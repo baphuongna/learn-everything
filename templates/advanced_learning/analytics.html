@@ -1,0 +1,512 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Phân Tích Học Tập - Nền Tảng Học Tập{% endblock %}
+
+{% block extra_css %}
+<style>
+    .analytics-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .stats-card {
+        border-radius: 15px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stats-card .card-body {
+        padding: 20px;
+    }
+    
+    .stats-icon {
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+    }
+    
+    .stats-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+    }
+    
+    .stats-label {
+        font-size: 1rem;
+        color: #6c757d;
+    }
+    
+    .chart-card {
+        border-radius: 15px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    
+    .chart-header {
+        padding: 15px 20px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .chart-body {
+        padding: 20px;
+        height: 300px;
+    }
+    
+    .trend-indicator {
+        display: inline-flex;
+        align-items: center;
+        margin-left: 10px;
+        font-size: 0.9rem;
+    }
+    
+    .trend-up {
+        color: #28a745;
+    }
+    
+    .trend-down {
+        color: #dc3545;
+    }
+    
+    .trend-neutral {
+        color: #6c757d;
+    }
+    
+    .feature-usage-card {
+        border-radius: 15px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    
+    .feature-usage-header {
+        padding: 15px 20px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .feature-usage-body {
+        padding: 20px;
+    }
+    
+    .feature-item {
+        margin-bottom: 15px;
+    }
+    
+    .feature-label {
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    .feature-progress {
+        height: 8px;
+        border-radius: 4px;
+    }
+    
+    .progress-pomodoro {
+        background-color: #dc3545;
+    }
+    
+    .progress-cornell {
+        background-color: #0d6efd;
+    }
+    
+    .progress-mindmap {
+        background-color: #198754;
+    }
+    
+    .progress-feynman {
+        background-color: #ffc107;
+    }
+    
+    .progress-project {
+        background-color: #17a2b8;
+    }
+    
+    .progress-competition {
+        background-color: #fd7e14;
+    }
+    
+    .recommendation-card {
+        border-radius: 15px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    
+    .recommendation-header {
+        padding: 15px 20px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .recommendation-body {
+        padding: 20px;
+    }
+    
+    .recommendation-item {
+        margin-bottom: 15px;
+        padding: 15px;
+        border-radius: 10px;
+        background-color: #f8f9fa;
+    }
+    
+    .recommendation-icon {
+        font-size: 1.5rem;
+        margin-right: 10px;
+    }
+    
+    .recommendation-title {
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    .recommendation-text {
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="analytics-container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-chart-line text-primary"></i> Phân Tích Học Tập
+            </h1>
+            <p class="lead">Theo dõi và phân tích hoạt động học tập của bạn để cải thiện hiệu quả học tập.</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'advanced_learning:dashboard' %}" class="btn btn-outline-primary">
+                <i class="fas fa-tachometer-alt"></i> Quay Lại Tổng Quan
+            </a>
+        </div>
+    </div>
+    
+    <!-- Thống kê tổng quan -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-4">
+            <div class="card stats-card h-100">
+                <div class="card-body text-center">
+                    <div class="stats-icon text-danger">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stats-value">{{ total_study_minutes }}</div>
+                    <div class="stats-label">Phút Học Tập</div>
+                    <div class="mt-2">
+                        {% if learning_trends.pomodoro_trend > 0 %}
+                            <span class="trend-indicator trend-up">
+                                <i class="fas fa-arrow-up"></i> {{ learning_trends.pomodoro_trend|floatformat:2 }}%
+                            </span>
+                        {% elif learning_trends.pomodoro_trend < 0 %}
+                            <span class="trend-indicator trend-down">
+                                <i class="fas fa-arrow-down"></i> {{ learning_trends.pomodoro_trend|floatformat:2 }}%
+                            </span>
+                        {% else %}
+                            <span class="trend-indicator trend-neutral">
+                                <i class="fas fa-minus"></i> 0%
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card stats-card h-100">
+                <div class="card-body text-center">
+                    <div class="stats-icon text-info">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="stats-value">{{ avg_project_progress|floatformat:0 }}%</div>
+                    <div class="stats-label">Tiến Độ Dự Án Trung Bình</div>
+                    <div class="mt-2">
+                        {% if learning_trends.project_trend > 0 %}
+                            <span class="trend-indicator trend-up">
+                                <i class="fas fa-arrow-up"></i> Tốt
+                            </span>
+                        {% elif learning_trends.project_trend < 0 %}
+                            <span class="trend-indicator trend-down">
+                                <i class="fas fa-arrow-down"></i> Cần cải thiện
+                            </span>
+                        {% else %}
+                            <span class="trend-indicator trend-neutral">
+                                <i class="fas fa-minus"></i> Trung bình
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card stats-card h-100">
+                <div class="card-body text-center">
+                    <div class="stats-icon text-warning">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="stats-value">{{ total_competition_points }}</div>
+                    <div class="stats-label">Điểm Thi Đấu</div>
+                    <div class="mt-2">
+                        <span class="badge bg-success">Xếp hạng cao nhất: {{ best_rank.rank|default:"N/A" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Biểu đồ thời gian học tập -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card chart-card">
+                <div class="chart-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-area text-primary"></i> Thời Gian Học Tập (30 Ngày Qua)</h5>
+                </div>
+                <div class="chart-body">
+                    <canvas id="studyTimeChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Sử dụng tính năng -->
+        <div class="col-md-6 mb-4">
+            <div class="card feature-usage-card">
+                <div class="feature-usage-header">
+                    <h5 class="mb-0"><i class="fas fa-puzzle-piece"></i> Sử Dụng Tính Năng</h5>
+                </div>
+                <div class="feature-usage-body">
+                    <div class="feature-item">
+                        <div class="d-flex justify-content-between">
+                            <div class="feature-label">Pomodoro Timer</div>
+                            <div>{{ feature_usage.Pomodoro }}</div>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar progress-pomodoro" role="progressbar" style="width: {{ feature_usage.Pomodoro }}%;" aria-valuenow="{{ feature_usage.Pomodoro }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="d-flex justify-content-between">
+                            <div class="feature-label">Cornell Notes</div>
+                            <div>{{ feature_usage.Cornell_Notes }}</div>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar progress-cornell" role="progressbar" style="width: {{ feature_usage.Cornell_Notes }}%;" aria-valuenow="{{ feature_usage.Cornell_Notes }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="d-flex justify-content-between">
+                            <div class="feature-label">Mind Maps</div>
+                            <div>{{ feature_usage.Mind_Maps }}</div>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar progress-mindmap" role="progressbar" style="width: {{ feature_usage.Mind_Maps }}%;" aria-valuenow="{{ feature_usage.Mind_Maps }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="d-flex justify-content-between">
+                            <div class="feature-label">Feynman Notes</div>
+                            <div>{{ feature_usage.Feynman_Notes }}</div>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar progress-feynman" role="progressbar" style="width: {{ feature_usage.Feynman_Notes }}%;" aria-valuenow="{{ feature_usage.Feynman_Notes }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="d-flex justify-content-between">
+                            <div class="feature-label">Projects</div>
+                            <div>{{ feature_usage.Projects }}</div>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar progress-project" role="progressbar" style="width: {{ feature_usage.Projects }}%;" aria-valuenow="{{ feature_usage.Projects }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="d-flex justify-content-between">
+                            <div class="feature-label">Competitions</div>
+                            <div>{{ feature_usage.Competitions }}</div>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar progress-competition" role="progressbar" style="width: {{ feature_usage.Competitions }}%;" aria-valuenow="{{ feature_usage.Competitions }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Khuyến nghị học tập -->
+        <div class="col-md-6 mb-4">
+            <div class="card recommendation-card">
+                <div class="recommendation-header">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb"></i> Khuyến Nghị Học Tập</h5>
+                </div>
+                <div class="recommendation-body">
+                    {% if learning_trends.pomodoro_trend < 0 %}
+                        <div class="recommendation-item">
+                            <div class="d-flex align-items-center">
+                                <div class="recommendation-icon text-danger">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div>
+                                    <div class="recommendation-title">Tăng thời gian học tập</div>
+                                    <div class="recommendation-text">Thời gian học tập của bạn đang giảm. Hãy cố gắng sử dụng Pomodoro Timer thường xuyên hơn để cải thiện năng suất.</div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    {% if learning_trends.notes_trend < 0 %}
+                        <div class="recommendation-item">
+                            <div class="d-flex align-items-center">
+                                <div class="recommendation-icon text-primary">
+                                    <i class="fas fa-sticky-note"></i>
+                                </div>
+                                <div>
+                                    <div class="recommendation-title">Tạo thêm ghi chú</div>
+                                    <div class="recommendation-text">Bạn đang tạo ít ghi chú hơn so với trước đây. Hãy sử dụng Cornell Notes, Mind Maps hoặc Feynman Notes để cải thiện việc ghi nhớ.</div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    {% if learning_trends.project_trend < 0 %}
+                        <div class="recommendation-item">
+                            <div class="d-flex align-items-center">
+                                <div class="recommendation-icon text-info">
+                                    <i class="fas fa-tasks"></i>
+                                </div>
+                                <div>
+                                    <div class="recommendation-title">Cập nhật tiến độ dự án</div>
+                                    <div class="recommendation-text">Tiến độ dự án của bạn đang chậm. Hãy dành thời gian để cập nhật và tiếp tục các dự án đang thực hiện.</div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    {% if feature_usage.Competitions == 0 %}
+                        <div class="recommendation-item">
+                            <div class="d-flex align-items-center">
+                                <div class="recommendation-icon text-warning">
+                                    <i class="fas fa-trophy"></i>
+                                </div>
+                                <div>
+                                    <div class="recommendation-title">Tham gia cuộc thi</div>
+                                    <div class="recommendation-text">Bạn chưa tham gia cuộc thi nào. Hãy thử tham gia các cuộc thi để kiểm tra kiến thức và tăng động lực học tập.</div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    {% if feature_usage.Pomodoro > 0 and feature_usage.Cornell_Notes == 0 and feature_usage.Mind_Maps == 0 and feature_usage.Feynman_Notes == 0 %}
+                        <div class="recommendation-item">
+                            <div class="d-flex align-items-center">
+                                <div class="recommendation-icon text-success">
+                                    <i class="fas fa-brain"></i>
+                                </div>
+                                <div>
+                                    <div class="recommendation-title">Đa dạng hóa phương pháp học tập</div>
+                                    <div class="recommendation-text">Bạn chỉ đang sử dụng Pomodoro Timer. Hãy thử các phương pháp ghi chú khác như Cornell Notes, Mind Maps hoặc Feynman Notes.</div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    {% if total_study_minutes < 60 %}
+                        <div class="recommendation-item">
+                            <div class="d-flex align-items-center">
+                                <div class="recommendation-icon text-danger">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                </div>
+                                <div>
+                                    <div class="recommendation-title">Tăng thời gian học tập</div>
+                                    <div class="recommendation-text">Tổng thời gian học tập của bạn còn thấp. Hãy cố gắng học ít nhất 1 giờ mỗi ngày để đạt kết quả tốt nhất.</div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    {% if learning_trends.pomodoro_trend >= 0 and learning_trends.notes_trend >= 0 and learning_trends.project_trend >= 0 and total_study_minutes >= 60 %}
+                        <div class="recommendation-item">
+                            <div class="d-flex align-items-center">
+                                <div class="recommendation-icon text-success">
+                                    <i class="fas fa-thumbs-up"></i>
+                                </div>
+                                <div>
+                                    <div class="recommendation-title">Tiếp tục phát huy</div>
+                                    <div class="recommendation-text">Bạn đang học tập rất tốt! Hãy tiếp tục duy trì thói quen học tập hiện tại và thử thách bản thân với các dự án và cuộc thi khó hơn.</div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Dữ liệu cho biểu đồ thời gian học tập
+        const studyTimeLabels = {{ pomodoro_labels|safe }};
+        const studyTimeData = {{ pomodoro_values|safe }};
+        
+        // Tạo biểu đồ thời gian học tập
+        const studyTimeChart = new Chart(
+            document.getElementById('studyTimeChart'),
+            {
+                type: 'line',
+                data: {
+                    labels: studyTimeLabels,
+                    datasets: [{
+                        label: 'Phút học tập',
+                        data: studyTimeData,
+                        fill: true,
+                        backgroundColor: 'rgba(220, 53, 69, 0.2)',
+                        borderColor: 'rgba(220, 53, 69, 1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Phút'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Ngày'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    }
+                }
+            }
+        );
+    });
+</script>
+{% endblock %}

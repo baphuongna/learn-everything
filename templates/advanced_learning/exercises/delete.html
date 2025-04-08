@@ -1,0 +1,107 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Xóa Bài Tập Thực Hành Tương Tác - Nền Tảng Học Tập{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-trash text-danger"></i> Xóa Bài Tập Thực Hành Tương Tác
+        </h1>
+        <p class="lead">Bạn có chắc chắn muốn xóa bài tập này không? Hành động này không thể hoàn tác.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:exercise_detail' exercise_id=exercise.id %}" class="btn btn-outline-purple">
+            <i class="fas fa-arrow-left"></i> Quay Lại
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Xác nhận xóa</h5>
+            </div>
+            <div class="card-body">
+                <h5>Bạn sắp xóa bài tập sau:</h5>
+                <p><strong>Tiêu đề:</strong> {{ exercise.title }}</p>
+                <p>
+                    <strong>Loại bài tập:</strong>
+                    <span class="badge 
+                        {% if exercise.exercise_type == 'code' %}bg-primary
+                        {% elif exercise.exercise_type == 'quiz' %}bg-success
+                        {% elif exercise.exercise_type == 'simulation' %}bg-warning
+                        {% else %}bg-purple{% endif %}">
+                        {% if exercise.exercise_type == 'code' %}
+                            Bài tập lập trình
+                        {% elif exercise.exercise_type == 'quiz' %}
+                            Câu đố tương tác
+                        {% elif exercise.exercise_type == 'simulation' %}
+                            Mô phỏng
+                        {% else %}
+                            Trò chơi học tập
+                        {% endif %}
+                    </span>
+                </p>
+                <p><strong>Bài học:</strong> {{ exercise.lesson.title }}</p>
+                <p><strong>Mô tả:</strong> {{ exercise.description|truncatechars:100 }}</p>
+                
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-exclamation-circle"></i> Cảnh báo: Khi xóa bài tập này, tất cả nội dung và dữ liệu liên quan sẽ bị mất vĩnh viễn và không thể khôi phục.
+                </div>
+                
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-center">
+                        <button type="submit" class="btn btn-danger btn-lg">
+                            <i class="fas fa-trash"></i> Xác Nhận Xóa
+                        </button>
+                        <a href="{% url 'advanced_learning:exercise_detail' exercise_id=exercise.id %}" class="btn btn-outline-secondary btn-lg ms-3">
+                            <i class="fas fa-times"></i> Hủy
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Thêm màu tím cho nút và các phần tử khác
+    document.addEventListener('DOMContentLoaded', function() {
+        // Thêm CSS cho màu tím
+        const style = document.createElement('style');
+        style.textContent = `
+            .btn-purple {
+                background-color: #6f42c1;
+                border-color: #6f42c1;
+                color: white;
+            }
+            .btn-purple:hover {
+                background-color: #5e35b1;
+                border-color: #5e35b1;
+                color: white;
+            }
+            .btn-outline-purple {
+                color: #6f42c1;
+                border-color: #6f42c1;
+            }
+            .btn-outline-purple:hover {
+                background-color: #6f42c1;
+                color: white;
+            }
+            .bg-purple {
+                background-color: #6f42c1 !important;
+            }
+            .text-purple {
+                color: #6f42c1 !important;
+            }
+        `;
+        document.head.appendChild(style);
+    });
+</script>
+{% endblock %}

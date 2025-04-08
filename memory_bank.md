@@ -56,6 +56,11 @@ learning_platform/
 - `UserProfile`: Thông tin bổ sung của người dùng
 - `UserProgress`: Theo dõi tiến độ học tập
 - `StudySession`: Ghi lại các phiên học tập
+- `Badge`: Huy hiệu thành tích
+- `UserBadge`: Huy hiệu của người dùng
+- `RewardPoint`: Điểm thưởng của người dùng
+- `Reward`: Phần thưởng có thể đổi
+- `UserReward`: Phần thưởng đã đổi của người dùng
 
 **Tính năng chính:**
 - Đăng ký, đăng nhập, đăng xuất
@@ -63,6 +68,9 @@ learning_platform/
 - Theo dõi tiến độ học tập
 - Ghi lại thời gian học tập
 - Đặt mục tiêu học tập
+- Hệ thống thành tích và huy hiệu
+- Hệ thống điểm thưởng và phần thưởng
+- Theo dõi chuỗi ngày liên tiếp hoàn thành mục tiêu
 
 ### 3.2. Content
 
@@ -120,6 +128,29 @@ learning_platform/
 - Ôn tập ghi nhớ theo phương pháp Spaced Repetition
 - Đánh dấu ghi nhớ yêu thích
 
+### 3.6. Learning Goals
+
+**Mô hình dữ liệu:**
+- `LearningGoal`: Mục tiêu học tập của người dùng
+- `GoalProgress`: Tiến độ đạt mục tiêu
+- `GoalCollaborator`: Người cộng tác trong mục tiêu
+- `GoalComment`: Bình luận về mục tiêu
+- `GoalInvitation`: Lời mời tham gia mục tiêu
+
+**Tính năng chính:**
+- Tạo và quản lý mục tiêu học tập
+- Theo dõi tiến độ đạt mục tiêu
+- Nhắc nhở khi chưa đạt mục tiêu
+- Báo cáo tiến độ định kỳ
+- Biểu đồ tiến độ theo thời gian
+- Thống kê mục tiêu theo danh mục
+- Chia sẻ mục tiêu với bạn bè hoặc nhóm học tập
+- Cộng tác trong mục tiêu học tập
+- Bình luận và thảo luận về mục tiêu
+- Xuất mục tiêu sang định dạng iCalendar
+- Tích hợp với Google Calendar
+- Phần thưởng khi hoàn thành mục tiêu
+
 ## 4. Công nghệ và thư viện
 
 ### 4.1. Backend
@@ -133,6 +164,8 @@ learning_platform/
 - **Bootstrap 5**: Framework CSS
 - **jQuery**: Thư viện JavaScript
 - **Font Awesome**: Thư viện icon
+- **Chart.js**: Thư viện vẽ biểu đồ
+- **Moment.js**: Thư viện xử lý thời gian
 
 ### 4.3. Thư viện Python
 
@@ -145,6 +178,10 @@ learning_platform/
 - **psycopg2-binary**: Kết nối PostgreSQL
 - **python-dotenv**: Đọc biến môi trường từ file .env
 - **dj-database-url**: Xử lý URL kết nối cơ sở dữ liệu
+- **icalendar**: Tạo và xử lý file iCalendar (.ics)
+- **requests**: Gọi API và tương tác với web
+- **django-csp**: Chính sách bảo mật nội dung
+- **bleach**: Làm sạch và xử lý HTML an toàn
 
 ## 5. Hướng dẫn cài đặt
 
@@ -335,6 +372,9 @@ learning_platform/
 - **Học tập cộng tác**: Làm việc cùng nhau trên một dự án hoặc bài tập
 - **Thách thức học tập**: Tạo và tham gia các thách thức học tập
 - **Bảng xếp hạng và huy hiệu**: Tạo động lực học tập thông qua gamification
+- **Chia sẻ mục tiêu học tập**: Cho phép chia sẻ mục tiêu với bạn bè hoặc nhóm học tập
+- **Cộng tác mục tiêu**: Cho phép nhiều người cùng cập nhật tiến độ một mục tiêu
+- **Bình luận và thảo luận mục tiêu**: Trao đổi về mục tiêu học tập
 
 #### 8.1.3. Tính năng cá nhân hóa
 - **Lộ trình học tập cá nhân hóa**: Tạo lộ trình dựa trên mục tiêu và trình độ
@@ -355,19 +395,24 @@ learning_platform/
 - **Công nghệ OCR**: Nhập nội dung từ hình ảnh và tài liệu quét
 
 #### 8.1.5. Tính năng phân tích và báo cáo
-- **Biểu đồ tiến độ học tập**: Biểu đồ trực quan về tiến độ học tập
+- **Biểu đồ tiến độ học tập**: Biểu đồ trực quan về tiến độ học tập theo thời gian
 - **Phân tích thời gian học tập**: Thống kê thời gian học tập theo ngày, tuần, tháng
 - **Báo cáo định kỳ**: Báo cáo hàng tuần/hàng tháng về tiến độ
 - **Dự đoán thời gian học tập**: Ước tính thời gian cần thiết để hoàn thành mục tiêu
 - **Phân tích mẫu quên**: Theo dõi các khái niệm thường bị quên
 - **Thống kê chi tiết**: Tỷ lệ đúng/sai trong các bài kiểm tra
 - **Xuất báo cáo**: Xuất báo cáo dưới dạng PDF, Excel
+- **Biểu đồ thống kê mục tiêu**: Thống kê mục tiêu theo danh mục và trạng thái
+- **Biểu đồ hoàn thành mục tiêu**: Theo dõi tỷ lệ hoàn thành mục tiêu theo thời gian
+- **Chuỗi ngày liên tiếp**: Theo dõi chuỗi ngày liên tiếp hoàn thành mục tiêu
 
 #### 8.1.6. Tính năng tiện ích và trải nghiệm người dùng
 - **Ứng dụng di động**: Phiên bản iOS và Android
 - **Chế độ ngoại tuyến**: Tải xuống nội dung để học khi không có kết nối
 - **Đồng bộ hóa đa thiết bị**: Học liền mạch trên nhiều thiết bị
 - **Tích hợp lịch**: Đồng bộ hóa với Google Calendar/Outlook
+- **Xuất mục tiêu sang iCalendar**: Xuất mục tiêu học tập sang định dạng .ics
+- **Tích hợp Google Calendar**: Thêm mục tiêu vào Google Calendar
 - **Chế độ ban đêm**: Giao diện tối giảm mỏi mắt
 - **Tùy chỉnh thông báo**: Chọn loại thông báo nhận được
 - **Tích hợp công cụ ghi chú**: Đồng bộ hóa với Notion, Evernote, OneNote

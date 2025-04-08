@@ -1,0 +1,423 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ exercise.title }} - Bài Tập Thực Hành Tương Tác{% endblock %}
+
+{% block extra_css %}
+<style>
+    .exercise-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .exercise-header {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+    }
+
+    .exercise-title {
+        color: #6f42c1;
+        margin-bottom: 10px;
+    }
+
+    .exercise-meta {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 15px;
+    }
+
+    .exercise-description {
+        line-height: 1.6;
+        margin-bottom: 20px;
+    }
+
+    .exercise-content {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+    }
+
+    .exercise-type-badge {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    .type-code {
+        background-color: #007bff;
+    }
+
+    .type-quiz {
+        background-color: #28a745;
+    }
+
+    .type-simulation {
+        background-color: #fd7e14;
+    }
+
+    .type-game {
+        background-color: #6f42c1;
+    }
+
+    .code-editor {
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        min-height: 300px;
+        margin-bottom: 20px;
+    }
+
+    .quiz-form {
+        background-color: #fff;
+        border-radius: 5px;
+        padding: 20px;
+        border: 1px solid #dee2e6;
+        margin-bottom: 20px;
+    }
+
+    .simulation-container {
+        background-color: #fff;
+        border-radius: 5px;
+        padding: 20px;
+        border: 1px solid #dee2e6;
+        margin-bottom: 20px;
+        min-height: 400px;
+    }
+
+    .game-container {
+        background-color: #fff;
+        border-radius: 5px;
+        padding: 20px;
+        border: 1px solid #dee2e6;
+        margin-bottom: 20px;
+        min-height: 400px;
+    }
+
+    .feedback-container {
+        display: none;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+
+    .feedback-success {
+        background-color: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+    }
+
+    .feedback-error {
+        background-color: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+    }
+
+    .solution-container {
+        display: none;
+        background-color: #e2f0fd;
+        border: 1px solid #b8daff;
+        color: #004085;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-laptop-code text-purple"></i> Bài Tập Thực Hành Tương Tác
+        </h1>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:create_cornell_from_exercise' exercise_id=exercise.id %}" class="btn btn-primary me-2">
+            <i class="fas fa-edit"></i> Tạo Ghi Chú Cornell
+        </a>
+        <a href="{% url 'advanced_learning:exercise_list' %}" class="btn btn-outline-purple">
+            <i class="fas fa-arrow-left"></i> Quay Lại Danh Sách
+        </a>
+    </div>
+</div>
+
+<div class="exercise-container">
+    <div class="exercise-header">
+        <h2 class="exercise-title">{{ exercise.title }}</h2>
+        <div class="exercise-meta">
+            {% if exercise.lesson.topic.subject %}
+            <span class="badge bg-primary">{{ exercise.lesson.topic.subject.name }}</span>
+            {% endif %}
+            <span class="badge
+                {% if exercise.exercise_type == 'code' %}type-code
+                {% elif exercise.exercise_type == 'quiz' %}type-quiz
+                {% elif exercise.exercise_type == 'simulation' %}type-simulation
+                {% else %}type-game{% endif %}
+                exercise-type-badge">
+                {% if exercise.exercise_type == 'code' %}
+                    Bài tập lập trình
+                {% elif exercise.exercise_type == 'quiz' %}
+                    Câu đố tương tác
+                {% elif exercise.exercise_type == 'simulation' %}
+                    Mô phỏng
+                {% else %}
+                    Trò chơi học tập
+                {% endif %}
+            </span>
+        </div>
+
+        <div class="exercise-description">
+            {{ exercise.description|linebreaks }}
+        </div>
+    </div>
+
+    <div class="exercise-content">
+        <h4><i class="fas fa-tasks text-purple"></i> Nội Dung Bài Tập</h4>
+
+        {% if exercise.exercise_type == 'code' %}
+            <!-- Bài tập lập trình -->
+            <div id="code-exercise">
+                <div class="mb-3">
+                    {{ exercise.content|safe }}
+                </div>
+
+                <div class="code-editor" id="code-editor">
+                    <!-- Sẽ được thay thế bằng editor -->
+                    <textarea id="code-textarea" class="form-control" rows="10" placeholder="Viết mã của bạn ở đây..."></textarea>
+                </div>
+
+                <button id="submit-code" class="btn btn-purple">
+                    <i class="fas fa-play"></i> Chạy Mã
+                </button>
+            </div>
+
+        {% elif exercise.exercise_type == 'quiz' %}
+            <!-- Câu đố tương tác -->
+            <div id="quiz-exercise">
+                <div class="mb-3">
+                    {{ exercise.content|safe }}
+                </div>
+
+                <div class="quiz-form">
+                    <div class="mb-3">
+                        <label for="quiz-answer" class="form-label">Đáp án của bạn:</label>
+                        <input type="text" class="form-control" id="quiz-answer" placeholder="Nhập đáp án của bạn...">
+                    </div>
+
+                    <button id="submit-quiz" class="btn btn-purple">
+                        <i class="fas fa-check"></i> Kiểm Tra Đáp Án
+                    </button>
+                </div>
+            </div>
+
+        {% elif exercise.exercise_type == 'simulation' %}
+            <!-- Mô phỏng -->
+            <div id="simulation-exercise">
+                <div class="mb-3">
+                    {{ exercise.content|safe }}
+                </div>
+
+                <div class="simulation-container" id="simulation-container">
+                    <!-- Nội dung mô phỏng sẽ được tải ở đây -->
+                    <div class="text-center">
+                        <p>Đang tải mô phỏng...</p>
+                        <div class="spinner-border text-purple" role="status">
+                            <span class="visually-hidden">Đang tải...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        {% else %}
+            <!-- Trò chơi học tập -->
+            <div id="game-exercise">
+                <div class="mb-3">
+                    {{ exercise.content|safe }}
+                </div>
+
+                <div class="game-container" id="game-container">
+                    <!-- Nội dung trò chơi sẽ được tải ở đây -->
+                    <div class="text-center">
+                        <p>Đang tải trò chơi...</p>
+                        <div class="spinner-border text-purple" role="status">
+                            <span class="visually-hidden">Đang tải...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Phản hồi -->
+        <div id="feedback-container" class="feedback-container">
+            <p id="feedback-message"></p>
+        </div>
+
+        <!-- Giải pháp -->
+        <div id="solution-container" class="solution-container">
+            <h5>Giải pháp:</h5>
+            <div id="solution-content">
+                {% if show_solution %}
+                    {{ exercise.solution|linebreaks }}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Thêm màu tím cho nút và các phần tử khác
+    document.addEventListener('DOMContentLoaded', function() {
+        // Thêm CSS cho màu tím
+        const style = document.createElement('style');
+        style.textContent = `
+            .btn-purple {
+                background-color: #6f42c1;
+                border-color: #6f42c1;
+                color: white;
+            }
+            .btn-purple:hover {
+                background-color: #5e35b1;
+                border-color: #5e35b1;
+                color: white;
+            }
+            .btn-outline-purple {
+                color: #6f42c1;
+                border-color: #6f42c1;
+            }
+            .btn-outline-purple:hover {
+                background-color: #6f42c1;
+                color: white;
+            }
+            .bg-purple {
+                background-color: #6f42c1 !important;
+            }
+            .text-purple {
+                color: #6f42c1 !important;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Xử lý nộp bài tập
+        const exerciseType = '{{ exercise.exercise_type }}';
+        const exerciseId = '{{ exercise.id }}';
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        // Xử lý phản hồi
+        function showFeedback(message, isSuccess) {
+            const feedbackContainer = document.getElementById('feedback-container');
+            const feedbackMessage = document.getElementById('feedback-message');
+
+            feedbackContainer.style.display = 'block';
+            feedbackMessage.textContent = message;
+
+            if (isSuccess) {
+                feedbackContainer.className = 'feedback-container feedback-success';
+            } else {
+                feedbackContainer.className = 'feedback-container feedback-error';
+            }
+        }
+
+        // Xử lý hiển thị giải pháp
+        function showSolution(solution) {
+            const solutionContainer = document.getElementById('solution-container');
+            const solutionContent = document.getElementById('solution-content');
+
+            solutionContainer.style.display = 'block';
+            solutionContent.textContent = solution;
+        }
+
+        // Xử lý nộp bài tập
+        function submitExercise(submission) {
+            fetch(`/advanced/exercises/${exerciseId}/submit/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrfToken
+                },
+                body: `submission=${encodeURIComponent(submission)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showFeedback(data.feedback, data.is_correct);
+
+                    if (data.is_correct && data.solution) {
+                        showSolution(data.solution);
+                    }
+                } else {
+                    showFeedback('Đã xảy ra lỗi khi nộp bài tập. Vui lòng thử lại.', false);
+                }
+            })
+            .catch(error => {
+                console.error('Lỗi:', error);
+                showFeedback('Đã xảy ra lỗi khi nộp bài tập. Vui lòng thử lại.', false);
+            });
+        }
+
+        // Xử lý nút nộp bài tập
+        if (exerciseType === 'code') {
+            const submitCodeBtn = document.getElementById('submit-code');
+            const codeTextarea = document.getElementById('code-textarea');
+
+            if (submitCodeBtn && codeTextarea) {
+                submitCodeBtn.addEventListener('click', function() {
+                    const code = codeTextarea.value;
+                    submitExercise(code);
+                });
+            }
+        } else if (exerciseType === 'quiz') {
+            const submitQuizBtn = document.getElementById('submit-quiz');
+            const quizAnswer = document.getElementById('quiz-answer');
+
+            if (submitQuizBtn && quizAnswer) {
+                submitQuizBtn.addEventListener('click', function() {
+                    const answer = quizAnswer.value;
+                    submitExercise(answer);
+                });
+            }
+        }
+
+        // Tải mô phỏng hoặc trò chơi
+        if (exerciseType === 'simulation') {
+            const simulationContainer = document.getElementById('simulation-container');
+
+            if (simulationContainer) {
+                // Mã để tải mô phỏng
+                setTimeout(function() {
+                    simulationContainer.innerHTML = `
+                        <div class="text-center">
+                            <p>Mô phỏng đã được tải thành công!</p>
+                            <p>Nội dung mô phỏng sẽ xuất hiện ở đây.</p>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> Đây là một mô phỏng mẫu. Trong ứng dụng thực tế, nội dung mô phỏng sẽ được tải từ dữ liệu bài tập.
+                            </div>
+                        </div>
+                    `;
+                }, 1500);
+            }
+        } else if (exerciseType === 'game') {
+            const gameContainer = document.getElementById('game-container');
+
+            if (gameContainer) {
+                // Mã để tải trò chơi
+                setTimeout(function() {
+                    gameContainer.innerHTML = `
+                        <div class="text-center">
+                            <p>Trò chơi đã được tải thành công!</p>
+                            <p>Nội dung trò chơi sẽ xuất hiện ở đây.</p>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> Đây là một trò chơi mẫu. Trong ứng dụng thực tế, nội dung trò chơi sẽ được tải từ dữ liệu bài tập.
+                            </div>
+                        </div>
+                    `;
+                }, 1500);
+            }
+        }
+    });
+</script>
+{% endblock %}

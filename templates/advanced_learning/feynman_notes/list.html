@@ -1,0 +1,226 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Phương Pháp Feynman - Nền Tảng Học Tập{% endblock %}
+
+{% block extra_css %}
+<style>
+    .note-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        margin-bottom: 15px;
+        border-left: 4px solid #fd7e14;
+    }
+    
+    .note-card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .note-title {
+        font-weight: 600;
+        color: #fd7e14;
+    }
+    
+    .note-meta {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    
+    .note-content {
+        max-height: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+    }
+    
+    .search-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: #dee2e6;
+        margin-bottom: 20px;
+    }
+    
+    .feynman-steps {
+        counter-reset: step-counter;
+        list-style-type: none;
+        padding-left: 0;
+    }
+    
+    .feynman-steps li {
+        position: relative;
+        padding-left: 50px;
+        margin-bottom: 15px;
+        counter-increment: step-counter;
+    }
+    
+    .feynman-steps li::before {
+        content: counter(step-counter);
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 35px;
+        height: 35px;
+        background-color: #fd7e14;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-lightbulb text-warning"></i> Phương Pháp Feynman
+        </h1>
+        <p class="lead">Hiểu sâu sắc các khái niệm phức tạp bằng cách giải thích chúng bằng ngôn ngữ đơn giản.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:feynman_note_create' %}" class="btn btn-warning">
+            <i class="fas fa-plus"></i> Tạo Ghi Chú Mới
+        </a>
+    </div>
+</div>
+
+<!-- Tìm kiếm và lọc -->
+<div class="card search-card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <input type="text" class="form-control" name="search" placeholder="Tìm kiếm ghi chú..." value="{{ search_query }}">
+                    <button class="btn btn-warning" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select class="form-select" name="subject" onchange="this.form.submit()">
+                    <option value="">Tất cả chủ đề</option>
+                    {% for subject in subjects %}
+                    <option value="{{ subject.id }}" {% if selected_subject == subject.id|stringformat:"i" %}selected{% endif %}>
+                        {{ subject.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                {% if search_query or selected_subject %}
+                <a href="{% url 'advanced_learning:feynman_note_list' %}" class="btn btn-outline-secondary w-100">
+                    <i class="fas fa-times"></i> Xóa bộ lọc
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Danh sách ghi chú -->
+<div class="row">
+    <div class="col-md-12">
+        {% if notes %}
+            {% for note in notes %}
+            <div class="card note-card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5 class="note-title">{{ note.title }}</h5>
+                            <p class="note-meta">
+                                {% if note.subject %}
+                                <span class="badge bg-primary">{{ note.subject.name }}</span>
+                                {% endif %}
+                                <span class="ms-2"><i class="far fa-calendar-alt"></i> {{ note.created_at|date:"d/m/Y H:i" }}</span>
+                            </p>
+                            <p><strong>Khái niệm:</strong> {{ note.concept|truncatechars:100 }}</p>
+                            <div class="note-content">
+                                <strong>Giải thích:</strong> {{ note.explanation|truncatechars:200 }}
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end d-flex align-items-center justify-content-end">
+                            <a href="{% url 'advanced_learning:feynman_note_detail' note_id=note.id %}" class="btn btn-outline-warning me-2">
+                                <i class="fas fa-eye"></i> Xem
+                            </a>
+                            <a href="{% url 'advanced_learning:feynman_note_edit' note_id=note.id %}" class="btn btn-outline-secondary me-2">
+                                <i class="fas fa-edit"></i> Sửa
+                            </a>
+                            <a href="{% url 'advanced_learning:feynman_note_delete' note_id=note.id %}" class="btn btn-outline-danger">
+                                <i class="fas fa-trash"></i> Xóa
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="card">
+                <div class="card-body empty-state">
+                    <i class="fas fa-lightbulb"></i>
+                    <h4>Không có ghi chú nào</h4>
+                    <p class="text-muted">Bạn chưa có ghi chú Feynman nào. Hãy tạo ghi chú đầu tiên của bạn!</p>
+                    <a href="{% url 'advanced_learning:feynman_note_create' %}" class="btn btn-warning mt-3">
+                        <i class="fas fa-plus"></i> Tạo Ghi Chú Mới
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Thông tin về phương pháp Feynman -->
+<div class="row mt-5">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Về Phương Pháp Feynman</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Phương pháp Feynman là gì?</h5>
+                        <p>Phương pháp Feynman là một kỹ thuật học tập được đặt theo tên của nhà vật lý học đoạt giải Nobel Richard Feynman. Phương pháp này giúp bạn hiểu sâu sắc các khái niệm phức tạp bằng cách giải thích chúng bằng ngôn ngữ đơn giản như thể bạn đang dạy cho một đứa trẻ.</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Các bước của phương pháp Feynman:</h5>
+                        <ol class="feynman-steps">
+                            <li><strong>Chọn một khái niệm:</strong> Xác định khái niệm hoặc chủ đề bạn muốn hiểu sâu sắc.</li>
+                            <li><strong>Giải thích bằng ngôn ngữ đơn giản:</strong> Viết ra giải thích về khái niệm đó bằng ngôn ngữ đơn giản như thể bạn đang dạy cho một đứa trẻ 12 tuổi.</li>
+                            <li><strong>Xác định lỗ hổng kiến thức:</strong> Xem xét giải thích của bạn và xác định những phần bạn còn chưa hiểu rõ hoặc không thể giải thích một cách đơn giản.</li>
+                            <li><strong>Cải thiện và đơn giản hóa:</strong> Quay lại tài liệu gốc, học lại những phần còn thiếu, và cải thiện giải thích của bạn cho đến khi bạn có thể diễn đạt khái niệm một cách đơn giản và rõ ràng.</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <h5>Lợi ích:</h5>
+                        <ul>
+                            <li>Hiểu sâu sắc các khái niệm phức tạp</li>
+                            <li>Xác định và điền vào các lỗ hổng kiến thức</li>
+                            <li>Cải thiện khả năng ghi nhớ dài hạn</li>
+                            <li>Phát triển kỹ năng giao tiếp và giải thích</li>
+                            <li>Áp dụng được cho hầu hết các lĩnh vực học tập</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

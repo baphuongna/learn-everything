@@ -1,0 +1,45 @@
+Thông Báo Hàng Tuần Từ Nền Tảng Học Tập
+===============================
+
+Xin chào {{ user.username }},
+
+TÓM TẮT THÔNG BÁO TUẦN NÀY
+--------------------------
+Bạn có {{ notifications|length }} thông báo mới trong 7 ngày qua.
+
+{% regroup notifications by related_feature as feature_list %}
+
+{% for feature in feature_list %}
+{% if feature.grouper == 'pomodoro' %}POMODORO TIMER
+{% elif feature.grouper == 'cornell' %}CORNELL NOTES
+{% elif feature.grouper == 'mindmap' %}MIND MAPPING
+{% elif feature.grouper == 'feynman' %}FEYNMAN TECHNIQUE
+{% elif feature.grouper == 'project' %}PROJECT-BASED LEARNING
+{% elif feature.grouper == 'exercise' %}INTERACTIVE EXERCISES
+{% elif feature.grouper == 'competition' %}COMPETITION MODE
+{% else %}HỆ THỐNG
+{% endif %}
+===============================
+
+{% for notification in feature.list %}
+{{ notification.title }}
+-------------------------------
+{{ notification.message }}
+
+Thời gian: {{ notification.created_at|date:"d/m/Y H:i" }}
+
+{% if notification.url %}Xem chi tiết: {{ site_url }}{{ notification.url }}{% endif %}
+
+{% endfor %}
+{% endfor %}
+
+Để xem tất cả thông báo của bạn, vui lòng truy cập: {{ site_url }}{% url 'notifications:list' %}
+
+Để quản lý tùy chọn thông báo của bạn, vui lòng truy cập: {{ site_url }}{% url 'notifications:preferences' %}
+
+Trân trọng,
+Đội ngũ Nền Tảng Học Tập
+
+---
+Email này được gửi tự động. Vui lòng không trả lời.
+© {% now "Y" %} Nền Tảng Học Tập. Tất cả các quyền được bảo lưu.

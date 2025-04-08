@@ -80,6 +80,7 @@ INSTALLED_APPS = [
     "crispy_forms",
     "crispy_bootstrap4",
     "csp",  # Content Security Policy
+    "channels",  # Django Channels for WebSocket
 
     # Custom apps
     "accounts",
@@ -87,7 +88,11 @@ INSTALLED_APPS = [
     "flashcards",
     "quizzes",
     "memory_bank",
+    "advanced_learning",
     "django_summernote",
+    "notifications",  # Ứng dụng thông báo mới
+    "learning_goals",  # Ứng dụng mục tiêu học tập
+    "achievements",  # Ứng dụng thành tích và phần thưởng
 ]
 
 MIDDLEWARE = [
@@ -120,6 +125,17 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "learning_platform.wsgi.application"
+ASGI_APPLICATION = "learning_platform.asgi.application"
+
+# Channels configuration
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("localhost", 6379)],
+        },
+    },
+}
 
 
 # Database
@@ -305,3 +321,15 @@ if not all([SUPABASE_URL, SUPABASE_KEY]):
         print("Cảnh báo: Thiếu thông tin Supabase API. Hãy kiểm tra file .env")
     else:
         raise Exception("Thiếu thông tin Supabase API. Hãy kiểm tra file .env")
+
+# Cấu hình Email
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@learningplatform.com')
+
+# URL của trang web (dùng cho email)
+SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000')

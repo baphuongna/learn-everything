@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
+from django.http import JsonResponse
 from .models import Subject, Topic, Lesson
 from accounts.models import UserProgress
 from flashcards.models import FlashcardSet
@@ -24,7 +25,7 @@ def home(request):
         completed_lessons_count = UserProgress.objects.filter(user=request.user, completed=True).count()
 
         # Lấy các chủ đề yêu thích của người dùng
-        user_favorites = request.user.profile.favorite_subjects.all()
+        user_favorites = request.user.profile.preferred_subjects.all()
 
         # Các thống kê khác sẽ được thêm sau
 
@@ -83,7 +84,7 @@ def subject_detail(request, slug):
     # Kiểm tra xem chủ đề có được yêu thích không
     is_favorite = False
     if request.user.is_authenticated:
-        is_favorite = subject in request.user.profile.favorite_subjects.all()
+        is_favorite = subject in request.user.profile.preferred_subjects.all()
 
     # Lấy danh sách ID của các bài học đã hoàn thành
     completed_lessons_ids = []
@@ -184,8 +185,14 @@ def toggle_favorite_subject(request, subject_id):
     if subject in user_profile.preferred_subjects.all():
         user_profile.preferred_subjects.remove(subject)
         messages.info(request, f'Đã xóa "{subject.name}" khỏi danh sách yêu thích')
+        is_favorite = False
     else:
         user_profile.preferred_subjects.add(subject)
         messages.success(request, f'Đã thêm "{subject.name}" vào danh sách yêu thích')
+        is_favorite = True
+
+    # Nếu là yêu cầu AJAX, trả về JSON
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': True, 'is_favorite': is_favorite})
 
     return redirect('subject_detail', slug=subject.slug)

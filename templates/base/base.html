@@ -11,6 +11,62 @@
     <!-- Custom CSS -->
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <!-- Notification CSS -->
+    <style>
+        /* Thông báo dropdown */
+        .notification-dropdown {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+
+        .notification-item {
+            border-left: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .notification-item:hover {
+            background-color: rgba(0, 0, 0, 0.03);
+        }
+
+        /* Màu sắc cho các loại thông báo */
+        .notification-item[data-type="info"] {
+            border-left-color: #0d6efd;
+        }
+
+        .notification-item[data-type="success"] {
+            border-left-color: #198754;
+        }
+
+        .notification-item[data-type="warning"] {
+            border-left-color: #ffc107;
+        }
+
+        .notification-item[data-type="danger"] {
+            border-left-color: #dc3545;
+        }
+
+        /* Badge thông báo */
+        #notification-badge {
+            font-size: 0.65rem;
+            padding: 0.2rem 0.4rem;
+        }
+
+        /* Nội dung thông báo */
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .notification-text {
+            color: #6c757d;
+        }
+
+        .notification-time {
+            font-size: 0.75rem;
+            color: #adb5bd;
+        }
+    </style>
+
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -39,9 +95,45 @@
                             <i class="fas fa-brain"></i> Memory Bank
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'learning_goals:dashboard' %}">
+                            <i class="fas fa-bullseye"></i> Mục Tiêu Học Tập
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'achievements:dashboard' %}">
+                            <i class="fas fa-trophy"></i> Thành Tích
+                        </a>
+                    </li>
                 </ul>
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
+                    <!-- Thông báo Dropdown -->
+                    <li class="nav-item dropdown me-2">
+                        <a class="nav-link" href="#" id="notification-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-bell"></i>
+                            <span id="notification-badge" class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle d-none">0</span>
+                        </a>
+                        <div id="notification-dropdown" class="dropdown-menu dropdown-menu-end notification-dropdown" style="width: 350px; max-height: 500px; overflow-y: auto;">
+                            <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                                <h6 class="dropdown-header m-0 p-0">Thông Báo</h6>
+                                <button id="mark-all-read-btn" class="btn btn-sm btn-link text-decoration-none d-none">Đánh dấu tất cả đã đọc</button>
+                            </div>
+                            <div id="notification-content" class="py-2">
+                                <div class="text-center p-3">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Đang tải...</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item text-center" href="{% url 'notifications:list' %}">
+                                <strong>Xem tất cả thông báo</strong>
+                            </a>
+                        </div>
+                    </li>
+
+                    <!-- User Dropdown -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-user-circle"></i> {{ user.username }}
@@ -50,6 +142,8 @@
                             <li><a class="dropdown-item" href="{% url 'profile' %}">Hồ Sơ</a></li>
                             <li><a class="dropdown-item" href="{% url 'progress' %}">Tiến Độ</a></li>
                             <li><a class="dropdown-item" href="{% url 'memory_home' %}"><i class="fas fa-brain"></i> Memory Bank</a></li>
+                            <li><a class="dropdown-item" href="{% url 'advanced_learning:dashboard' %}"><i class="fas fa-tachometer-alt"></i> Học Tập Nâng Cao</a></li>
+                            <li><a class="dropdown-item" href="{% url 'notifications:preferences' %}"><i class="fas fa-cog"></i> Tùy Chọn Thông Báo</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{% url 'logout' %}">Đăng Xuất</a></li>
                         </ul>
@@ -118,8 +212,25 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Moment.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
     <!-- Custom JS -->
     <script src="{% static 'js/main.js' %}"></script>
+
+    <!-- Notifications JS -->
+    {% if user.is_authenticated %}
+    <script src="{% static 'js/notifications.js' %}"></script>
+    {% endif %}
+
+    <!-- Toast Container for Notifications -->
+    <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+
+    {% if user.is_authenticated %}
+    <!-- Script này đã được thay thế bằng notifications.js -->
+    {% endif %}
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>

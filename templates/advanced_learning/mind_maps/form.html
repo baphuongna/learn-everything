@@ -1,0 +1,391 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }} - Nền Tảng Học Tập{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsmind@0.6.4/style/jsmind.css">
+<style>
+    .mindmap-form-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .form-section {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+    }
+    
+    .form-section h5 {
+        margin-bottom: 15px;
+        color: #28a745;
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 10px;
+    }
+    
+    .mindmap-editor {
+        width: 100%;
+        height: 600px;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+    
+    #jsmind_container {
+        width: 100%;
+        height: 100%;
+    }
+    
+    .node-tools {
+        margin-bottom: 15px;
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        border: 1px solid #dee2e6;
+    }
+    
+    .form-buttons {
+        margin-top: 30px;
+        text-align: center;
+    }
+    
+    .color-picker {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-top: 10px;
+    }
+    
+    .color-option {
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: 1px solid #dee2e6;
+    }
+    
+    .color-option:hover {
+        transform: scale(1.1);
+    }
+    
+    .color-option.selected {
+        border: 2px solid #000;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-project-diagram text-success"></i> {{ title }}
+        </h1>
+        <p class="lead">Tạo sơ đồ tư duy trực quan để tổ chức và kết nối các ý tưởng, khái niệm một cách hiệu quả.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:mind_map_list' %}" class="btn btn-outline-success">
+            <i class="fas fa-arrow-left"></i> Quay Lại Danh Sách
+        </a>
+    </div>
+</div>
+
+<div class="mindmap-form-container">
+    <form method="post" id="mindmap-form">
+        {% csrf_token %}
+        
+        <div class="form-section">
+            <h5><i class="fas fa-heading"></i> Thông Tin Chung</h5>
+            <div class="row">
+                <div class="col-md-8 mb-3">
+                    {{ form.title|as_crispy_field }}
+                </div>
+                <div class="col-md-4 mb-3">
+                    {{ form.subject|as_crispy_field }}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    {{ form.central_topic|as_crispy_field }}
+                </div>
+            </div>
+            {{ form.map_data }}
+        </div>
+        
+        <div class="form-section">
+            <h5><i class="fas fa-project-diagram"></i> Trình Soạn Thảo Sơ Đồ Tư Duy</h5>
+            
+            <div class="node-tools">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="input-group mb-3">
+                            <input type="text" id="node-text" class="form-control" placeholder="Nội dung nút mới">
+                            <button class="btn btn-success" type="button" id="add-child-btn">
+                                <i class="fas fa-plus"></i> Thêm Nút Con
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-danger" id="remove-node-btn">
+                                <i class="fas fa-trash"></i> Xóa Nút
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" id="edit-node-btn">
+                                <i class="fas fa-edit"></i> Sửa Nút
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="expand-all-btn">
+                                <i class="fas fa-expand-arrows-alt"></i> Mở Rộng Tất Cả
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-2">
+                    <div class="col-md-12">
+                        <label class="form-label">Màu sắc nút:</label>
+                        <div class="color-picker">
+                            <div class="color-option selected" style="background-color: #ffffff;" data-color="#ffffff"></div>
+                            <div class="color-option" style="background-color: #f8d7da;" data-color="#f8d7da"></div>
+                            <div class="color-option" style="background-color: #d1e7dd;" data-color="#d1e7dd"></div>
+                            <div class="color-option" style="background-color: #cfe2ff;" data-color="#cfe2ff"></div>
+                            <div class="color-option" style="background-color: #fff3cd;" data-color="#fff3cd"></div>
+                            <div class="color-option" style="background-color: #e2e3e5;" data-color="#e2e3e5"></div>
+                            <div class="color-option" style="background-color: #d3d3d3;" data-color="#d3d3d3"></div>
+                            <div class="color-option" style="background-color: #ffcccc;" data-color="#ffcccc"></div>
+                            <div class="color-option" style="background-color: #ccffcc;" data-color="#ccffcc"></div>
+                            <div class="color-option" style="background-color: #ccccff;" data-color="#ccccff"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mindmap-editor">
+                <div id="jsmind_container"></div>
+            </div>
+        </div>
+        
+        <div class="form-buttons">
+            <button type="submit" class="btn btn-success btn-lg">
+                <i class="fas fa-save"></i> {{ button_text }}
+            </button>
+            <a href="{% url 'advanced_learning:mind_map_list' %}" class="btn btn-outline-secondary btn-lg ms-2">
+                <i class="fas fa-times"></i> Hủy
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/jsmind@0.6.4/js/jsmind.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsmind@0.6.4/js/jsmind.draggable.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Khởi tạo JSMind
+        var options = {
+            container: 'jsmind_container',
+            theme: 'primary',
+            editable: true,
+            mode: 'full',
+            support_html: true,
+            view: {
+                line_width: 2,
+                line_color: '#555'
+            }
+        };
+        
+        var jm = new jsMind(options);
+        
+        // Lấy dữ liệu từ form hoặc tạo mới
+        var mapDataInput = document.getElementById('id_map_data');
+        var mapData;
+        
+        try {
+            if (mapDataInput.value) {
+                mapData = JSON.parse(mapDataInput.value);
+            } else {
+                // Dữ liệu mặc định
+                mapData = {
+                    "id": "root",
+                    "topic": document.getElementById('id_central_topic').value || "Chủ đề trung tâm",
+                    "children": []
+                };
+            }
+        } catch (e) {
+            console.error('Lỗi khi phân tích dữ liệu sơ đồ:', e);
+            mapData = {
+                "id": "root",
+                "topic": document.getElementById('id_central_topic').value || "Chủ đề trung tâm",
+                "children": []
+            };
+        }
+        
+        // Chuyển đổi dữ liệu sang định dạng JSMind
+        var jm_data = {
+            "meta": {
+                "name": document.getElementById('id_title').value || "Sơ đồ tư duy mới",
+                "author": "Người dùng",
+                "version": "1.0"
+            },
+            "format": "node_tree",
+            "data": convertToJSMindFormat(mapData)
+        };
+        
+        // Hiển thị sơ đồ
+        jm.show(jm_data);
+        
+        // Cập nhật dữ liệu khi submit form
+        document.getElementById('mindmap-form').addEventListener('submit', function() {
+            var data = jm.get_data('node_tree');
+            var convertedData = convertFromJSMindFormat(data.data);
+            mapDataInput.value = JSON.stringify(convertedData);
+            
+            // Cập nhật chủ đề trung tâm
+            document.getElementById('id_central_topic').value = data.data.topic;
+            
+            return true;
+        });
+        
+        // Thêm nút con
+        document.getElementById('add-child-btn').addEventListener('click', function() {
+            var selected_node = jm.get_selected_node();
+            if (!selected_node) {
+                alert('Vui lòng chọn một nút để thêm nút con.');
+                return;
+            }
+            
+            var nodeText = document.getElementById('node-text').value.trim();
+            if (!nodeText) {
+                alert('Vui lòng nhập nội dung cho nút mới.');
+                return;
+            }
+            
+            var nodeId = 'node_' + new Date().getTime();
+            var selectedColor = document.querySelector('.color-option.selected').getAttribute('data-color');
+            
+            jm.add_node(selected_node, nodeId, nodeText, null, selectedColor);
+            document.getElementById('node-text').value = '';
+        });
+        
+        // Xóa nút
+        document.getElementById('remove-node-btn').addEventListener('click', function() {
+            var selected_node = jm.get_selected_node();
+            if (!selected_node) {
+                alert('Vui lòng chọn một nút để xóa.');
+                return;
+            }
+            
+            if (selected_node.id === 'root') {
+                alert('Không thể xóa nút gốc.');
+                return;
+            }
+            
+            if (confirm('Bạn có chắc chắn muốn xóa nút này và tất cả các nút con của nó?')) {
+                jm.remove_node(selected_node);
+            }
+        });
+        
+        // Sửa nút
+        document.getElementById('edit-node-btn').addEventListener('click', function() {
+            var selected_node = jm.get_selected_node();
+            if (!selected_node) {
+                alert('Vui lòng chọn một nút để sửa.');
+                return;
+            }
+            
+            var newText = prompt('Nhập nội dung mới cho nút:', selected_node.topic);
+            if (newText !== null && newText.trim() !== '') {
+                selected_node.topic = newText.trim();
+                jm.update_node(selected_node);
+            }
+        });
+        
+        // Mở rộng tất cả
+        document.getElementById('expand-all-btn').addEventListener('click', function() {
+            jm.expand_all();
+        });
+        
+        // Cập nhật chủ đề trung tâm khi thay đổi
+        document.getElementById('id_central_topic').addEventListener('change', function() {
+            var rootNode = jm.get_node('root');
+            if (rootNode) {
+                rootNode.topic = this.value;
+                jm.update_node(rootNode);
+            }
+        });
+        
+        // Xử lý chọn màu
+        document.querySelectorAll('.color-option').forEach(function(option) {
+            option.addEventListener('click', function() {
+                // Bỏ chọn tất cả
+                document.querySelectorAll('.color-option').forEach(function(opt) {
+                    opt.classList.remove('selected');
+                });
+                
+                // Chọn màu mới
+                this.classList.add('selected');
+                
+                // Áp dụng màu cho nút đã chọn
+                var selected_node = jm.get_selected_node();
+                if (selected_node) {
+                    var color = this.getAttribute('data-color');
+                    selected_node.data = selected_node.data || {};
+                    selected_node.data.background = color;
+                    jm.update_node(selected_node);
+                }
+            });
+        });
+        
+        // Hàm chuyển đổi dữ liệu từ định dạng lưu trữ sang định dạng JSMind
+        function convertToJSMindFormat(data) {
+            var result = {
+                "id": data.id || "root",
+                "topic": data.text || data.topic || "Chủ đề trung tâm",
+                "direction": "right",
+                "expanded": true
+            };
+            
+            if (data.background) {
+                result.background = data.background;
+            }
+            
+            if (data.children && data.children.length > 0) {
+                result.children = [];
+                for (var i = 0; i < data.children.length; i++) {
+                    result.children.push(convertToJSMindFormat(data.children[i]));
+                }
+            }
+            
+            return result;
+        }
+        
+        // Hàm chuyển đổi dữ liệu từ định dạng JSMind sang định dạng lưu trữ
+        function convertFromJSMindFormat(data) {
+            var result = {
+                "id": data.id,
+                "text": data.topic,
+                "type": data.id === "root" ? "root" : "topic"
+            };
+            
+            if (data.background) {
+                result.background = data.background;
+            }
+            
+            if (data.children && data.children.length > 0) {
+                result.children = [];
+                for (var i = 0; i < data.children.length; i++) {
+                    result.children.push(convertFromJSMindFormat(data.children[i]));
+                }
+            } else {
+                result.children = [];
+            }
+            
+            return result;
+        }
+    });
+</script>
+{% endblock %}

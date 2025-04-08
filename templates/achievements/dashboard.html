@@ -1,0 +1,209 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Thành Tích & Phần Thưởng{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-trophy text-warning"></i> Thành Tích & Phần Thưởng
+            </h1>
+            <p class="lead">Theo dõi thành tích học tập và đổi điểm thưởng</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'achievements:badge_list' %}" class="btn btn-outline-primary me-2">
+                <i class="fas fa-award"></i> Huy Hiệu
+            </a>
+            <a href="{% url 'achievements:reward_list' %}" class="btn btn-outline-success">
+                <i class="fas fa-gift"></i> Phần Thưởng
+            </a>
+        </div>
+    </div>
+
+    <!-- Thông tin điểm thưởng -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h3 class="mb-0">
+                                <i class="fas fa-coins text-warning"></i> Điểm Thưởng: <span class="text-primary">{{ reward_point.points }}</span>
+                            </h3>
+                            <p class="text-muted mb-0">Tổng điểm đã nhận: {{ reward_point.lifetime_points }}</p>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <a href="{% url 'achievements:point_history' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-history"></i> Lịch Sử Điểm
+                            </a>
+                            <a href="{% url 'achievements:reward_list' %}" class="btn btn-success ms-2">
+                                <i class="fas fa-exchange-alt"></i> Đổi Điểm
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thống kê -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-award"></i> Huy Hiệu</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center mb-3">
+                        <div class="col">
+                            <h2 class="display-4">{{ user_badges_count }}</h2>
+                            <p class="mb-0">Huy hiệu đã nhận</p>
+                        </div>
+                    </div>
+                    
+                    <h6 class="border-bottom pb-2 mb-3">Tiến độ theo danh mục</h6>
+                    {% for category, stats in badge_stats.items %}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>{{ stats.name }}</span>
+                                <span>{{ stats.earned }}/{{ stats.total }}</span>
+                            </div>
+                            <div class="progress" style="height: 10px;">
+                                <div class="progress-bar" role="progressbar" style="width: {{ stats.percentage }}%;" aria-valuenow="{{ stats.percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                    
+                    <div class="text-center mt-3">
+                        <a href="{% url 'achievements:badge_list' %}" class="btn btn-primary">Xem tất cả huy hiệu</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-gift"></i> Phần Thưởng</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center mb-3">
+                        <div class="col">
+                            <h2 class="display-4">{{ user_rewards_count }}</h2>
+                            <p class="mb-0">Phần thưởng đã đổi</p>
+                        </div>
+                    </div>
+                    
+                    <h6 class="border-bottom pb-2 mb-3">Lịch sử điểm thưởng gần đây</h6>
+                    {% if point_history %}
+                        <div class="list-group">
+                            {% for entry in point_history %}
+                                <div class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">
+                                            {% if entry.action_type == 'earn' %}
+                                                <span class="text-success">+{{ entry.points }}</span>
+                                            {% else %}
+                                                <span class="text-danger">-{{ entry.points }}</span>
+                                            {% endif %}
+                                            điểm
+                                        </h6>
+                                        <small class="text-muted">{{ entry.timestamp|date:"d/m/Y H:i" }}</small>
+                                    </div>
+                                    <p class="mb-1 small">{{ entry.reason }}</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="{% url 'achievements:point_history' %}" class="btn btn-outline-primary">Xem lịch sử đầy đủ</a>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> Bạn chưa có lịch sử điểm thưởng nào.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Huy hiệu mới nhận -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-award"></i> Huy Hiệu Mới Nhận</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_badges %}
+                        <div class="row">
+                            {% for user_badge in recent_badges %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-body text-center">
+                                            <div class="mb-3">
+                                                <i class="{{ user_badge.badge.get_icon_class }}" style="font-size: 3rem; color: {{ user_badge.badge.get_level_color }}"></i>
+                                            </div>
+                                            <h5 class="card-title">{{ user_badge.badge.name }}</h5>
+                                            <p class="card-text small">{{ user_badge.badge.description }}</p>
+                                            <div class="badge bg-secondary">{{ user_badge.badge.get_level_display }}</div>
+                                            <div class="mt-2 small text-muted">Nhận: {{ user_badge.earned_at|date:"d/m/Y" }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> Bạn chưa nhận được huy hiệu nào.
+                            <a href="{% url 'achievements:badge_list' %}" class="alert-link">Xem danh sách huy hiệu</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Phần thưởng mới đổi -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-gift"></i> Phần Thưởng Mới Đổi</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_rewards %}
+                        <div class="list-group">
+                            {% for user_reward in recent_rewards %}
+                                <div class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">
+                                            <i class="{{ user_reward.reward.get_icon_class }} me-2"></i>
+                                            {{ user_reward.reward.name }}
+                                        </h5>
+                                        <small class="text-muted">{{ user_reward.redeemed_at|date:"d/m/Y" }}</small>
+                                    </div>
+                                    <p class="mb-1">{{ user_reward.reward.description }}</p>
+                                    <div class="d-flex justify-content-between align-items-center mt-2">
+                                        <span class="badge bg-primary">{{ user_reward.reward.points_required }} điểm</span>
+                                        {% if user_reward.is_used %}
+                                            <span class="badge bg-secondary">Đã sử dụng</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Chưa sử dụng</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> Bạn chưa đổi phần thưởng nào.
+                            <a href="{% url 'achievements:reward_list' %}" class="alert-link">Xem danh sách phần thưởng</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

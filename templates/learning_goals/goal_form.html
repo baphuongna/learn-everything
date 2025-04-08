@@ -1,0 +1,314 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-bullseye text-primary"></i> {{ title }}
+            </h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'learning_goals:goal_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Quay Lại
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="{{ form.title.id_for_label }}" class="form-label">{{ form.title.label }}</label>
+                                {{ form.title }}
+                                {% if form.title.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.title.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.description.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.goal_type.id_for_label }}" class="form-label">{{ form.goal_type.label }}</label>
+                                {{ form.goal_type }}
+                                {% if form.goal_type.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.goal_type.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.category.id_for_label }}" class="form-label">{{ form.category.label }}</label>
+                                {{ form.category }}
+                                {% if form.category.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.category.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.start_date.id_for_label }}" class="form-label">{{ form.start_date.label }}</label>
+                                {{ form.start_date }}
+                                {% if form.start_date.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.start_date.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.end_date.id_for_label }}" class="form-label">{{ form.end_date.label }}</label>
+                                {{ form.end_date }}
+                                {% if form.end_date.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.end_date.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="{{ form.target_value.id_for_label }}" class="form-label">{{ form.target_value.label }}</label>
+                                {{ form.target_value }}
+                                {% if form.target_value.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.target_value.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">
+                                    Nhập giá trị mục tiêu (ví dụ: số phút học tập, số bài học cần hoàn thành, số flashcard cần ôn tập, ...)
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <a class="text-decoration-none" data-bs-toggle="collapse" href="#collapseContent" role="button" aria-expanded="false" aria-controls="collapseContent">
+                                    <i class="fas fa-link"></i> Liên kết nội dung <i class="fas fa-chevron-down float-end"></i>
+                                </a>
+                            </div>
+                            <div class="collapse" id="collapseContent">
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <label for="{{ form.subject.id_for_label }}" class="form-label">{{ form.subject.label }}</label>
+                                            {{ form.subject }}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="{{ form.topic.id_for_label }}" class="form-label">{{ form.topic.label }}</label>
+                                            {{ form.topic }}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="{{ form.lesson.id_for_label }}" class="form-label">{{ form.lesson.label }}</label>
+                                            {{ form.lesson }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <a class="text-decoration-none" data-bs-toggle="collapse" href="#collapseReminder" role="button" aria-expanded="false" aria-controls="collapseReminder">
+                                    <i class="fas fa-bell"></i> Nhắc nhở <i class="fas fa-chevron-down float-end"></i>
+                                </a>
+                            </div>
+                            <div class="collapse" id="collapseReminder">
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="form-check form-switch">
+                                                {{ form.reminder_enabled }}
+                                                <label class="form-check-label" for="{{ form.reminder_enabled.id_for_label }}">{{ form.reminder_enabled.label }}</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="{{ form.reminder_frequency.id_for_label }}" class="form-label">{{ form.reminder_frequency.label }}</label>
+                                            {{ form.reminder_frequency }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <a class="text-decoration-none" data-bs-toggle="collapse" href="#collapseReward" role="button" aria-expanded="false" aria-controls="collapseReward">
+                                    <i class="fas fa-gift"></i> Phần thưởng <i class="fas fa-chevron-down float-end"></i>
+                                </a>
+                            </div>
+                            <div class="collapse" id="collapseReward">
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="{{ form.reward_points.id_for_label }}" class="form-label">{{ form.reward_points.label }}</label>
+                                            {{ form.reward_points }}
+                                            <div class="form-text">Điểm thưởng khi hoàn thành mục tiêu</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check form-switch mt-4">
+                                                {{ form.has_badge_reward }}
+                                                <label class="form-check-label" for="{{ form.has_badge_reward.id_for_label }}">{{ form.has_badge_reward.label }}</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="badgeRewardFields" class="{% if not form.instance.has_badge_reward %}d-none{% endif %}">
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label for="{{ form.badge_name.id_for_label }}" class="form-label">{{ form.badge_name.label }}</label>
+                                                {{ form.badge_name }}
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="{{ form.badge_level.id_for_label }}" class="form-label">{{ form.badge_level.label }}</label>
+                                                {{ form.badge_level }}
+                                            </div>
+                                        </div>
+                                        <div class="row mb-3">
+                                            <div class="col-md-12">
+                                                <label for="{{ form.badge_description.id_for_label }}" class="form-label">{{ form.badge_description.label }}</label>
+                                                {{ form.badge_description }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <a class="text-decoration-none" data-bs-toggle="collapse" href="#collapseSharing" role="button" aria-expanded="false" aria-controls="collapseSharing">
+                                    <i class="fas fa-share-alt"></i> Chia sẻ <i class="fas fa-chevron-down float-end"></i>
+                                </a>
+                            </div>
+                            <div class="collapse" id="collapseSharing">
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="form-check form-switch">
+                                                {{ form.is_public }}
+                                                <label class="form-check-label" for="{{ form.is_public.id_for_label }}">{{ form.is_public.label }}</label>
+                                                <div class="form-text">Mục tiêu công khai sẽ hiển thị trong danh sách mục tiêu công khai</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check form-switch">
+                                                {{ form.allow_collaboration }}
+                                                <label class="form-check-label" for="{{ form.allow_collaboration.id_for_label }}">{{ form.allow_collaboration.label }}</label>
+                                                <div class="form-text">Cho phép người khác tham gia và cập nhật tiến độ mục tiêu</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'learning_goals:goal_list' %}" class="btn btn-outline-secondary me-md-2">Hủy</a>
+                            <button type="submit" class="btn btn-primary">{{ button_text }}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Cập nhật ngày kết thúc dựa trên loại mục tiêu
+        const goalTypeSelect = document.getElementById('{{ form.goal_type.id_for_label }}');
+        const startDateInput = document.getElementById('{{ form.start_date.id_for_label }}');
+        const endDateInput = document.getElementById('{{ form.end_date.id_for_label }}');
+
+        goalTypeSelect.addEventListener('change', function() {
+            if (startDateInput.value) {
+                const startDate = new Date(startDateInput.value);
+                let endDate = new Date(startDate);
+
+                switch (this.value) {
+                    case 'daily':
+                        // Cùng ngày
+                        break;
+                    case 'weekly':
+                        // 7 ngày
+                        endDate.setDate(startDate.getDate() + 6);
+                        break;
+                    case 'monthly':
+                        // 30 ngày
+                        endDate.setDate(startDate.getDate() + 29);
+                        break;
+                }
+
+                // Định dạng ngày thành YYYY-MM-DD
+                const year = endDate.getFullYear();
+                const month = String(endDate.getMonth() + 1).padStart(2, '0');
+                const day = String(endDate.getDate()).padStart(2, '0');
+                endDateInput.value = `${year}-${month}-${day}`;
+            }
+        });
+
+        // Cập nhật ngày kết thúc khi ngày bắt đầu thay đổi
+        startDateInput.addEventListener('change', function() {
+            if (this.value) {
+                // Kích hoạt sự kiện change của goalTypeSelect để cập nhật ngày kết thúc
+                const event = new Event('change');
+                goalTypeSelect.dispatchEvent(event);
+            }
+        });
+
+        // Xử lý ẩn/hiện các trường huy hiệu thưởng
+        const hasBadgeRewardCheckbox = document.getElementById('{{ form.has_badge_reward.id_for_label }}');
+        const badgeRewardFields = document.getElementById('badgeRewardFields');
+
+        hasBadgeRewardCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                badgeRewardFields.classList.remove('d-none');
+            } else {
+                badgeRewardFields.classList.add('d-none');
+            }
+        });
+    });
+</script>
+{% endblock %}

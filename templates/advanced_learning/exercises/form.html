@@ -1,0 +1,207 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }} - Nền Tảng Học Tập{% endblock %}
+
+{% block extra_css %}
+<style>
+    .exercise-form-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    .form-section {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+    }
+    
+    .form-section h5 {
+        margin-bottom: 15px;
+        color: #6f42c1;
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 10px;
+    }
+    
+    .form-buttons {
+        margin-top: 30px;
+        text-align: center;
+    }
+    
+    .exercise-type-info {
+        display: none;
+        padding: 10px;
+        background-color: #e9ecef;
+        border-radius: 5px;
+        margin-top: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-laptop-code text-purple"></i> {{ title }}
+        </h1>
+        <p class="lead">Tạo bài tập thực hành tương tác để giúp người học áp dụng kiến thức vào thực tiễn.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:exercise_list' %}" class="btn btn-outline-purple">
+            <i class="fas fa-arrow-left"></i> Quay Lại Danh Sách
+        </a>
+    </div>
+</div>
+
+<div class="exercise-form-container">
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-section">
+            <h5><i class="fas fa-info-circle"></i> Thông Tin Chung</h5>
+            <div class="row">
+                <div class="col-md-8 mb-3">
+                    {{ form.title|as_crispy_field }}
+                </div>
+                <div class="col-md-4 mb-3">
+                    {{ form.lesson|as_crispy_field }}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    {{ form.description|as_crispy_field }}
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <h5><i class="fas fa-cogs"></i> Cấu Hình Bài Tập</h5>
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    {{ form.exercise_type|as_crispy_field }}
+                    
+                    <div id="code-info" class="exercise-type-info">
+                        <p><strong>Bài tập lập trình:</strong> Cho phép người học viết và chạy mã để giải quyết vấn đề. Bạn có thể cung cấp mã mẫu, yêu cầu và các trường hợp kiểm tra.</p>
+                    </div>
+                    
+                    <div id="quiz-info" class="exercise-type-info">
+                        <p><strong>Câu đố tương tác:</strong> Tạo câu hỏi, câu đố hoặc thử thách tư duy. Người học sẽ nhập câu trả lời và nhận phản hồi ngay lập tức.</p>
+                    </div>
+                    
+                    <div id="simulation-info" class="exercise-type-info">
+                        <p><strong>Mô phỏng:</strong> Tạo mô phỏng tương tác cho các hiện tượng, quy trình hoặc hệ thống. Người học có thể thay đổi các tham số và quan sát kết quả.</p>
+                    </div>
+                    
+                    <div id="game-info" class="exercise-type-info">
+                        <p><strong>Trò chơi học tập:</strong> Tạo trò chơi có mục tiêu giáo dục. Người học học thông qua việc chơi và hoàn thành các nhiệm vụ trong trò chơi.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <h5><i class="fas fa-code"></i> Nội Dung Bài Tập</h5>
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    {{ form.content|as_crispy_field }}
+                    <small class="form-text text-muted">Bạn có thể sử dụng HTML để định dạng nội dung. Đối với bài tập lập trình, bạn có thể nhúng mã mẫu. Đối với mô phỏng và trò chơi, bạn có thể nhúng iframe hoặc mã JavaScript.</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <h5><i class="fas fa-check-circle"></i> Giải Pháp</h5>
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    {{ form.solution|as_crispy_field }}
+                    <small class="form-text text-muted">Cung cấp giải pháp hoặc đáp án cho bài tập. Giải pháp này sẽ được sử dụng để kiểm tra câu trả lời của người học và hiển thị khi họ hoàn thành bài tập thành công.</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-buttons">
+            <button type="submit" class="btn btn-purple btn-lg">
+                <i class="fas fa-save"></i> {{ button_text }}
+            </button>
+            <a href="{% url 'advanced_learning:exercise_list' %}" class="btn btn-outline-secondary btn-lg ms-2">
+                <i class="fas fa-times"></i> Hủy
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Thêm màu tím cho nút và các phần tử khác
+    document.addEventListener('DOMContentLoaded', function() {
+        // Thêm CSS cho màu tím
+        const style = document.createElement('style');
+        style.textContent = `
+            .btn-purple {
+                background-color: #6f42c1;
+                border-color: #6f42c1;
+                color: white;
+            }
+            .btn-purple:hover {
+                background-color: #5e35b1;
+                border-color: #5e35b1;
+                color: white;
+            }
+            .btn-outline-purple {
+                color: #6f42c1;
+                border-color: #6f42c1;
+            }
+            .btn-outline-purple:hover {
+                background-color: #6f42c1;
+                color: white;
+            }
+            .bg-purple {
+                background-color: #6f42c1 !important;
+            }
+            .text-purple {
+                color: #6f42c1 !important;
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Xử lý hiển thị thông tin loại bài tập
+        const exerciseTypeSelect = document.getElementById('id_exercise_type');
+        const codeInfo = document.getElementById('code-info');
+        const quizInfo = document.getElementById('quiz-info');
+        const simulationInfo = document.getElementById('simulation-info');
+        const gameInfo = document.getElementById('game-info');
+        
+        function showExerciseTypeInfo() {
+            // Ẩn tất cả
+            codeInfo.style.display = 'none';
+            quizInfo.style.display = 'none';
+            simulationInfo.style.display = 'none';
+            gameInfo.style.display = 'none';
+            
+            // Hiển thị thông tin tương ứng
+            const selectedType = exerciseTypeSelect.value;
+            
+            if (selectedType === 'code') {
+                codeInfo.style.display = 'block';
+            } else if (selectedType === 'quiz') {
+                quizInfo.style.display = 'block';
+            } else if (selectedType === 'simulation') {
+                simulationInfo.style.display = 'block';
+            } else if (selectedType === 'game') {
+                gameInfo.style.display = 'block';
+            }
+        }
+        
+        if (exerciseTypeSelect) {
+            exerciseTypeSelect.addEventListener('change', showExerciseTypeInfo);
+            
+            // Hiển thị thông tin ban đầu
+            showExerciseTypeInfo();
+        }
+    });
+</script>
+{% endblock %}

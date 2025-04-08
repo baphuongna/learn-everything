@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thông Báo Hàng Ngày</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #4A6FDC;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 0 0 5px 5px;
+            border: 1px solid #ddd;
+            border-top: none;
+        }
+        .notification {
+            background-color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border-left: 4px solid #4A6FDC;
+        }
+        .notification.info { border-left-color: #4A6FDC; }
+        .notification.success { border-left-color: #28a745; }
+        .notification.warning { border-left-color: #ffc107; }
+        .notification.danger { border-left-color: #dc3545; }
+        
+        .notification-title {
+            margin-top: 0;
+            margin-bottom: 5px;
+            font-size: 16px;
+            color: #333;
+        }
+        .notification-message {
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        .notification-meta {
+            font-size: 12px;
+            color: #777;
+        }
+        .button {
+            display: inline-block;
+            background-color: #4A6FDC;
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            margin-top: 5px;
+            font-size: 12px;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #777;
+        }
+        .summary {
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Thông Báo Hàng Ngày</h1>
+        </div>
+        
+        <div class="content">
+            <p>Xin chào {{ user.username }},</p>
+            
+            <div class="summary">
+                <h2>Tóm Tắt Thông Báo Hôm Nay</h2>
+                <p>Bạn có <strong>{{ notifications|length }}</strong> thông báo mới trong 24 giờ qua.</p>
+            </div>
+            
+            {% for notification in notifications %}
+                <div class="notification {{ notification.notification_type }}">
+                    <h3 class="notification-title">{{ notification.title }}</h3>
+                    <div class="notification-message">{{ notification.message }}</div>
+                    <div class="notification-meta">
+                        Thời gian: {{ notification.created_at|date:"d/m/Y H:i" }}
+                        {% if notification.related_feature != 'system' %}
+                            • 
+                            {% if notification.related_feature == 'pomodoro' %}
+                                Pomodoro Timer
+                            {% elif notification.related_feature == 'cornell' %}
+                                Cornell Notes
+                            {% elif notification.related_feature == 'mindmap' %}
+                                Mind Mapping
+                            {% elif notification.related_feature == 'feynman' %}
+                                Feynman Technique
+                            {% elif notification.related_feature == 'project' %}
+                                Project-Based Learning
+                            {% elif notification.related_feature == 'exercise' %}
+                                Interactive Exercises
+                            {% elif notification.related_feature == 'competition' %}
+                                Competition Mode
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                    
+                    {% if notification.url %}
+                        <a href="{{ site_url }}{{ notification.url }}" class="button">Xem Chi Tiết</a>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            
+            <p>Để xem tất cả thông báo của bạn, vui lòng <a href="{{ site_url }}{% url 'notifications:list' %}">nhấp vào đây</a>.</p>
+            
+            <p>Để quản lý tùy chọn thông báo của bạn, vui lòng <a href="{{ site_url }}{% url 'notifications:preferences' %}">nhấp vào đây</a>.</p>
+            
+            <p>Trân trọng,<br>Đội ngũ Nền Tảng Học Tập</p>
+        </div>
+        
+        <div class="footer">
+            <p>Email này được gửi tự động. Vui lòng không trả lời.</p>
+            <p>© {% now "Y" %} Nền Tảng Học Tập. Tất cả các quyền được bảo lưu.</p>
+        </div>
+    </div>
+</body>
+</html>

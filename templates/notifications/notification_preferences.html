@@ -1,0 +1,175 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Tùy Chọn Thông Báo{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">Tùy Chọn Thông Báo</h1>
+            <p class="text-muted">Tùy chỉnh cách bạn nhận thông báo từ hệ thống.</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'notifications:list' %}" class="btn btn-outline-primary">
+                <i class="fas fa-bell"></i> Xem Thông Báo
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <h4 class="card-title mb-4">Cài Đặt Chung</h4>
+
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="receive_realtime_notifications" name="receive_realtime_notifications" {% if preferences.receive_realtime_notifications %}checked{% endif %}>
+                            <label class="form-check-label" for="receive_realtime_notifications">
+                                Nhận thông báo thời gian thực trong ứng dụng
+                            </label>
+                            <div class="form-text">Hiển thị thông báo ngay lập tức khi có sự kiện mới.</div>
+                        </div>
+
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="receive_email_notifications" name="receive_email_notifications" {% if preferences.receive_email_notifications %}checked{% endif %}>
+                            <label class="form-check-label" for="receive_email_notifications">
+                                Nhận thông báo qua email
+                            </label>
+                            <div class="form-text">Gửi thông báo quan trọng đến địa chỉ email của bạn.</div>
+                        </div>
+
+                        <hr>
+
+                        <h4 class="card-title mb-4">Tùy Chọn Email</h4>
+
+                        <div class="mb-3">
+                            <label class="form-label">Tần suất nhận email</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="email_frequency" id="email_immediately" value="immediately" {% if preferences.email_frequency == 'immediately' %}checked{% endif %}>
+                                <label class="form-check-label" for="email_immediately">
+                                    Ngay lập tức
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="email_frequency" id="email_daily" value="daily" {% if preferences.email_frequency == 'daily' %}checked{% endif %}>
+                                <label class="form-check-label" for="email_daily">
+                                    Hàng ngày (tóm tắt)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="email_frequency" id="email_weekly" value="weekly" {% if preferences.email_frequency == 'weekly' %}checked{% endif %}>
+                                <label class="form-check-label" for="email_weekly">
+                                    Hàng tuần (tóm tắt)
+                                </label>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <h4 class="card-title mb-4">Loại Thông Báo</h4>
+                        <p class="text-muted mb-3">Chọn loại thông báo bạn muốn nhận qua email:</p>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="email_pomodoro" name="email_pomodoro" {% if preferences.email_pomodoro %}checked{% endif %}>
+                                    <label class="form-check-label" for="email_pomodoro">
+                                        <i class="fas fa-clock text-primary me-2"></i> Pomodoro Timer
+                                    </label>
+                                </div>
+
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="email_cornell" name="email_cornell" {% if preferences.email_cornell %}checked{% endif %}>
+                                    <label class="form-check-label" for="email_cornell">
+                                        <i class="fas fa-edit text-success me-2"></i> Cornell Notes
+                                    </label>
+                                </div>
+
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="email_mindmap" name="email_mindmap" {% if preferences.email_mindmap %}checked{% endif %}>
+                                    <label class="form-check-label" for="email_mindmap">
+                                        <i class="fas fa-project-diagram text-info me-2"></i> Mind Mapping
+                                    </label>
+                                </div>
+
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="email_feynman" name="email_feynman" {% if preferences.email_feynman %}checked{% endif %}>
+                                    <label class="form-check-label" for="email_feynman">
+                                        <i class="fas fa-lightbulb text-warning me-2"></i> Feynman Technique
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="email_project" name="email_project" {% if preferences.email_project %}checked{% endif %}>
+                                    <label class="form-check-label" for="email_project">
+                                        <i class="fas fa-tasks text-secondary me-2"></i> Project-Based Learning
+                                    </label>
+                                </div>
+
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="email_exercise" name="email_exercise" {% if preferences.email_exercise %}checked{% endif %}>
+                                    <label class="form-check-label" for="email_exercise">
+                                        <i class="fas fa-laptop-code text-dark me-2"></i> Interactive Exercises
+                                    </label>
+                                </div>
+
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="email_competition" name="email_competition" {% if preferences.email_competition %}checked{% endif %}>
+                                    <label class="form-check-label" for="email_competition">
+                                        <i class="fas fa-trophy text-danger me-2"></i> Competition Mode
+                                    </label>
+                                </div>
+
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="email_system" name="email_system" {% if preferences.email_system %}checked{% endif %}>
+                                    <label class="form-check-label" for="email_system">
+                                        <i class="fas fa-cog text-muted me-2"></i> Hệ thống
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i> Lưu Tùy Chọn
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <i class="fas fa-info-circle me-2"></i> Thông Tin
+                </div>
+                <div class="card-body">
+                    <p>Thông báo thời gian thực sẽ hiển thị ngay lập tức trong ứng dụng khi có sự kiện mới.</p>
+                    <p>Thông báo qua email sẽ được gửi đến địa chỉ email của bạn theo tần suất bạn đã chọn.</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <i class="fas fa-question-circle me-2"></i> Trợ Giúp
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Tần suất nhận email</h5>
+                    <ul class="list-unstyled">
+                        <li><strong>Ngay lập tức:</strong> Gửi email ngay khi có thông báo mới.</li>
+                        <li><strong>Hàng ngày:</strong> Gửi một email tóm tắt mỗi ngày.</li>
+                        <li><strong>Hàng tuần:</strong> Gửi một email tóm tắt mỗi tuần.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

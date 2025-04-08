@@ -1,0 +1,203 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }} - Nền Tảng Học Tập{% endblock %}
+
+{% block extra_css %}
+<style>
+    .cornell-form-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    .cornell-layout {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        grid-template-rows: auto 1fr auto;
+        grid-template-areas:
+            "header header"
+            "cue main"
+            "summary summary";
+        gap: 15px;
+        margin-top: 20px;
+    }
+    
+    .cornell-header {
+        grid-area: header;
+    }
+    
+    .cornell-cue {
+        grid-area: cue;
+    }
+    
+    .cornell-main {
+        grid-area: main;
+    }
+    
+    .cornell-summary {
+        grid-area: summary;
+    }
+    
+    .form-section {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    
+    .form-section h5 {
+        margin-bottom: 15px;
+        color: #007bff;
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 10px;
+    }
+    
+    .form-buttons {
+        margin-top: 30px;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-edit text-primary"></i> {{ title }}
+        </h1>
+        <p class="lead">Sử dụng phương pháp Cornell để tổ chức ghi chú của bạn một cách có cấu trúc.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:cornell_note_list' %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Quay Lại Danh Sách
+        </a>
+    </div>
+</div>
+
+<div class="cornell-form-container">
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-section cornell-header">
+            <h5><i class="fas fa-heading"></i> Thông Tin Chung</h5>
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    {{ form.title|as_crispy_field }}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    {{ form.subject|as_crispy_field }}
+                </div>
+                <div class="col-md-4 mb-3">
+                    {{ form.topic|as_crispy_field }}
+                </div>
+                <div class="col-md-4 mb-3">
+                    {{ form.lesson|as_crispy_field }}
+                </div>
+            </div>
+        </div>
+        
+        <div class="cornell-layout">
+            <div class="form-section cornell-cue">
+                <h5><i class="fas fa-question-circle"></i> Cột Gợi Ý</h5>
+                <p class="text-muted small">Ghi các câu hỏi, từ khóa, hoặc gợi ý để giúp bạn nhớ nội dung chính.</p>
+                {{ form.cue_column|as_crispy_field }}
+            </div>
+            
+            <div class="form-section cornell-main">
+                <h5><i class="fas fa-pen"></i> Ghi Chú Chính</h5>
+                <p class="text-muted small">Ghi chép nội dung chính của bài học hoặc tài liệu.</p>
+                {{ form.main_notes|as_crispy_field }}
+            </div>
+            
+            <div class="form-section cornell-summary">
+                <h5><i class="fas fa-compress-alt"></i> Tóm Tắt</h5>
+                <p class="text-muted small">Tóm tắt những điểm chính của ghi chú bằng ngôn ngữ của riêng bạn.</p>
+                {{ form.summary|as_crispy_field }}
+            </div>
+        </div>
+        
+        <div class="form-buttons">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-save"></i> {{ button_text }}
+            </button>
+            <a href="{% url 'advanced_learning:cornell_note_list' %}" class="btn btn-outline-secondary btn-lg ms-2">
+                <i class="fas fa-times"></i> Hủy
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Xử lý khi thay đổi subject
+        const subjectSelect = document.getElementById('id_subject');
+        const topicSelect = document.getElementById('id_topic');
+        const lessonSelect = document.getElementById('id_lesson');
+        
+        if (subjectSelect && topicSelect) {
+            subjectSelect.addEventListener('change', function() {
+                const subjectId = this.value;
+                
+                // Reset topic và lesson
+                topicSelect.innerHTML = '<option value="">-- Chọn chủ đề con --</option>';
+                topicSelect.disabled = !subjectId;
+                
+                lessonSelect.innerHTML = '<option value="">-- Chọn bài học --</option>';
+                lessonSelect.disabled = true;
+                
+                if (subjectId) {
+                    // Gửi yêu cầu AJAX để lấy danh sách topic
+                    fetch(`/api/subjects/${subjectId}/topics/`)
+                        .then(response => response.json())
+                        .then(data => {
+                            // Thêm các option mới
+                            data.forEach(topic => {
+                                const option = document.createElement('option');
+                                option.value = topic.id;
+                                option.textContent = topic.name;
+                                topicSelect.appendChild(option);
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Lỗi khi lấy danh sách chủ đề con:', error);
+                        });
+                }
+            });
+        }
+        
+        // Xử lý khi thay đổi topic
+        if (topicSelect && lessonSelect) {
+            topicSelect.addEventListener('change', function() {
+                const topicId = this.value;
+                
+                // Reset lesson
+                lessonSelect.innerHTML = '<option value="">-- Chọn bài học --</option>';
+                lessonSelect.disabled = !topicId;
+                
+                if (topicId) {
+                    // Gửi yêu cầu AJAX để lấy danh sách lesson
+                    fetch(`/api/topics/${topicId}/lessons/`)
+                        .then(response => response.json())
+                        .then(data => {
+                            // Thêm các option mới
+                            data.forEach(lesson => {
+                                const option = document.createElement('option');
+                                option.value = lesson.id;
+                                option.textContent = lesson.title;
+                                lessonSelect.appendChild(option);
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Lỗi khi lấy danh sách bài học:', error);
+                        });
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

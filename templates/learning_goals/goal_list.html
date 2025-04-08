@@ -1,0 +1,193 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Mục Tiêu Học Tập{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-bullseye text-primary"></i> Mục Tiêu Học Tập
+            </h1>
+            <p class="lead">Quản lý các mục tiêu học tập của bạn</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'learning_goals:goal_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Tạo Mục Tiêu Mới
+            </a>
+            <a href="{% url 'learning_goals:dashboard' %}" class="btn btn-outline-primary ms-2">
+                <i class="fas fa-chart-bar"></i> Tổng Quan
+            </a>
+        </div>
+    </div>
+
+    <!-- Bộ lọc -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-5">
+                            <label for="type" class="form-label">Loại mục tiêu</label>
+                            <select name="type" id="type" class="form-select" onchange="this.form.submit()">
+                                <option value="">Tất cả</option>
+                                <option value="daily" {% if selected_type == 'daily' %}selected{% endif %}>Hàng ngày</option>
+                                <option value="weekly" {% if selected_type == 'weekly' %}selected{% endif %}>Hàng tuần</option>
+                                <option value="monthly" {% if selected_type == 'monthly' %}selected{% endif %}>Hàng tháng</option>
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label for="status" class="form-label">Trạng thái</label>
+                            <select name="status" id="status" class="form-select" onchange="this.form.submit()">
+                                <option value="">Tất cả</option>
+                                <option value="not_started" {% if selected_status == 'not_started' %}selected{% endif %}>Chưa bắt đầu</option>
+                                <option value="in_progress" {% if selected_status == 'in_progress' %}selected{% endif %}>Đang thực hiện</option>
+                                <option value="completed" {% if selected_status == 'completed' %}selected{% endif %}>Đã hoàn thành</option>
+                                <option value="overdue" {% if selected_status == 'overdue' %}selected{% endif %}>Quá hạn</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <a href="{% url 'learning_goals:goal_list' %}" class="btn btn-outline-secondary w-100">Đặt lại</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thống kê -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Tổng Số</h5>
+                    <h2>{{ total_goals }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Đã Hoàn Thành</h5>
+                    <h2>{{ completed_goals }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Đang Thực Hiện</h5>
+                    <h2>{{ active_goals }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Quá Hạn</h5>
+                    <h2>{{ overdue_goals }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Danh sách mục tiêu -->
+    <div class="row">
+        <div class="col-md-12">
+            {% if goals %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tiêu đề</th>
+                                <th>Loại</th>
+                                <th>Danh mục</th>
+                                <th>Thời gian</th>
+                                <th>Tiến độ</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for goal in goals %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'learning_goals:goal_detail' goal_id=goal.id %}">{{ goal.title }}</a>
+                                    </td>
+                                    <td>{{ goal.get_goal_type_display }}</td>
+                                    <td>{{ goal.get_category_display }}</td>
+                                    <td>
+                                        <small>{{ goal.start_date|date:"d/m/Y" }} - {{ goal.end_date|date:"d/m/Y" }}</small>
+                                        {% if goal.is_active %}
+                                            <br>
+                                            <small class="text-muted">Còn {{ goal.days_remaining }} ngày</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="height: 10px;">
+                                            <div class="progress-bar {% if goal.is_behind_schedule and goal.status != 'completed' %}bg-warning{% else %}bg-success{% endif %}" role="progressbar" style="width: {{ goal.progress_percentage }}%;" aria-valuenow="{{ goal.progress_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                        <small>{{ goal.progress_percentage }}% ({{ goal.current_value }}/{{ goal.target_value }})</small>
+                                    </td>
+                                    <td>
+                                        {% if goal.status == 'not_started' %}
+                                            <span class="badge bg-secondary">Chưa bắt đầu</span>
+                                        {% elif goal.status == 'in_progress' %}
+                                            <span class="badge bg-primary">Đang thực hiện</span>
+                                        {% elif goal.status == 'completed' %}
+                                            <span class="badge bg-success">Đã hoàn thành</span>
+                                        {% elif goal.status == 'overdue' %}
+                                            <span class="badge bg-danger">Quá hạn</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'learning_goals:goal_detail' goal_id=goal.id %}" class="btn btn-outline-primary" title="Xem chi tiết">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'learning_goals:goal_edit' goal_id=goal.id %}" class="btn btn-outline-secondary" title="Chỉnh sửa">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-outline-danger" title="Xóa" data-bs-toggle="modal" data-bs-target="#deleteModal{{ goal.id }}">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Modal xác nhận xóa -->
+                                        <div class="modal fade" id="deleteModal{{ goal.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ goal.id }}" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="deleteModalLabel{{ goal.id }}">Xác nhận xóa</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        Bạn có chắc chắn muốn xóa mục tiêu <strong>{{ goal.title }}</strong>?
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                                        <form action="{% url 'learning_goals:goal_delete' goal_id=goal.id %}" method="post">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="btn btn-danger">Xóa</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> Bạn chưa có mục tiêu học tập nào.
+                    <a href="{% url 'learning_goals:goal_create' %}" class="alert-link">Tạo mục tiêu mới</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

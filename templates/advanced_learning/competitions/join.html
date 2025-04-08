@@ -1,0 +1,176 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Tham Gia Cuộc Thi - {{ competition.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .competition-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .competition-header {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+    }
+    
+    .competition-title {
+        color: #fd7e14;
+        margin-bottom: 10px;
+    }
+    
+    .competition-meta {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 15px;
+    }
+    
+    .competition-description {
+        line-height: 1.6;
+        margin-bottom: 20px;
+    }
+    
+    .rules-section {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+    }
+    
+    .rules-section h5 {
+        color: #fd7e14;
+        margin-bottom: 15px;
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 10px;
+    }
+    
+    .form-buttons {
+        margin-top: 30px;
+        text-align: center;
+    }
+    
+    .status-badge {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .status-active {
+        background-color: #28a745;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-play text-orange"></i> Tham Gia Cuộc Thi
+        </h1>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:competition_detail' competition_id=competition.id %}" class="btn btn-outline-orange">
+            <i class="fas fa-arrow-left"></i> Quay Lại Chi Tiết
+        </a>
+    </div>
+</div>
+
+<div class="competition-container">
+    <div class="competition-header">
+        <h2 class="competition-title">{{ competition.title }}</h2>
+        <div class="competition-meta">
+            {% if competition.subject %}
+            <span class="badge bg-primary">{{ competition.subject.name }}</span>
+            {% endif %}
+            <span class="badge status-active status-badge">Đang diễn ra</span>
+        </div>
+        
+        <div class="competition-description">
+            {{ competition.description|linebreaks }}
+        </div>
+    </div>
+    
+    <div class="rules-section">
+        <h5><i class="fas fa-gavel"></i> Quy Tắc Cuộc Thi</h5>
+        <ul>
+            <li><strong>Thời gian làm bài:</strong> {{ competition.time_limit }} phút</li>
+            <li><strong>Số lượng câu hỏi:</strong> {{ competition.competitionquestion_set.count }} câu</li>
+            <li><strong>Cách tính điểm:</strong> Mỗi câu trả lời đúng sẽ được cộng điểm tương ứng với giá trị của câu hỏi đó.</li>
+            <li><strong>Không được sử dụng tài liệu:</strong> Bạn không được phép sử dụng tài liệu, internet hoặc hỏi người khác trong quá trình làm bài.</li>
+            <li><strong>Không được làm mới trang:</strong> Nếu bạn làm mới trang hoặc thoát khỏi trang, thời gian vẫn tiếp tục tính.</li>
+            <li><strong>Nộp bài:</strong> Bạn phải nộp bài trước khi hết thời gian. Nếu không, hệ thống sẽ tự động nộp bài với các câu trả lời đã chọn.</li>
+        </ul>
+        
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i> <strong>Lưu ý:</strong> Sau khi bắt đầu làm bài, bạn không thể quay lại trang này. Hãy đảm bảo rằng bạn đã sẵn sàng trước khi bắt đầu.
+        </div>
+        
+        <form method="post" class="mt-4">
+            {% csrf_token %}
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="agree-rules" required>
+                <label class="form-check-label" for="agree-rules">
+                    Tôi đã đọc và đồng ý với các quy tắc cuộc thi.
+                </label>
+            </div>
+            
+            <div class="form-buttons">
+                <button type="submit" class="btn btn-orange btn-lg" id="start-button" disabled>
+                    <i class="fas fa-play"></i> Bắt Đầu Làm Bài
+                </button>
+                <a href="{% url 'advanced_learning:competition_detail' competition_id=competition.id %}" class="btn btn-outline-secondary btn-lg ms-2">
+                    <i class="fas fa-times"></i> Hủy
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Thêm CSS cho màu cam
+        const style = document.createElement('style');
+        style.textContent = `
+            .btn-orange {
+                background-color: #fd7e14;
+                border-color: #fd7e14;
+                color: white;
+            }
+            .btn-orange:hover {
+                background-color: #e76b00;
+                border-color: #e76b00;
+                color: white;
+            }
+            .btn-outline-orange {
+                color: #fd7e14;
+                border-color: #fd7e14;
+            }
+            .btn-outline-orange:hover {
+                background-color: #fd7e14;
+                color: white;
+            }
+            .bg-orange {
+                background-color: #fd7e14 !important;
+            }
+            .text-orange {
+                color: #fd7e14 !important;
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Xử lý checkbox đồng ý quy tắc
+        const agreeRules = document.getElementById('agree-rules');
+        const startButton = document.getElementById('start-button');
+        
+        agreeRules.addEventListener('change', function() {
+            startButton.disabled = !this.checked;
+        });
+    });
+</script>
+{% endblock %}
