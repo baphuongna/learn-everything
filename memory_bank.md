@@ -261,22 +261,13 @@ learning_platform/
 
 **Vấn đề:** Lỗi "TemplateDoesNotExist at /accounts/login/ bootstrap4/uni_form.html" khi truy cập trang đăng nhập.
 
-**Nguyên nhân:** Thiếu cấu hình crispy-bootstrap4 trong INSTALLED_APPS và phiên bản không tương thích.
-
-**Giải pháp:**
-1. Thêm 'crispy_bootstrap4' vào INSTALLED_APPS trong settings.py
-2. Cài đặt phiên bản crispy-bootstrap4 phù hợp: `pip install crispy-bootstrap4==2022.1`
+**Trạng thái:** Đã sửa xong
 
 ### 7.2. Vấn đề với django-summernote
 
 **Vấn đề:** Trình soạn thảo Summernote không hiển thị đúng trong form tạo/chỉnh sửa ghi nhớ.
 
-**Nguyên nhân:** Thiếu cấu hình và tích hợp không đúng cách.
-
-**Giải pháp:**
-1. Thêm 'django_summernote' vào INSTALLED_APPS
-2. Cấu hình SUMMERNOTE_CONFIG trong settings.py
-3. Sử dụng SummernoteWidget trong form
+**Trạng thái:** Đã sửa xong
 
 ## 8. Kế hoạch phát triển tương lai
 

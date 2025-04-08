@@ -13,6 +13,13 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import os
 
+# Load environment variables from .env file if it exists
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # dotenv not installed
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -21,12 +28,42 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-a&3r49obc#)*lea%gfj164*2463&_xlbkaz@*!&59ro*@45-t#"
+import os
+import secrets
+
+# Thử lấy SECRET_KEY từ biến môi trường
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+
+# Nếu không có SECRET_KEY trong biến môi trường, tạo một key mới
+if not SECRET_KEY:
+    # Chỉ hiển thị cảnh báo trong môi trường phát triển
+    if os.environ.get('DJANGO_DEBUG', 'True') == 'True':
+        print("WARNING: No SECRET_KEY set in environment variables. Using a random key.")
+        print("This is fine for development but not for production.")
+
+    # Tạo một SECRET_KEY ngẫu nhiên mới
+    SECRET_KEY = secrets.token_hex(32)  # 64 ký tự hex
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = []
+# Lấy danh sách ALLOWED_HOSTS từ biến môi trường hoặc sử dụng giá trị mặc định an toàn
+ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,[::1]')
+ALLOWED_HOSTS = ALLOWED_HOSTS_ENV.split(',')
+
+# Bảo mật cho cookie và session
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 năm
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+SESSION_COOKIE_HTTPONLY = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
+X_FRAME_OPTIONS = 'DENY'
 
 
 # Application definition
@@ -42,6 +79,7 @@ INSTALLED_APPS = [
     # Third-party apps
     "crispy_forms",
     "crispy_bootstrap4",
+    "csp",  # Content Security Policy
 
     # Custom apps
     "accounts",
@@ -54,12 +92,14 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "csp.middleware.CSPMiddleware",  # Content Security Policy middleware
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "learning_platform.middleware.SecurityHeadersMiddleware",  # Middleware bảo mật tùy chỉnh
 ]
 
 ROOT_URLCONF = "learning_platform.urls"
@@ -85,12 +125,55 @@ WSGI_APPLICATION = "learning_platform.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+# Kết nối với Supabase PostgreSQL - Chỉ sử dụng biến môi trường, không lưu thông tin nhạy cảm
+SUPABASE_DB_USER = os.environ.get('SUPABASE_DB_USER')
+SUPABASE_DB_PASSWORD = os.environ.get('SUPABASE_DB_PASSWORD')
+SUPABASE_DB_HOST = os.environ.get('SUPABASE_DB_HOST')
+SUPABASE_DB_PORT = os.environ.get('SUPABASE_DB_PORT', '5432')  # Port mặc định an toàn để giữ lại
+SUPABASE_DB_NAME = os.environ.get('SUPABASE_DB_NAME', 'postgres')  # Tên database mặc định an toàn để giữ lại
+SUPABASE_DB_SCHEMA = os.environ.get('SUPABASE_DB_SCHEMA', 'public')  # Schema mặc định an toàn để giữ lại
+
+# Kiểm tra xem các biến môi trường bắt buộc đã được thiết lập chưa
+if not all([SUPABASE_DB_USER, SUPABASE_DB_PASSWORD, SUPABASE_DB_HOST]):
+    if DEBUG:
+        print("Cảnh báo: Thiếu thông tin kết nối Supabase. Hãy kiểm tra file .env")
+    else:
+        raise Exception("Thiếu thông tin kết nối Supabase. Hãy kiểm tra file .env")
+
+# Cấu hình Supabase Connection String (dùng cho các công cụ bên ngoài)
+SUPABASE_CONNECTION_STRING = f"postgresql://{SUPABASE_DB_USER}:{SUPABASE_DB_PASSWORD}@{SUPABASE_DB_HOST}:{SUPABASE_DB_PORT}/{SUPABASE_DB_NAME}?sslmode=require"
+
+# Cấu hình cơ sở dữ liệu
+# Sử dụng Supabase PostgreSQL nếu có đủ thông tin kết nối
+# Nếu không, sử dụng SQLite cho môi trường phát triển
+if all([SUPABASE_DB_USER, SUPABASE_DB_PASSWORD, SUPABASE_DB_HOST]):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': SUPABASE_DB_NAME,
+            'USER': SUPABASE_DB_USER,
+            'PASSWORD': SUPABASE_DB_PASSWORD,
+            'HOST': SUPABASE_DB_HOST,
+            'PORT': SUPABASE_DB_PORT,
+            'OPTIONS': {
+                'sslmode': 'require',
+                'options': f'-c search_path={SUPABASE_DB_SCHEMA}',
+            },
+        }
     }
-}
+    print("Sử dụng Supabase PostgreSQL")
+else:
+    # Sử dụng SQLite cho môi trường phát triển nếu thiếu thông tin kết nối Supabase
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+    if DEBUG:
+        print("Sử dụng SQLite cho môi trường phát triển")
+    else:
+        print("Cảnh báo: Đang sử dụng SQLite trong môi trường production!")
 
 
 # Password validation
@@ -141,6 +224,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Crispy Forms
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 # Authentication settings
@@ -151,17 +235,73 @@ LOGIN_URL = 'login'
 # Django Summernote settings
 SUMMERNOTE_THEME = 'bs4'
 SUMMERNOTE_CONFIG = {
-    'width': '100%',
-    'height': '300px',
-    'toolbar': [
-        ['style', ['style']],
-        ['font', ['bold', 'italic', 'underline', 'clear']],
-        ['fontname', ['fontname']],
-        ['color', ['color']],
-        ['para', ['ul', 'ol', 'paragraph']],
-        ['table', ['table']],
-        ['insert', ['link', 'picture']],
-        ['view', ['fullscreen', 'codeview', 'help']],
-    ],
-    'lang': 'vi-VN',
+    'summernote': {
+        'width': '100%',
+        'height': '480px',
+        'toolbar': [
+            ['style', ['style']],
+            ['font', ['bold', 'italic', 'underline', 'clear']],
+            ['fontname', ['fontname']],
+            ['color', ['color']],
+            ['para', ['ul', 'ol', 'paragraph']],
+            ['table', ['table']],
+            ['insert', ['link', 'picture']],
+            ['view', ['fullscreen', 'codeview', 'help']],
+        ],
+        'disable_attachment': False,  # Set to True to disable attachment completely
+    },
+    'attachment_storage_class': 'django.core.files.storage.FileSystemStorage',
+    'attachment_filesize_limit': 5 * 1024 * 1024,  # Giới hạn 5MB
+    'attachment_require_authentication': True,  # Yêu cầu đăng nhập để tải lên file
+    'attachment_upload_to': 'summernote_uploads/%Y/%m/%d/',  # Đường dẫn lưu trữ có cấu trúc
+    'attachment_file_types': ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'application/pdf'],  # Chỉ cho phép hình ảnh và PDF
+    'attachment_upload_to_s3': False,  # Không sử dụng S3
+    'attachment_absolute_uri': False,  # Không sử dụng URI tuyệt đối
+    'summernote_sanitizer': {
+        'tags': ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'img', 'strong', 'em', 'br', 'table', 'tr', 'td', 'th', 'thead', 'tbody', 'span'],
+        'attributes': {
+            '*': ['style', 'class'],
+            'a': ['href', 'target'],
+            'img': ['src', 'alt', 'width', 'height'],
+        },
+        'styles': [
+            'font-family', 'font-size', 'font-weight', 'color', 'text-align', 'background-color',
+            'margin', 'padding', 'width', 'height', 'border', 'border-radius'
+        ],
+    },
 }
+
+# Content Security Policy settings
+CSP_DEFAULT_SRC = ("'self'",)
+CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net")
+CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com")
+CSP_FONT_SRC = ("'self'", "https://fonts.gstatic.com")
+CSP_IMG_SRC = ("'self'", "data:", "blob:")
+CSP_CONNECT_SRC = ("'self'",)
+CSP_FRAME_SRC = ("'self'",)
+CSP_OBJECT_SRC = ("'none'",)
+CSP_BASE_URI = ("'self'",)
+
+# Password validation settings
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+    'django.contrib.auth.hashers.Argon2PasswordHasher',
+    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+]
+
+# Cấu hình bảo mật cho file upload
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # 5MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # 5MB
+
+# Cấu hình Supabase API - Chỉ sử dụng biến môi trường, không lưu thông tin nhạy cảm
+SUPABASE_URL = os.environ.get('SUPABASE_URL')
+SUPABASE_KEY = os.environ.get('SUPABASE_KEY')
+SUPABASE_SECRET = os.environ.get('SUPABASE_SECRET')
+
+# Kiểm tra xem các biến môi trường Supabase API đã được thiết lập chưa
+if not all([SUPABASE_URL, SUPABASE_KEY]):
+    if DEBUG:
+        print("Cảnh báo: Thiếu thông tin Supabase API. Hãy kiểm tra file .env")
+    else:
+        raise Exception("Thiếu thông tin Supabase API. Hãy kiểm tra file .env")

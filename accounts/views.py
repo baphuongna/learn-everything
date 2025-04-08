@@ -1,27 +1,35 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.views import LoginView
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Sum
+from django.urls import reverse_lazy
 from .models import UserProfile, UserProgress, StudySession
 from content.models import Subject, Lesson
 from flashcards.models import SpacedRepetitionSchedule
 from quizzes.models import QuizAttempt
-from .forms import UserProfileForm, UserForm, StudySessionForm
+from .forms import UserProfileForm, UserForm, StudySessionForm, CustomUserCreationForm, CustomAuthenticationForm
 
 def register(request):
     """Trang đăng ký người dùng mới"""
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             messages.success(request, 'Tài khoản đã được tạo thành công! Bây giờ bạn có thể đăng nhập.')
             return redirect('login')
     else:
-        form = UserCreationForm()
+        form = CustomUserCreationForm()
     return render(request, 'accounts/register.html', {'form': form})
+
+class CustomLoginView(LoginView):
+    """View đăng nhập tùy chỉnh sử dụng form với crispy-forms"""
+    form_class = CustomAuthenticationForm
+    template_name = 'accounts/login.html'
+    redirect_authenticated_user = True
+    success_url = reverse_lazy('home')
 
 @login_required
 def profile(request):

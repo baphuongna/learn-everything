@@ -18,6 +18,7 @@ Nền Tảng Học Tập là một ứng dụng web được xây dựng bằng 
 
 - Python 3.8+
 - Django 5.2+
+- PostgreSQL (Supabase)
 - Các thư viện khác được liệt kê trong `requirements.txt`
 
 ### Các Bước Cài Đặt
@@ -40,27 +41,36 @@ Nền Tảng Học Tập là một ứng dụng web được xây dựng bằng 
    pip install -r requirements.txt
    ```
 
-4. Tạo cơ sở dữ liệu:
+4. Cấu hình kết nối Supabase:
+   - Sử dụng script tự động để tạo file `.env`:
+     ```
+     python scripts/setup_env.py
+     ```
+   - Hoặc sao chép file `.env.example` thành `.env` và cập nhật thủ công
+   - Xem hướng dẫn chi tiết tại `docs/supabase_integration.md`
+   - **Lưu ý**: Không bao giờ commit file `.env` lên Git
+
+5. Tạo cơ sở dữ liệu:
    ```
    python manage.py migrate
    ```
 
-5. Tạo tài khoản admin:
+6. Tạo tài khoản admin:
    ```
    python manage.py createsuperuser
    ```
 
-6. Tạo dữ liệu mẫu (tùy chọn):
+7. Tạo dữ liệu mẫu (tùy chọn):
    ```
    python sample_data.py
    ```
 
-7. Chạy máy chủ phát triển:
+8. Chạy máy chủ phát triển:
    ```
    python manage.py runserver
    ```
 
-8. Truy cập ứng dụng tại http://127.0.0.1:8000/
+9. Truy cập ứng dụng tại http://127.0.0.1:8000/
 
 ## Cấu Trúc Dự Án
 

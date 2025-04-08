@@ -41,7 +41,7 @@ urlpatterns = [
 
     # Accounts
     path("accounts/register/", accounts_views.register, name="register"),
-    path("accounts/login/", auth_views.LoginView.as_view(template_name="accounts/login.html"), name="login"),
+    path("accounts/login/", accounts_views.CustomLoginView.as_view(), name="login"),
     path("accounts/logout/", auth_views.LogoutView.as_view(), name="logout"),
     path("accounts/profile/", accounts_views.profile, name="profile"),
     path("accounts/progress/", accounts_views.progress, name="progress"),

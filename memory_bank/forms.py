@@ -1,6 +1,8 @@
 from django import forms
 from .models import MemoryCategory, MemoryItem, MemoryAttachment
 from django_summernote.widgets import SummernoteWidget
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Submit, Layout, Field, ButtonHolder, Div
 
 class MemoryCategoryForm(forms.ModelForm):
     """Form cho danh mục ghi nhớ"""
@@ -22,22 +24,73 @@ class MemoryItemForm(forms.ModelForm):
             'tags': forms.TextInput(attrs={'placeholder': 'Nhập các thẻ, phân cách bằng dấu phẩy'}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.form_class = 'form-horizontal'
+        self.helper.label_class = 'col-md-3'
+        self.helper.field_class = 'col-md-9'
+        self.helper.layout = Layout(
+            Field('category'),
+            Field('title'),
+            Field('content', css_class='summernote-editor'),
+            Field('priority'),
+            Field('is_favorite'),
+            Field('tags'),
+            ButtonHolder(
+                Submit('submit', 'Lưu Ghi Nhớ', css_class='btn btn-primary')
+            )
+        )
+
 class MemoryAttachmentForm(forms.ModelForm):
     """Form cho tập tin đính kèm"""
     class Meta:
         model = MemoryAttachment
         fields = ['file']
-    
+
     def clean_file(self):
         file = self.cleaned_data.get('file')
         if file:
-            # Giới hạn kích thước file (10MB)
-            if file.size > 10 * 1024 * 1024:
-                raise forms.ValidationError("Kích thước file không được vượt quá 10MB.")
-            
+            # Giới hạn kích thước file (5MB)
+            max_size = 5 * 1024 * 1024  # 5MB
+            if file.size > max_size:
+                raise forms.ValidationError(f"Kích thước file không được vượt quá 5MB.")
+
+            # Kiểm tra loại file
+            import os
+            from django.core.exceptions import ValidationError
+
+            # Danh sách các đuôi file cho phép
+            valid_extensions = ['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png', '.gif', '.txt', '.csv', '.xlsx', '.xls']
+            # Danh sách MIME types cho phép
+            valid_content_types = [
+                'application/pdf', 'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'image/jpeg', 'image/png', 'image/gif', 'text/plain', 'text/csv',
+                'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            ]
+
+            # Kiểm tra đuôi file
+            ext = os.path.splitext(file.name)[1].lower()
+            if ext not in valid_extensions:
+                raise ValidationError(
+                    f"Loại file không được hỗ trợ. Các loại file được phép: {', '.join(valid_extensions)}"
+                )
+
+            # Kiểm tra MIME type
+            content_type = file.content_type
+            if content_type not in valid_content_types:
+                raise ValidationError(
+                    f"Loại nội dung file không được hỗ trợ. Vui lòng tải lên file PDF, Word, Excel, hình ảnh hoặc văn bản."
+                )
+
             # Lưu tên file và loại file
-            self.instance.file_name = file.name
-            self.instance.file_type = file.content_type
+            import re
+            # Làm sạch tên file để tránh các ký tự đặc biệt
+            clean_name = re.sub(r'[^\w\s.-]', '', file.name)
+            self.instance.file_name = clean_name
+            self.instance.file_type = content_type
         return file
 
 class MemorySearchForm(forms.Form):
@@ -65,7 +118,7 @@ class MemorySearchForm(forms.Form):
         label='Chỉ hiển thị yêu thích',
         widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
     )
-    
+
     def __init__(self, user, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['category'].queryset = MemoryCategory.objects.filter(user=user)
