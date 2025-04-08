@@ -41,36 +41,46 @@ Nền Tảng Học Tập là một ứng dụng web được xây dựng bằng 
    pip install -r requirements.txt
    ```
 
-4. Cấu hình kết nối Supabase:
+4. Cài đặt Git hooks để bảo vệ thông tin nhạy cảm:
+   - Trên Windows:
+     ```
+     scripts\install_hooks.bat
+     ```
+   - Trên Linux/Mac:
+     ```
+     bash scripts/install_hooks.sh
+     ```
+
+5. Cấu hình kết nối Supabase:
    - Sử dụng script tự động để tạo file `.env`:
      ```
      python scripts/setup_env.py
      ```
    - Hoặc sao chép file `.env.example` thành `.env` và cập nhật thủ công
    - Xem hướng dẫn chi tiết tại `docs/supabase_integration.md`
-   - **Lưu ý**: Không bao giờ commit file `.env` lên Git
+   - **Lưu ý**: Không bao giờ commit file `.env` lên Git (Git hooks sẽ ngăn chặn điều này)
 
-5. Tạo cơ sở dữ liệu:
+6. Tạo cơ sở dữ liệu:
    ```
    python manage.py migrate
    ```
 
-6. Tạo tài khoản admin:
+7. Tạo tài khoản admin:
    ```
    python manage.py createsuperuser
    ```
 
-7. Tạo dữ liệu mẫu (tùy chọn):
+8. Tạo dữ liệu mẫu (tùy chọn):
    ```
    python sample_data.py
    ```
 
-8. Chạy máy chủ phát triển:
+9. Chạy máy chủ phát triển:
    ```
    python manage.py runserver
    ```
 
-9. Truy cập ứng dụng tại http://127.0.0.1:8000/
+10. Truy cập ứng dụng tại http://127.0.0.1:8000/
 
 ## Cấu Trúc Dự Án
 

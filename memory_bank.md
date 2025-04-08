@@ -125,7 +125,8 @@ learning_platform/
 ### 4.1. Backend
 
 - **Django 5.2**: Framework web Python
-- **SQLite**: Cơ sở dữ liệu mặc định (có thể thay đổi sang PostgreSQL, MySQL, v.v.)
+- **Supabase (PostgreSQL)**: Cơ sở dữ liệu chính
+- **SQLite**: Cơ sở dữ liệu dự phòng cho môi trường phát triển
 
 ### 4.2. Frontend
 
@@ -140,6 +141,10 @@ learning_platform/
 - **crispy-bootstrap4**: Template pack cho crispy-forms
 - **django-summernote**: Trình soạn thảo văn bản phong phú
 - **markdown**: Xử lý Markdown
+- **supabase-py**: Thư viện Python cho Supabase
+- **psycopg2-binary**: Kết nối PostgreSQL
+- **python-dotenv**: Đọc biến môi trường từ file .env
+- **dj-database-url**: Xử lý URL kết nối cơ sở dữ liệu
 
 ## 5. Hướng dẫn cài đặt
 
@@ -148,6 +153,7 @@ learning_platform/
 - Python 3.8+
 - pip (trình quản lý gói Python)
 - Virtualenv (tùy chọn, nhưng được khuyến nghị)
+- Tài khoản Supabase (cho cơ sở dữ liệu PostgreSQL)
 
 ### 5.2. Các bước cài đặt
 
@@ -169,27 +175,46 @@ learning_platform/
    pip install -r requirements.txt
    ```
 
-4. **Tạo cơ sở dữ liệu:**
+4. **Cài đặt Git hooks để bảo vệ thông tin nhạy cảm:**
+   - Trên Windows:
+     ```
+     scripts\install_hooks.bat
+     ```
+   - Trên Linux/Mac:
+     ```
+     bash scripts/install_hooks.sh
+     ```
+
+5. **Cấu hình kết nối Supabase:**
+   - Sử dụng script tự động để tạo file `.env`:
+     ```
+     python scripts/setup_env.py
+     ```
+   - Hoặc sao chép file `.env.example` thành `.env` và cập nhật thủ công
+   - Xem hướng dẫn chi tiết tại `docs/supabase_integration.md`
+   - **Lưu ý**: Không bao giờ commit file `.env` lên Git (Git hooks sẽ ngăn chặn điều này)
+
+6. **Tạo cơ sở dữ liệu:**
    ```
    python manage.py migrate
    ```
 
-5. **Tạo tài khoản admin:**
+7. **Tạo tài khoản admin:**
    ```
    python manage.py createsuperuser
    ```
 
-6. **Tạo dữ liệu mẫu (tùy chọn):**
+8. **Tạo dữ liệu mẫu (tùy chọn):**
    ```
    python sample_data.py
    ```
 
-7. **Chạy máy chủ phát triển:**
+9. **Chạy máy chủ phát triển:**
    ```
    python manage.py runserver
    ```
 
-8. **Truy cập ứng dụng tại http://127.0.0.1:8000/**
+10. **Truy cập ứng dụng tại http://127.0.0.1:8000/**
 
 ## 6. Hướng dẫn sử dụng
 
@@ -261,11 +286,31 @@ learning_platform/
 
 **Vấn đề:** Lỗi "TemplateDoesNotExist at /accounts/login/ bootstrap4/uni_form.html" khi truy cập trang đăng nhập.
 
+**Giải pháp:** Thêm 'crispy_bootstrap4' vào INSTALLED_APPS và cài đặt phiên bản phù hợp.
+
 **Trạng thái:** Đã sửa xong
 
 ### 7.2. Vấn đề với django-summernote
 
 **Vấn đề:** Trình soạn thảo Summernote không hiển thị đúng trong form tạo/chỉnh sửa ghi nhớ.
+
+**Giải pháp:** Thêm 'django_summernote' vào INSTALLED_APPS, cấu hình SUMMERNOTE_CONFIG và sử dụng SummernoteWidget.
+
+**Trạng thái:** Đã sửa xong
+
+### 7.3. Vấn đề với pre-commit hook
+
+**Vấn đề:** Script pre-commit hook gặp lỗi mã hóa ký tự Unicode trên Windows, gây ra lỗi 'charmap' codec can't encode character.
+
+**Giải pháp:** Sử dụng ký tự ASCII thuần túy trong script thay vì Unicode, bỏ qua thư mục .venv và các thư viện bên thứ ba.
+
+**Trạng thái:** Đã sửa xong
+
+### 7.4. Vấn đề với thông tin nhạy cảm trong mã nguồn
+
+**Vấn đề:** Script kiểm tra thông tin nhạy cảm phát hiện nhiều báo cáo giả dương, đặc biệt là với các chứng chỉ SSL.
+
+**Giải pháp:** Cải thiện script để bỏ qua các chứng chỉ SSL và các mẫu an toàn khác, giảm báo cáo giả dương.
 
 **Trạng thái:** Đã sửa xong
 
@@ -355,4 +400,4 @@ learning_platform/
 
 ---
 
-*Memory Bank được tạo bởi [Tên của bạn] - Cập nhật lần cuối: 07/04/2025*
+*Memory Bank được tạo bởi [Tên của bạn] - Cập nhật lần cuối: 08/04/2025*
