@@ -1,5 +1,6 @@
 from django import forms
 from .models import CornellNote, FeynmanNote, MindMap, Project, ProjectTask, UserProject, InteractiveExercise, CompetitionMode, CompetitionQuestion, CompetitionAnswer, CompetitionParticipant
+from .models_learning_goals import LearningGoal, DailyStudyLog
 from content.models import Topic, Lesson, Subject
 
 class CornellNoteForm(forms.ModelForm):
@@ -65,7 +66,7 @@ class MindMapForm(forms.ModelForm):
     """Form cho sơ đồ tư duy"""
     class Meta:
         model = MindMap
-        fields = ['title', 'subject', 'central_topic', 'map_data']
+        fields = ['title', 'subject', 'central_topic', 'map_data', 'style_settings']
         widgets = {
             'title': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -77,12 +78,14 @@ class MindMapForm(forms.ModelForm):
                 'placeholder': 'Chủ đề trung tâm của sơ đồ'
             }),
             'map_data': forms.HiddenInput(),
+            'style_settings': forms.HiddenInput(),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Thiết lập các trường không bắt buộc
         self.fields['subject'].required = False
+        self.fields['style_settings'].required = False
 
         # Khởi tạo giá trị mặc định cho map_data nếu là form tạo mới
         if not self.instance.pk and not self.data.get('map_data'):
@@ -94,6 +97,16 @@ class MindMapForm(forms.ModelForm):
                 'children': []
             }
             self.initial['map_data'] = default_map_data
+
+        # Khởi tạo giá trị mặc định cho style_settings nếu là form tạo mới
+        if not self.instance.pk and not self.data.get('style_settings'):
+            # Sử dụng các tùy chọn mặc định từ model
+            default_style_settings = MindMap().get_default_style_settings()
+            self.initial['style_settings'] = default_style_settings
+        elif self.instance.pk and not self.instance.style_settings:
+            # Nếu đã có instance nhưng chưa có style_settings
+            default_style_settings = self.instance.get_default_style_settings()
+            self.initial['style_settings'] = default_style_settings
 
 class FeynmanNoteForm(forms.ModelForm):
     """Form cho ghi chú theo phương pháp Feynman"""
@@ -205,7 +218,7 @@ class InteractiveExerciseForm(forms.ModelForm):
     """Form cho bài tập thực hành tương tác"""
     class Meta:
         model = InteractiveExercise
-        fields = ['title', 'description', 'lesson', 'exercise_type', 'content', 'solution']
+        fields = ['title', 'description', 'lesson', 'exercise_type', 'programming_language', 'content', 'starter_code', 'solution', 'test_cases', 'difficulty_level', 'points', 'time_limit', 'hints', 'is_public']
         widgets = {
             'title': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -218,17 +231,89 @@ class InteractiveExerciseForm(forms.ModelForm):
             }),
             'lesson': forms.Select(attrs={'class': 'form-select'}),
             'exercise_type': forms.Select(attrs={'class': 'form-select'}),
+            'programming_language': forms.Select(attrs={'class': 'form-select'}),
             'content': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 10,
                 'placeholder': 'Nội dung bài tập (HTML, JavaScript, hoặc mã nguồn)'
             }),
+            'starter_code': forms.Textarea(attrs={
+                'class': 'form-control code-editor',
+                'rows': 8,
+                'placeholder': 'Mã khởi đầu cho bài tập lập trình'
+            }),
             'solution': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 5,
+                'class': 'form-control code-editor',
+                'rows': 8,
                 'placeholder': 'Giải pháp hoặc đáp án cho bài tập'
             }),
+            'test_cases': forms.Textarea(attrs={
+                'class': 'form-control json-editor',
+                'rows': 5,
+                'placeholder': 'Các trường hợp kiểm tra (JSON)'
+            }),
+            'difficulty_level': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': 1,
+                'max': 5,
+                'placeholder': 'Độ khó (1-5)'
+            }),
+            'points': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': 0,
+                'placeholder': 'Điểm thưởng'
+            }),
+            'time_limit': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': 0,
+                'placeholder': 'Giới hạn thời gian (giây)'
+            }),
+            'hints': forms.Textarea(attrs={
+                'class': 'form-control json-editor',
+                'rows': 5,
+                'placeholder': 'Gợi ý (JSON)'
+            }),
+            'is_public': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Thiết lập các trường không bắt buộc
+        self.fields['programming_language'].required = False
+        self.fields['starter_code'].required = False
+        self.fields['test_cases'].required = False
+        self.fields['time_limit'].required = False
+        self.fields['hints'].required = False
+
+        # Hiển thị các trường dựa trên loại bài tập
+        if 'exercise_type' in self.data:
+            exercise_type = self.data.get('exercise_type')
+            self._show_fields_based_on_type(exercise_type)
+        elif self.instance.pk:
+            self._show_fields_based_on_type(self.instance.exercise_type)
+
+    def _show_fields_based_on_type(self, exercise_type):
+        """Hiển thị các trường dựa trên loại bài tập"""
+        # Ẩn tất cả các trường đặc biệt trước
+        for field in ['programming_language', 'starter_code', 'test_cases', 'simulation_config', 'game_config']:
+            if field in self.fields:
+                self.fields[field].widget = forms.HiddenInput()
+
+        # Hiển thị các trường dựa trên loại bài tập
+        if exercise_type == 'code':
+            self.fields['programming_language'].widget = forms.Select(attrs={'class': 'form-select'})
+            self.fields['starter_code'].widget = forms.Textarea(attrs={
+                'class': 'form-control code-editor',
+                'rows': 8,
+                'placeholder': 'Mã khởi đầu cho bài tập lập trình'
+            })
+            self.fields['test_cases'].widget = forms.Textarea(attrs={
+                'class': 'form-control json-editor',
+                'rows': 5,
+                'placeholder': 'Các trường hợp kiểm tra (JSON)'
+            })
 
 class CompetitionForm(forms.ModelForm):
     """Form cho chế độ thi đấu"""
@@ -316,3 +401,26 @@ class CompetitionParticipantForm(forms.ModelForm):
         widgets = {
             'competition': forms.Select(attrs={'class': 'form-select'}),
         }
+
+class LearningGoalForm(forms.ModelForm):
+    """Form cho mục tiêu học tập"""
+    class Meta:
+        model = LearningGoal
+        fields = ['title', 'description', 'goal_type', 'goal_metric', 'target_value', 'start_date', 'end_date', 'subject']
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Tiêu đề mục tiêu'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Mô tả mục tiêu'}),
+            'goal_type': forms.Select(attrs={'class': 'form-select'}),
+            'goal_metric': forms.Select(attrs={'class': 'form-select'}),
+            'target_value': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
+            'start_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'end_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'subject': forms.Select(attrs={'class': 'form-select'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Thiết lập các trường không bắt buộc
+        self.fields['description'].required = False
+        self.fields['end_date'].required = False
+        self.fields['subject'].required = False

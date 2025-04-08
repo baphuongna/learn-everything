@@ -1,0 +1,344 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Nhóm Thi Đấu{% endblock %}
+
+{% block extra_css %}
+<style>
+    .teams-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    .filter-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+        border: 1px solid #dee2e6;
+    }
+    
+    .team-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+        border: 1px solid #dee2e6;
+        overflow: hidden;
+    }
+    
+    .team-card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .team-header {
+        padding: 15px 20px;
+        border-bottom: 1px solid #dee2e6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #f8f9fa;
+    }
+    
+    .team-title {
+        font-weight: 600;
+        margin-bottom: 0;
+        color: #6f42c1;
+    }
+    
+    .team-body {
+        padding: 20px;
+    }
+    
+    .team-info {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .team-info-item {
+        display: flex;
+        align-items: center;
+        font-size: 0.9rem;
+    }
+    
+    .team-info-item i {
+        margin-right: 5px;
+        color: #6f42c1;
+    }
+    
+    .team-description {
+        margin-bottom: 15px;
+    }
+    
+    .team-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+    
+    .team-members {
+        margin-top: 15px;
+    }
+    
+    .team-members-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: #6f42c1;
+    }
+    
+    .team-member {
+        display: flex;
+        align-items: center;
+        padding: 8px 10px;
+        border-radius: 5px;
+        background-color: #f8f9fa;
+        margin-bottom: 5px;
+    }
+    
+    .team-member-avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background-color: #6f42c1;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        margin-right: 10px;
+    }
+    
+    .team-member-name {
+        flex: 1;
+    }
+    
+    .team-member-leader {
+        background-color: #e2f0fd;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 50px 20px;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        margin-top: 30px;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        color: #dee2e6;
+        margin-bottom: 20px;
+    }
+    
+    .my-teams-section {
+        margin-bottom: 30px;
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: #6f42c1;
+        display: flex;
+        align-items: center;
+    }
+    
+    .section-title i {
+        margin-right: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-users text-purple"></i> Nhóm Thi Đấu
+        </h1>
+        <p class="lead">Tham gia hoặc tạo nhóm để thi đấu cùng bạn bè.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:create_team' %}" class="btn btn-purple">
+            <i class="fas fa-plus"></i> Tạo Nhóm Mới
+        </a>
+    </div>
+</div>
+
+<div class="teams-container">
+    <!-- Bộ lọc -->
+    <div class="card filter-card">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-6">
+                    <label for="search" class="form-label">Tìm kiếm</label>
+                    <input type="text" class="form-control" id="search" name="search" value="{{ search_query }}" placeholder="Nhập từ khóa...">
+                </div>
+                <div class="col-md-4">
+                    <label for="competition" class="form-label">Cuộc thi</label>
+                    <select class="form-select" id="competition" name="competition" onchange="this.form.submit()">
+                        <option value="">Tất cả cuộc thi</option>
+                        {% for competition in team_competitions %}
+                        <option value="{{ competition.id }}" {% if selected_competition == competition.id|stringformat:"s" %}selected{% endif %}>{{ competition.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-purple w-100">
+                        <i class="fas fa-search"></i> Tìm
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Nhóm của tôi -->
+    {% if user_teams %}
+    <div class="my-teams-section">
+        <h2 class="section-title">
+            <i class="fas fa-user-friends text-info"></i> Nhóm Của Tôi
+        </h2>
+        
+        <div class="row">
+            {% for team in teams %}
+                {% if team.id in user_teams %}
+                <div class="col-md-6">
+                    <div class="team-card">
+                        <div class="team-header">
+                            <div class="team-title">{{ team.name }}</div>
+                            <span class="badge bg-info">Nhóm của tôi</span>
+                        </div>
+                        <div class="team-body">
+                            <div class="team-info">
+                                <div class="team-info-item">
+                                    <i class="fas fa-user"></i> Trưởng nhóm: {{ team.leader.username }}
+                                </div>
+                                <div class="team-info-item">
+                                    <i class="fas fa-users"></i> {{ team.get_members_count }} thành viên
+                                </div>
+                                <div class="team-info-item">
+                                    <i class="fas fa-trophy"></i> {{ team.competition.title }}
+                                </div>
+                            </div>
+                            
+                            {% if team.description %}
+                            <div class="team-description">
+                                {{ team.description|truncatechars:100 }}
+                            </div>
+                            {% endif %}
+                            
+                            <div class="team-actions">
+                                <a href="{% url 'advanced_learning:team_detail' team_id=team.id %}" class="btn btn-outline-purple">
+                                    <i class="fas fa-eye"></i> Xem Chi Tiết
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Danh sách tất cả nhóm -->
+    <h2 class="section-title">
+        <i class="fas fa-list text-purple"></i> Tất Cả Nhóm
+    </h2>
+    
+    {% if teams %}
+    <div class="row">
+        {% for team in teams %}
+        <div class="col-md-6">
+            <div class="team-card">
+                <div class="team-header">
+                    <div class="team-title">{{ team.name }}</div>
+                    {% if team.id in user_teams %}
+                    <span class="badge bg-info">Nhóm của tôi</span>
+                    {% endif %}
+                </div>
+                <div class="team-body">
+                    <div class="team-info">
+                        <div class="team-info-item">
+                            <i class="fas fa-user"></i> Trưởng nhóm: {{ team.leader.username }}
+                        </div>
+                        <div class="team-info-item">
+                            <i class="fas fa-users"></i> {{ team.get_members_count }} thành viên
+                        </div>
+                        <div class="team-info-item">
+                            <i class="fas fa-trophy"></i> {{ team.competition.title }}
+                        </div>
+                    </div>
+                    
+                    {% if team.description %}
+                    <div class="team-description">
+                        {{ team.description|truncatechars:100 }}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Hiển thị một số thành viên -->
+                    {% with members=team.members.all|slice:":3" %}
+                    {% if members %}
+                    <div class="team-members">
+                        <div class="team-members-title">Thành viên:</div>
+                        {% for member in members %}
+                        <div class="team-member {% if member.user == team.leader %}team-member-leader{% endif %}">
+                            <div class="team-member-avatar">
+                                {{ member.user.username|first|upper }}
+                            </div>
+                            <div class="team-member-name">
+                                {{ member.user.username }}
+                                {% if member.user == team.leader %}
+                                <span class="badge bg-info">Trưởng nhóm</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% if team.get_members_count > 3 %}
+                        <div class="text-center mt-2">
+                            <small>+ {{ team.get_members_count|add:"-3" }} thành viên khác</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                    
+                    <div class="team-actions">
+                        <a href="{% url 'advanced_learning:team_detail' team_id=team.id %}" class="btn btn-outline-purple">
+                            <i class="fas fa-eye"></i> Xem Chi Tiết
+                        </a>
+                        
+                        {% if team.id not in user_teams %}
+                            {% if team.competition.can_join %}
+                            <form method="post" action="{% url 'advanced_learning:join_team' team_id=team.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-sign-in-alt"></i> Tham Gia
+                                </button>
+                            </form>
+                            {% else %}
+                            <button class="btn btn-secondary" disabled>
+                                <i class="fas fa-lock"></i> Đã Khóa
+                            </button>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-users"></i>
+        <h3>Không có nhóm nào</h3>
+        <p>Hãy tạo nhóm đầu tiên của bạn!</p>
+        <a href="{% url 'advanced_learning:create_team' %}" class="btn btn-purple mt-3">
+            <i class="fas fa-plus"></i> Tạo Nhóm Mới
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

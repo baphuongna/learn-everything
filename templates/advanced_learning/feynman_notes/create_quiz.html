@@ -1,0 +1,248 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Tạo Quiz từ Ghi Chú Feynman - {{ note.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .quiz-preview-container {
+        margin-bottom: 30px;
+    }
+    
+    .quiz-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    
+    .quiz-preview {
+        padding: 20px;
+    }
+    
+    .quiz-item {
+        margin-bottom: 30px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        border: 1px solid #dee2e6;
+    }
+    
+    .quiz-question {
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 15px;
+        color: #212529;
+    }
+    
+    .quiz-answers {
+        list-style-type: none;
+        padding-left: 0;
+    }
+    
+    .quiz-answer {
+        padding: 10px 15px;
+        margin-bottom: 10px;
+        background-color: white;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .quiz-answer:hover {
+        background-color: #e9ecef;
+    }
+    
+    .quiz-answer.correct {
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+        color: #155724;
+    }
+    
+    .quiz-answer.incorrect {
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+        color: #721c24;
+    }
+    
+    .note-preview {
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid #dee2e6;
+    }
+    
+    .note-preview h5 {
+        color: #fd7e14;
+        margin-bottom: 10px;
+    }
+    
+    .step-number {
+        display: inline-block;
+        width: 25px;
+        height: 25px;
+        background-color: #fd7e14;
+        color: white;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 25px;
+        margin-right: 10px;
+        font-weight: bold;
+    }
+    
+    .integration-info {
+        margin-top: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-question-circle text-warning"></i> Tạo Quiz từ Ghi Chú Feynman
+        </h1>
+        <p class="lead">Tạo bài kiểm tra từ ghi chú "{{ note.title }}" để kiểm tra kiến thức của bạn.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:feynman_note_detail' note_id=note.id %}" class="btn btn-outline-warning">
+            <i class="fas fa-arrow-left"></i> Quay Lại Ghi Chú
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card quiz-card">
+            <div class="card-header bg-warning text-white">
+                <h5 class="mb-0"><i class="fas fa-lightbulb"></i> Ghi Chú Feynman Nguồn</h5>
+            </div>
+            <div class="card-body">
+                <div class="note-preview">
+                    <h5>{{ note.title }}</h5>
+                    <p><strong><span class="step-number">1</span> Khái Niệm:</strong> {{ note.concept|truncatechars:100 }}</p>
+                    <p><strong><span class="step-number">2</span> Giải Thích:</strong> {{ note.explanation|truncatechars:100 }}</p>
+                    {% if note.gaps_identified %}
+                    <p><strong><span class="step-number">3</span> Lỗ Hổng Kiến Thức:</strong> {{ note.gaps_identified|truncatechars:100 }}</p>
+                    {% endif %}
+                    {% if note.refined_explanation %}
+                    <p><strong><span class="step-number">4</span> Giải Thích Cải Thiện:</strong> {{ note.refined_explanation|truncatechars:100 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Hệ thống sẽ tạo quiz dựa trên nội dung ghi chú Feynman của bạn. Mỗi phần của ghi chú sẽ được chuyển thành các câu hỏi và câu trả lời.
+                </div>
+                
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-magic"></i> Tạo Quiz
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card quiz-card">
+            <div class="card-header bg-warning text-white">
+                <h5 class="mb-0"><i class="fas fa-question-circle"></i> Xem Trước Quiz</h5>
+            </div>
+            <div class="quiz-preview">
+                <p class="text-muted mb-4">Đây chỉ là xem trước, quiz thực tế sẽ được tạo khi bạn nhấn nút "Tạo Quiz".</p>
+                
+                <!-- Câu hỏi về khái niệm -->
+                <div class="quiz-item">
+                    <div class="quiz-question">1. {{ note.title }} là gì?</div>
+                    <ul class="quiz-answers">
+                        <li class="quiz-answer" data-correct="true">{{ note.concept|truncatechars:100 }}</li>
+                        <li class="quiz-answer">Không phải là {{ note.title }}</li>
+                        <li class="quiz-answer">Một khái niệm khác hoàn toàn</li>
+                    </ul>
+                </div>
+                
+                <!-- Câu hỏi về giải thích -->
+                <div class="quiz-item">
+                    <div class="quiz-question">2. Làm thế nào để giải thích {{ note.title }} bằng ngôn ngữ đơn giản?</div>
+                    <ul class="quiz-answers">
+                        <li class="quiz-answer" data-correct="true">{{ note.explanation|truncatechars:100 }}</li>
+                        <li class="quiz-answer">Giải thích sai về {{ note.title }}</li>
+                        <li class="quiz-answer">Không liên quan đến {{ note.title }}</li>
+                    </ul>
+                </div>
+                
+                <!-- Câu hỏi về lỗ hổng kiến thức nếu có -->
+                {% if note.gaps_identified %}
+                <div class="quiz-item">
+                    <div class="quiz-question">3. Lỗ hổng kiến thức thường gặp khi học về {{ note.title }} là gì?</div>
+                    <ul class="quiz-answers">
+                        <li class="quiz-answer" data-correct="true">{{ note.gaps_identified|truncatechars:100 }}</li>
+                        <li class="quiz-answer">Không có lỗ hổng kiến thức nào</li>
+                        <li class="quiz-answer">Lỗ hổng không liên quan</li>
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="integration-info mt-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Về Quiz</h5>
+                </div>
+                <div class="card-body">
+                    <p>Quiz là công cụ học tập hiệu quả giúp kiểm tra kiến thức và củng cố trí nhớ thông qua việc kiểm tra tích cực.</p>
+                    
+                    <h5>Lợi ích:</h5>
+                    <ul>
+                        <li>Kiểm tra mức độ hiểu bài</li>
+                        <li>Xác định các lỗ hổng kiến thức</li>
+                        <li>Củng cố trí nhớ dài hạn</li>
+                        <li>Tạo động lực học tập</li>
+                    </ul>
+                    
+                    <div class="alert alert-primary">
+                        <i class="fas fa-lightbulb"></i> <strong>Mẹo:</strong> Làm quiz thường xuyên sẽ giúp bạn ghi nhớ thông tin tốt hơn 50% so với chỉ đọc lại tài liệu.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Xử lý khi nhấp vào câu trả lời
+        const answers = document.querySelectorAll('.quiz-answer');
+        answers.forEach(answer => {
+            answer.addEventListener('click', function() {
+                // Xóa các lớp correct/incorrect trước đó
+                const siblings = this.parentNode.querySelectorAll('.quiz-answer');
+                siblings.forEach(sibling => {
+                    sibling.classList.remove('correct', 'incorrect');
+                });
+                
+                // Đánh dấu câu trả lời đúng/sai
+                if (this.dataset.correct) {
+                    this.classList.add('correct');
+                } else {
+                    this.classList.add('incorrect');
+                    // Hiển thị câu trả lời đúng
+                    siblings.forEach(sibling => {
+                        if (sibling.dataset.correct) {
+                            sibling.classList.add('correct');
+                        }
+                    });
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,246 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Chia Sẻ Sơ Đồ Tư Duy - {{ mind_map.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .share-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    
+    .share-url-container {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    
+    .share-url {
+        font-family: monospace;
+        word-break: break-all;
+    }
+    
+    .copy-btn {
+        cursor: pointer;
+    }
+    
+    .social-share {
+        margin-top: 20px;
+    }
+    
+    .social-share a {
+        display: inline-block;
+        margin-right: 10px;
+        font-size: 1.5rem;
+    }
+    
+    .social-share .facebook {
+        color: #3b5998;
+    }
+    
+    .social-share .twitter {
+        color: #1da1f2;
+    }
+    
+    .social-share .linkedin {
+        color: #0077b5;
+    }
+    
+    .social-share .whatsapp {
+        color: #25d366;
+    }
+    
+    .mindmap-preview {
+        height: 200px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-share-alt text-primary"></i> Chia Sẻ Sơ Đồ Tư Duy
+        </h1>
+        <p class="lead">Chia sẻ sơ đồ tư duy "{{ mind_map.title }}" với bạn bè hoặc đồng nghiệp.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:mind_map_detail' map_id=mind_map.id %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Quay Lại Sơ Đồ
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card share-card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-link"></i> Liên Kết Chia Sẻ</h5>
+            </div>
+            <div class="card-body">
+                <div class="mindmap-preview">
+                    <div id="preview_container" style="width: 100%; height: 100%;"></div>
+                </div>
+                
+                {% if share_url %}
+                <p>Sơ đồ tư duy của bạn đã được chia sẻ. Sử dụng liên kết dưới đây để chia sẻ với người khác:</p>
+                
+                <div class="share-url-container">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="share-url" id="share-url">{{ share_url }}</span>
+                        <button class="btn btn-sm btn-outline-primary copy-btn" onclick="copyToClipboard()">
+                            <i class="fas fa-copy"></i> Sao chép
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="social-share">
+                    <p><strong>Chia sẻ qua mạng xã hội:</strong></p>
+                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ share_url|urlencode }}" target="_blank" class="facebook" title="Chia sẻ qua Facebook">
+                        <i class="fab fa-facebook-square"></i>
+                    </a>
+                    <a href="https://twitter.com/intent/tweet?url={{ share_url|urlencode }}&text=Xem%20s%C6%A1%20%C4%91%E1%BB%93%20t%C6%B0%20duy%20c%E1%BB%A7a%20t%C3%B4i:%20{{ mind_map.title|urlencode }}" target="_blank" class="twitter" title="Chia sẻ qua Twitter">
+                        <i class="fab fa-twitter-square"></i>
+                    </a>
+                    <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ share_url|urlencode }}&title={{ mind_map.title|urlencode }}&summary=S%C6%A1%20%C4%91%E1%BB%93%20t%C6%B0%20duy" target="_blank" class="linkedin" title="Chia sẻ qua LinkedIn">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                    <a href="https://api.whatsapp.com/send?text=Xem%20s%C6%A1%20%C4%91%E1%BB%93%20t%C6%B0%20duy%20c%E1%BB%A7a%20t%C3%B4i:%20{{ mind_map.title|urlencode }}%20{{ share_url|urlencode }}" target="_blank" class="whatsapp" title="Chia sẻ qua WhatsApp">
+                        <i class="fab fa-whatsapp-square"></i>
+                    </a>
+                </div>
+                {% else %}
+                <p>Sơ đồ tư duy của bạn chưa được chia sẻ. Nhấn nút "Chia Sẻ Sơ Đồ" để tạo liên kết chia sẻ.</p>
+                {% endif %}
+                
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Gửi qua email (tùy chọn)</label>
+                        <div class="input-group">
+                            <input type="email" class="form-control" id="email" name="email" placeholder="Nhập địa chỉ email người nhận">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> Gửi
+                            </button>
+                        </div>
+                        <div class="form-text">Chúng tôi sẽ gửi email chứa liên kết đến sơ đồ tư duy của bạn.</div>
+                    </div>
+                    
+                    {% if not share_url %}
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-share-alt"></i> Chia Sẻ Sơ Đồ
+                    </button>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card share-card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Thông Tin</h5>
+            </div>
+            <div class="card-body">
+                <h5>Về Chia Sẻ Sơ Đồ Tư Duy</h5>
+                <ul>
+                    <li>Người nhận không cần đăng nhập để xem sơ đồ tư duy được chia sẻ.</li>
+                    <li>Họ chỉ có thể xem, không thể chỉnh sửa sơ đồ tư duy của bạn.</li>
+                    <li>Bạn có thể ngừng chia sẻ bất kỳ lúc nào bằng cách vô hiệu hóa liên kết.</li>
+                    <li>Liên kết chia sẻ không có thời hạn.</li>
+                </ul>
+                
+                <h5>Xuất Sơ Đồ Tư Duy</h5>
+                <p>Bạn cũng có thể xuất sơ đồ tư duy để chia sẻ dưới dạng file:</p>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'advanced_learning:mind_map_export_image' map_id=mind_map.id %}" class="btn btn-outline-primary btn-sm" id="export-image-btn">
+                        <i class="fas fa-image"></i> Xuất Hình Ảnh
+                    </a>
+                    <a href="{% url 'advanced_learning:mind_map_export_pdf' map_id=mind_map.id %}" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-file-pdf"></i> Xuất PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/jsmind@0.6.4/js/jsmind.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsmind@0.6.4/js/jsmind.draggable.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Hiển thị xem trước sơ đồ tư duy
+        var options = {
+            container: 'preview_container',
+            theme: 'primary',
+            editable: false,
+            mode: 'view',
+            support_html: true,
+            view: {
+                line_width: 2,
+                line_color: '#555'
+            }
+        };
+        
+        var jm = new jsMind(options);
+        var mind_data = {{ mind_map.map_data|safe }};
+        jm.show(mind_data);
+        
+        // Xử lý xuất hình ảnh
+        document.getElementById('export-image-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Tạo form để gửi dữ liệu hình ảnh
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = this.href;
+            
+            // Lấy dữ liệu hình ảnh từ jsMind
+            var image_data = jm.screenshot.shootAsDataURL();
+            
+            // Tạo input ẩn để chứa dữ liệu hình ảnh
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'image_data';
+            input.value = image_data;
+            
+            // Thêm CSRF token
+            var csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            // Thêm input vào form và gửi form
+            form.appendChild(input);
+            form.appendChild(csrfInput);
+            document.body.appendChild(form);
+            form.submit();
+        });
+    });
+    
+    function copyToClipboard() {
+        const shareUrl = document.getElementById('share-url');
+        const tempInput = document.createElement('input');
+        tempInput.value = shareUrl.textContent;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+        
+        // Hiển thị thông báo
+        alert('Đã sao chép liên kết vào clipboard!');
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,185 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Ghi Chú Cornell Cần Ôn Tập{% endblock %}
+
+{% block extra_css %}
+<style>
+    .review-list-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    
+    .review-item {
+        padding: 15px;
+        border-bottom: 1px solid #dee2e6;
+        transition: all 0.3s ease;
+    }
+    
+    .review-item:last-child {
+        border-bottom: none;
+    }
+    
+    .review-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .review-item-title {
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 5px;
+    }
+    
+    .review-item-meta {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    
+    .review-badge {
+        background-color: #17a2b8;
+        color: white;
+        padding: 3px 8px;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        margin-left: 10px;
+    }
+    
+    .review-due {
+        font-weight: 600;
+        color: #dc3545;
+    }
+    
+    .review-progress {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: #dee2e6;
+        margin-bottom: 20px;
+    }
+    
+    .empty-state h4 {
+        margin-bottom: 15px;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-sync-alt text-primary"></i> Ghi Chú Cần Ôn Tập
+            <span class="review-badge"><i class="fas fa-brain"></i> Spaced Repetition</span>
+        </h1>
+        <p class="lead">Danh sách ghi chú Cornell cần ôn tập hôm nay để cải thiện khả năng ghi nhớ dài hạn.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:cornell_note_list' %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Tất Cả Ghi Chú
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="review-list-card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-list"></i> Ghi Chú Cần Ôn Tập Hôm Nay</h5>
+            </div>
+            
+            {% if notes %}
+                {% for note in notes %}
+                <div class="review-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="review-item-title">{{ note.title }}</div>
+                            <div class="review-item-meta">
+                                {% if note.subject %}Chủ đề: <strong>{{ note.subject.name }}</strong>{% endif %}
+                                {% if note.topic %} | {{ note.topic.name }}{% endif %}
+                                <br>
+                                Số lần ôn tập: <strong>{{ note.review_count }}</strong>
+                                {% if note.last_review_date %}
+                                | Lần ôn tập gần nhất: {{ note.last_review_date|date:"d/m/Y" }}
+                                {% endif %}
+                                <br>
+                                <span class="review-due">Đến hạn ôn tập: {{ note.next_review_date|date:"d/m/Y" }}</span>
+                            </div>
+                        </div>
+                        <div>
+                            <a href="{% url 'advanced_learning:cornell_note_review' note_id=note.id %}?next=to_review" class="btn btn-primary">
+                                <i class="fas fa-sync-alt"></i> Ôn Tập
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-check-circle"></i>
+                    <h4>Không có ghi chú nào cần ôn tập hôm nay!</h4>
+                    <p>Bạn đã hoàn thành tất cả các bài ôn tập. Hãy quay lại sau.</p>
+                    <a href="{% url 'advanced_learning:cornell_note_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Tạo Ghi Chú Mới
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Về Spaced Repetition</h5>
+            </div>
+            <div class="card-body">
+                <p>Spaced Repetition (Lặp lại ngắt quãng) là một kỹ thuật học tập hiệu quả dựa trên nghiên cứu khoa học về trí nhớ. Kỹ thuật này giúp bạn ghi nhớ thông tin lâu dài bằng cách ôn tập theo các khoảng thời gian tăng dần.</p>
+                
+                <h5>Lợi ích:</h5>
+                <ul>
+                    <li>Tăng khả năng ghi nhớ dài hạn</li>
+                    <li>Tiết kiệm thời gian học tập</li>
+                    <li>Giảm quên lãng thông tin</li>
+                    <li>Tối ưu hóa quá trình học tập</li>
+                </ul>
+                
+                <div class="alert alert-primary">
+                    <i class="fas fa-lightbulb"></i> <strong>Mẹo:</strong> Ôn tập đều đặn theo lịch trình sẽ giúp bạn ghi nhớ thông tin hiệu quả hơn 90% so với chỉ đọc một lần.
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-link"></i> Tích Hợp</h5>
+            </div>
+            <div class="card-body">
+                <p>Kết hợp ghi chú Cornell với các phương pháp học tập khác để tối ưu hóa việc học:</p>
+                
+                <div class="d-grid gap-2">
+                    <a href="{% url 'flashcards:flashcard_list' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-layer-group"></i> Flashcards
+                    </a>
+                    <a href="{% url 'quizzes:quiz_list' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-question-circle"></i> Quizzes
+                    </a>
+                    <a href="{% url 'advanced_learning:pomodoro_timer' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-clock"></i> Pomodoro Timer
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

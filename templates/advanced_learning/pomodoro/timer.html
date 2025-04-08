@@ -5,60 +5,8 @@
 {% block title %}Pomodoro Timer - Nền Tảng Học Tập{% endblock %}
 
 {% block extra_css %}
-<style>
-    .timer-display {
-        font-size: 4rem;
-        font-weight: bold;
-        text-align: center;
-    }
-    
-    .timer-controls {
-        text-align: center;
-        margin-top: 20px;
-    }
-    
-    .timer-controls button {
-        margin: 0 10px;
-        font-size: 1.2rem;
-        padding: 10px 20px;
-    }
-    
-    .timer-phase {
-        text-align: center;
-        font-size: 1.5rem;
-        margin-bottom: 10px;
-    }
-    
-    .pomodoro-counter {
-        text-align: center;
-        margin-top: 20px;
-    }
-    
-    .pomodoro-counter .tomato {
-        color: #dc3545;
-        font-size: 1.5rem;
-        margin: 0 2px;
-    }
-    
-    .timer-card {
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        transition: all 0.3s ease;
-    }
-    
-    .timer-card.work {
-        border-top: 5px solid #dc3545;
-    }
-    
-    .timer-card.break {
-        border-top: 5px solid #28a745;
-    }
-    
-    .progress {
-        height: 10px;
-        margin-top: 20px;
-    }
-</style>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/pomodoro.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -70,23 +18,30 @@
         <p class="lead">Học tập hiệu quả với phương pháp Pomodoro - tập trung làm việc trong thời gian ngắn, xen kẽ với các khoảng nghỉ.</p>
     </div>
     <div class="col-md-4 text-end">
+        <div class="theme-switch-wrapper mb-2">
+            <label class="theme-switch" for="theme-switch">
+                <input type="checkbox" id="theme-switch" />
+                <span class="slider"></span>
+            </label>
+            <span id="theme-label">Chế độ tối</span>
+        </div>
         <a href="{% url 'advanced_learning:pomodoro_history' %}" class="btn btn-outline-primary">
             <i class="fas fa-history"></i> Lịch Sử Pomodoro
         </a>
     </div>
 </div>
 
-<div class="row">
+<div class="row pomodoro-container">
     <!-- Cài đặt Pomodoro -->
     <div class="col-md-4 mb-4">
-        <div class="card h-100">
+        <div class="settings-card h-100">
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0"><i class="fas fa-cog"></i> Cài Đặt Pomodoro</h5>
             </div>
             <div class="card-body">
                 <form id="pomodoro-settings-form">
                     {% csrf_token %}
-                    
+
                     <div class="mb-3">
                         <label for="subject" class="form-label">Chủ đề học tập</label>
                         <select class="form-select" id="subject" name="subject">
@@ -96,24 +51,48 @@
                             {% endfor %}
                         </select>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="topic" class="form-label">Chủ đề con</label>
                         <select class="form-select" id="topic" name="topic" disabled>
                             <option value="">-- Chọn chủ đề trước --</option>
                         </select>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="work_duration" class="form-label">Thời gian làm việc (phút)</label>
                         <input type="number" class="form-control" id="work_duration" name="work_duration" min="1" max="60" value="{{ work_duration }}" required>
                     </div>
-                    
+
                     <div class="mb-3">
-                        <label for="break_duration" class="form-label">Thời gian nghỉ (phút)</label>
+                        <label for="break_duration" class="form-label">Thời gian nghỉ ngắn (phút)</label>
                         <input type="number" class="form-control" id="break_duration" name="break_duration" min="1" max="30" value="{{ break_duration }}" required>
                     </div>
-                    
+
+                    <div class="mb-3">
+                        <label for="long_break_duration" class="form-label">Thời gian nghỉ dài (phút)</label>
+                        <input type="number" class="form-control" id="long_break_duration" name="long_break_duration" min="5" max="60" value="15" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="pomodoros_until_long_break" class="form-label">Số pomodoro trước khi nghỉ dài</label>
+                        <input type="number" class="form-control" id="pomodoros_until_long_break" name="pomodoros_until_long_break" min="1" max="10" value="4" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="enable_sounds" checked>
+                            <label class="form-check-label" for="enable_sounds">Bật âm thanh</label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="enable_notifications">
+                            <label class="form-check-label" for="enable_notifications">Bật thông báo trình duyệt</label>
+                        </div>
+                    </div>
+
                     <div class="mb-3">
                         <label for="notes" class="form-label">Ghi chú</label>
                         <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Nhập mục tiêu học tập của bạn..."></textarea>
@@ -122,10 +101,10 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Timer -->
     <div class="col-md-8 mb-4">
-        <div class="card h-100 timer-card work" id="timer-card">
+        <div class="timer-card h-100 work" id="timer-card">
             <div class="card-body">
                 <div class="timer-phase" id="timer-phase">Sẵn sàng bắt đầu</div>
                 <div class="timer-display" id="timer-display">25:00</div>
@@ -158,10 +137,73 @@
     </div>
 </div>
 
+<!-- Biểu đồ thống kê -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="stats-card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Thống Kê Học Tập</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Thời gian học tập theo ngày</h5>
+                        <div class="chart-container">
+                            <canvas id="daily-chart" data-chart='{{ daily_chart_data|safe }}'></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Phân bố thời gian theo chủ đề</h5>
+                        <div class="chart-container">
+                            <canvas id="subject-chart" data-chart='{{ subject_chart_data|safe }}'></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tích hợp với các tính năng khác -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="integration-card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-link"></i> Tích Hợp Học Tập</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="integration-item">
+                            <h5><i class="fas fa-layer-group"></i> Flashcards</h5>
+                            <p>Ôn tập flashcards trong thời gian nghỉ giữa các pomodoro.</p>
+                            <a href="{% url 'flashcards:flashcard_list' %}" class="btn btn-sm btn-outline-primary">Xem Flashcards</a>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="integration-item">
+                            <h5><i class="fas fa-bullseye"></i> Mục Tiêu Học Tập</h5>
+                            <p>Theo dõi tiến độ mục tiêu học tập của bạn.</p>
+                            <a href="{% url 'learning_goals:goal_list' %}" class="btn btn-sm btn-outline-primary">Xem Mục Tiêu</a>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="integration-item">
+                            <h5><i class="fas fa-edit"></i> Ghi Chú Cornell</h5>
+                            <p>Tạo ghi chú Cornell trong thời gian học tập.</p>
+                            <a href="{% url 'advanced_learning:cornell_note_list' %}" class="btn btn-sm btn-outline-primary">Xem Ghi Chú</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Thông tin về phương pháp Pomodoro -->
 <div class="row mt-4">
     <div class="col-md-12">
-        <div class="card">
+        <div class="info-card">
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0"><i class="fas fa-info-circle"></i> Về Phương Pháp Pomodoro</h5>
             </div>
@@ -202,384 +244,8 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Các biến cho timer
-        let timerDisplay = document.getElementById('timer-display');
-        let timerPhase = document.getElementById('timer-phase');
-        let timerCard = document.getElementById('timer-card');
-        let timerProgress = document.getElementById('timer-progress');
-        let startBtn = document.getElementById('start-timer');
-        let pauseBtn = document.getElementById('pause-timer');
-        let resumeBtn = document.getElementById('resume-timer');
-        let resetBtn = document.getElementById('reset-timer');
-        let skipBtn = document.getElementById('skip-timer');
-        let pomodoroCount = document.getElementById('pomodoro-count');
-        let pomodoroIcons = document.getElementById('pomodoro-icons');
-        
-        // Biến trạng thái
-        let isRunning = false;
-        let isPaused = false;
-        let isWorkPhase = true;
-        let timerInterval;
-        let sessionId = null;
-        let completedPomodoros = 0;
-        let totalSeconds = 0;
-        let currentSeconds = 0;
-        let workDuration = parseInt(document.getElementById('work_duration').value) * 60;
-        let breakDuration = parseInt(document.getElementById('break_duration').value) * 60;
-        
-        // Âm thanh thông báo
-        let alarmSound = new Audio('{% static "sounds/alarm.mp3" %}');
-        
-        // Cập nhật hiển thị timer
-        function updateTimerDisplay() {
-            let minutes = Math.floor(currentSeconds / 60);
-            let seconds = currentSeconds % 60;
-            timerDisplay.textContent = 
-                (minutes < 10 ? '0' + minutes : minutes) + ':' +
-                (seconds < 10 ? '0' + seconds : seconds);
-            
-            // Cập nhật thanh tiến trình
-            let progressPercent = ((totalSeconds - currentSeconds) / totalSeconds) * 100;
-            timerProgress.style.width = progressPercent + '%';
-        }
-        
-        // Bắt đầu timer
-        function startTimer() {
-            // Lấy giá trị từ form
-            workDuration = parseInt(document.getElementById('work_duration').value) * 60;
-            breakDuration = parseInt(document.getElementById('break_duration').value) * 60;
-            
-            // Thiết lập timer
-            isWorkPhase = true;
-            totalSeconds = workDuration;
-            currentSeconds = workDuration;
-            
-            // Cập nhật giao diện
-            timerPhase.textContent = 'Thời gian làm việc';
-            timerCard.classList.remove('break');
-            timerCard.classList.add('work');
-            timerProgress.classList.remove('bg-success');
-            timerProgress.classList.add('bg-danger');
-            
-            updateTimerDisplay();
-            
-            // Bắt đầu đếm ngược
-            isRunning = true;
-            isPaused = false;
-            
-            // Cập nhật nút
-            startBtn.classList.add('d-none');
-            pauseBtn.classList.remove('d-none');
-            resumeBtn.classList.add('d-none');
-            
-            // Bắt đầu phiên Pomodoro mới
-            startPomodoroSession();
-            
-            // Bắt đầu đếm ngược
-            timerInterval = setInterval(function() {
-                if (currentSeconds > 0) {
-                    currentSeconds--;
-                    updateTimerDisplay();
-                } else {
-                    // Hết thời gian
-                    clearInterval(timerInterval);
-                    alarmSound.play();
-                    
-                    if (isWorkPhase) {
-                        // Chuyển sang thời gian nghỉ
-                        isWorkPhase = false;
-                        totalSeconds = breakDuration;
-                        currentSeconds = breakDuration;
-                        timerPhase.textContent = 'Thời gian nghỉ';
-                        timerCard.classList.remove('work');
-                        timerCard.classList.add('break');
-                        timerProgress.classList.remove('bg-danger');
-                        timerProgress.classList.add('bg-success');
-                        
-                        // Tăng số pomodoro đã hoàn thành
-                        completedPomodoros++;
-                        pomodoroCount.textContent = completedPomodoros;
-                        updatePomodoroIcons();
-                    } else {
-                        // Chuyển lại thời gian làm việc
-                        isWorkPhase = true;
-                        totalSeconds = workDuration;
-                        currentSeconds = workDuration;
-                        timerPhase.textContent = 'Thời gian làm việc';
-                        timerCard.classList.remove('break');
-                        timerCard.classList.add('work');
-                        timerProgress.classList.remove('bg-success');
-                        timerProgress.classList.add('bg-danger');
-                    }
-                    
-                    updateTimerDisplay();
-                    
-                    // Tự động bắt đầu lại timer
-                    timerInterval = setInterval(function() {
-                        if (currentSeconds > 0) {
-                            currentSeconds--;
-                            updateTimerDisplay();
-                        } else {
-                            clearInterval(timerInterval);
-                            alarmSound.play();
-                            
-                            // Lặp lại quy trình
-                            if (isWorkPhase) {
-                                isWorkPhase = false;
-                                totalSeconds = breakDuration;
-                                currentSeconds = breakDuration;
-                                timerPhase.textContent = 'Thời gian nghỉ';
-                                timerCard.classList.remove('work');
-                                timerCard.classList.add('break');
-                                timerProgress.classList.remove('bg-danger');
-                                timerProgress.classList.add('bg-success');
-                                
-                                completedPomodoros++;
-                                pomodoroCount.textContent = completedPomodoros;
-                                updatePomodoroIcons();
-                            } else {
-                                isWorkPhase = true;
-                                totalSeconds = workDuration;
-                                currentSeconds = workDuration;
-                                timerPhase.textContent = 'Thời gian làm việc';
-                                timerCard.classList.remove('break');
-                                timerCard.classList.add('work');
-                                timerProgress.classList.remove('bg-success');
-                                timerProgress.classList.add('bg-danger');
-                            }
-                            
-                            updateTimerDisplay();
-                            startTimer();
-                        }
-                    }, 1000);
-                }
-            }, 1000);
-        }
-        
-        // Tạm dừng timer
-        function pauseTimer() {
-            if (isRunning && !isPaused) {
-                clearInterval(timerInterval);
-                isPaused = true;
-                pauseBtn.classList.add('d-none');
-                resumeBtn.classList.remove('d-none');
-            }
-        }
-        
-        // Tiếp tục timer
-        function resumeTimer() {
-            if (isRunning && isPaused) {
-                isPaused = false;
-                pauseBtn.classList.remove('d-none');
-                resumeBtn.classList.add('d-none');
-                
-                timerInterval = setInterval(function() {
-                    if (currentSeconds > 0) {
-                        currentSeconds--;
-                        updateTimerDisplay();
-                    } else {
-                        clearInterval(timerInterval);
-                        // Xử lý hết thời gian tương tự như trong startTimer
-                    }
-                }, 1000);
-            }
-        }
-        
-        // Đặt lại timer
-        function resetTimer() {
-            clearInterval(timerInterval);
-            isRunning = false;
-            isPaused = false;
-            
-            // Đặt lại thời gian
-            isWorkPhase = true;
-            workDuration = parseInt(document.getElementById('work_duration').value) * 60;
-            breakDuration = parseInt(document.getElementById('break_duration').value) * 60;
-            totalSeconds = workDuration;
-            currentSeconds = workDuration;
-            
-            // Cập nhật giao diện
-            timerPhase.textContent = 'Sẵn sàng bắt đầu';
-            timerCard.classList.remove('break');
-            timerCard.classList.add('work');
-            timerProgress.style.width = '0%';
-            timerProgress.classList.remove('bg-success');
-            timerProgress.classList.add('bg-danger');
-            
-            // Cập nhật nút
-            startBtn.classList.remove('d-none');
-            pauseBtn.classList.add('d-none');
-            resumeBtn.classList.add('d-none');
-            
-            updateTimerDisplay();
-            
-            // Kết thúc phiên hiện tại nếu có
-            if (sessionId) {
-                endPomodoroSession();
-            }
-        }
-        
-        // Bỏ qua giai đoạn hiện tại
-        function skipPhase() {
-            clearInterval(timerInterval);
-            
-            if (isWorkPhase) {
-                // Chuyển sang thời gian nghỉ
-                isWorkPhase = false;
-                totalSeconds = breakDuration;
-                currentSeconds = breakDuration;
-                timerPhase.textContent = 'Thời gian nghỉ';
-                timerCard.classList.remove('work');
-                timerCard.classList.add('break');
-                timerProgress.classList.remove('bg-danger');
-                timerProgress.classList.add('bg-success');
-                
-                // Tăng số pomodoro đã hoàn thành
-                completedPomodoros++;
-                pomodoroCount.textContent = completedPomodoros;
-                updatePomodoroIcons();
-            } else {
-                // Chuyển lại thời gian làm việc
-                isWorkPhase = true;
-                totalSeconds = workDuration;
-                currentSeconds = workDuration;
-                timerPhase.textContent = 'Thời gian làm việc';
-                timerCard.classList.remove('break');
-                timerCard.classList.add('work');
-                timerProgress.classList.remove('bg-success');
-                timerProgress.classList.add('bg-danger');
-            }
-            
-            updateTimerDisplay();
-            
-            // Tiếp tục timer
-            if (isRunning && !isPaused) {
-                timerInterval = setInterval(function() {
-                    if (currentSeconds > 0) {
-                        currentSeconds--;
-                        updateTimerDisplay();
-                    } else {
-                        clearInterval(timerInterval);
-                        // Xử lý hết thời gian tương tự như trong startTimer
-                    }
-                }, 1000);
-            }
-        }
-        
-        // Cập nhật biểu tượng pomodoro
-        function updatePomodoroIcons() {
-            pomodoroIcons.innerHTML = '';
-            for (let i = 0; i < completedPomodoros; i++) {
-                pomodoroIcons.innerHTML += '<i class="fas fa-apple-alt tomato"></i>';
-            }
-        }
-        
-        // Bắt đầu phiên Pomodoro mới
-        function startPomodoroSession() {
-            // Lấy dữ liệu từ form
-            const formData = new FormData(document.getElementById('pomodoro-settings-form'));
-            
-            // Gửi yêu cầu AJAX để bắt đầu phiên mới
-            fetch('{% url "advanced_learning:pomodoro_start" %}', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    sessionId = data.session_id;
-                    console.log('Phiên Pomodoro mới đã bắt đầu:', data);
-                }
-            })
-            .catch(error => {
-                console.error('Lỗi khi bắt đầu phiên Pomodoro:', error);
-            });
-        }
-        
-        // Kết thúc phiên Pomodoro
-        function endPomodoroSession() {
-            if (!sessionId) return;
-            
-            // Tạo FormData
-            const formData = new FormData();
-            formData.append('session_id', sessionId);
-            formData.append('completed_pomodoros', completedPomodoros);
-            
-            // Thêm CSRF token
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-            
-            // Gửi yêu cầu AJAX để kết thúc phiên
-            fetch('{% url "advanced_learning:pomodoro_end" %}', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': csrfToken
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    console.log('Phiên Pomodoro đã kết thúc:', data);
-                    sessionId = null;
-                    completedPomodoros = 0;
-                    pomodoroCount.textContent = '0';
-                    pomodoroIcons.innerHTML = '';
-                }
-            })
-            .catch(error => {
-                console.error('Lỗi khi kết thúc phiên Pomodoro:', error);
-            });
-        }
-        
-        // Xử lý sự kiện cho các nút
-        startBtn.addEventListener('click', startTimer);
-        pauseBtn.addEventListener('click', pauseTimer);
-        resumeBtn.addEventListener('click', resumeTimer);
-        resetBtn.addEventListener('click', resetTimer);
-        skipBtn.addEventListener('click', skipPhase);
-        
-        // Xử lý sự kiện khi thay đổi chủ đề
-        document.getElementById('subject').addEventListener('change', function() {
-            const subjectId = this.value;
-            const topicSelect = document.getElementById('topic');
-            
-            if (subjectId) {
-                // Kích hoạt select topic
-                topicSelect.disabled = false;
-                
-                // Gửi yêu cầu AJAX để lấy danh sách topic
-                fetch(`/api/subjects/${subjectId}/topics/`)
-                    .then(response => response.json())
-                    .then(data => {
-                        // Xóa các option cũ
-                        topicSelect.innerHTML = '<option value="">-- Chọn chủ đề con --</option>';
-                        
-                        // Thêm các option mới
-                        data.forEach(topic => {
-                            const option = document.createElement('option');
-                            option.value = topic.id;
-                            option.textContent = topic.name;
-                            topicSelect.appendChild(option);
-                        });
-                    })
-                    .catch(error => {
-                        console.error('Lỗi khi lấy danh sách chủ đề con:', error);
-                    });
-            } else {
-                // Vô hiệu hóa select topic
-                topicSelect.disabled = true;
-                topicSelect.innerHTML = '<option value="">-- Chọn chủ đề trước --</option>';
-            }
-        });
-        
-        // Khởi tạo timer
-        updateTimerDisplay();
-    });
-</script>
+<!-- Chart.js cho biểu đồ thống kê -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- File JavaScript riêng cho Pomodoro Timer -->
+<script src="{% static 'js/pomodoro.js' %}"></script>
 {% endblock %}

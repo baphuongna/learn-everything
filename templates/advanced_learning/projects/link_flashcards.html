@@ -1,0 +1,275 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Liên Kết Flashcards với Dự Án - {{ project.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .link-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .link-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    
+    .project-info {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .project-title {
+        color: #17a2b8;
+        margin-bottom: 10px;
+    }
+    
+    .flashcard-item {
+        border-radius: 10px;
+        border: 1px solid #dee2e6;
+        padding: 15px;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .flashcard-item:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .flashcard-item.selected {
+        border-color: #17a2b8;
+        background-color: #e9f7fb;
+    }
+    
+    .flashcard-title {
+        font-weight: 600;
+        color: #17a2b8;
+        margin-bottom: 5px;
+    }
+    
+    .flashcard-meta {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    
+    .flashcard-stats {
+        display: flex;
+        gap: 15px;
+        margin-top: 10px;
+    }
+    
+    .flashcard-stat {
+        display: flex;
+        align-items: center;
+        font-size: 0.85rem;
+    }
+    
+    .flashcard-stat i {
+        margin-right: 5px;
+        color: #17a2b8;
+    }
+    
+    .linked-flashcards {
+        margin-top: 30px;
+    }
+    
+    .linked-flashcard-item {
+        background-color: #e9f7fb;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-left: 4px solid #17a2b8;
+    }
+    
+    .linked-flashcard-title {
+        font-weight: 600;
+        color: #17a2b8;
+        margin-bottom: 5px;
+    }
+    
+    .linked-flashcard-meta {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 30px;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+    }
+    
+    .empty-state-icon {
+        font-size: 3rem;
+        color: #dee2e6;
+        margin-bottom: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-layer-group text-info"></i> Liên Kết Flashcards với Dự Án
+        </h1>
+        <p class="lead">Liên kết bộ flashcards với dự án "{{ project.title }}" để ôn tập kiến thức hiệu quả.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:project_detail' project_id=project.id %}" class="btn btn-outline-info">
+            <i class="fas fa-arrow-left"></i> Quay Lại Dự Án
+        </a>
+    </div>
+</div>
+
+<div class="link-container">
+    <div class="project-info">
+        <h4 class="project-title">{{ project.title }}</h4>
+        <div class="progress mb-3">
+            <div class="progress-bar bg-info" role="progressbar" style="width: {{ user_project.progress }}%;" aria-valuenow="{{ user_project.progress }}" aria-valuemin="0" aria-valuemax="100">{{ user_project.progress }}%</div>
+        </div>
+        <p><strong>Trạng thái:</strong>
+            <span class="badge {% if user_project.status == 'not_started' %}bg-secondary{% elif user_project.status == 'in_progress' %}bg-primary{% else %}bg-success{% endif %}">
+                {% if user_project.status == 'not_started' %}
+                    Chưa bắt đầu
+                {% elif user_project.status == 'in_progress' %}
+                    Đang thực hiện
+                {% else %}
+                    Đã hoàn thành
+                {% endif %}
+            </span>
+        </p>
+    </div>
+    
+    {% if linked_flashcard_sets %}
+    <div class="linked-flashcards">
+        <h4 class="mb-3"><i class="fas fa-link text-info"></i> Bộ Flashcards Đã Liên Kết</h4>
+        
+        {% for flashcard_set in linked_flashcard_sets %}
+        <div class="linked-flashcard-item">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="linked-flashcard-title">{{ flashcard_set.title }}</h5>
+                    <div class="linked-flashcard-meta">
+                        <span><i class="fas fa-calendar-alt"></i> Tạo: {{ flashcard_set.created_at|date:"d/m/Y" }}</span>
+                        <span class="ms-3"><i class="fas fa-layer-group"></i> {{ flashcard_set.flashcards.count }} thẻ</span>
+                    </div>
+                </div>
+                <div>
+                    <a href="{% url 'flashcards:flashcard_set_detail' set_id=flashcard_set.id %}" class="btn btn-sm btn-outline-info">
+                        <i class="fas fa-eye"></i> Xem
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <div class="card link-card">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="fas fa-plus"></i> Liên Kết Bộ Flashcards Mới</h5>
+        </div>
+        <div class="card-body">
+            {% if flashcard_sets %}
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label class="form-label">Chọn bộ flashcards để liên kết:</label>
+                    
+                    {% for flashcard_set in flashcard_sets %}
+                        {% if flashcard_set not in linked_flashcard_sets %}
+                        <div class="form-check flashcard-item">
+                            <input class="form-check-input" type="radio" name="flashcard_set" id="flashcard-{{ flashcard_set.id }}" value="{{ flashcard_set.id }}" required>
+                            <label class="form-check-label w-100" for="flashcard-{{ flashcard_set.id }}">
+                                <div class="flashcard-title">{{ flashcard_set.title }}</div>
+                                <div class="flashcard-meta">
+                                    {% if flashcard_set.subject %}
+                                    <span class="badge bg-primary">{{ flashcard_set.subject.name }}</span>
+                                    {% endif %}
+                                    <span class="ms-2"><i class="far fa-calendar-alt"></i> {{ flashcard_set.created_at|date:"d/m/Y" }}</span>
+                                </div>
+                                <div class="flashcard-stats">
+                                    <div class="flashcard-stat">
+                                        <i class="fas fa-layer-group"></i> {{ flashcard_set.flashcards.count }} thẻ
+                                    </div>
+                                    <div class="flashcard-stat">
+                                        <i class="fas fa-sync-alt"></i> {{ flashcard_set.review_count|default:0 }} lần ôn tập
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-info">
+                        <i class="fas fa-link"></i> Liên Kết Bộ Flashcards
+                    </button>
+                </div>
+            </form>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+                <h5>Bạn chưa có bộ flashcards nào</h5>
+                <p>Tạo bộ flashcards mới để liên kết với dự án này.</p>
+                <a href="{% url 'flashcards:create_set' %}" class="btn btn-info mt-3">
+                    <i class="fas fa-plus"></i> Tạo Bộ Flashcards Mới
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="card link-card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="fas fa-info-circle"></i> Lợi Ích Của Việc Liên Kết</h5>
+        </div>
+        <div class="card-body">
+            <h5>Tại sao nên liên kết flashcards với dự án?</h5>
+            <ul>
+                <li>Ôn tập kiến thức liên quan đến dự án một cách hiệu quả</li>
+                <li>Tổ chức tài liệu học tập theo chủ đề dự án</li>
+                <li>Dễ dàng truy cập các flashcards liên quan khi làm việc trên dự án</li>
+                <li>Cải thiện khả năng ghi nhớ dài hạn thông qua ôn tập có hệ thống</li>
+            </ul>
+            
+            <div class="alert alert-info">
+                <i class="fas fa-lightbulb"></i> <strong>Mẹo:</strong> Tạo các bộ flashcards cho từng phần của dự án để ôn tập có trọng tâm hơn.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const flashcardItems = document.querySelectorAll('.flashcard-item');
+        
+        flashcardItems.forEach(item => {
+            const radio = item.querySelector('input[type="radio"]');
+            
+            item.addEventListener('click', function() {
+                // Bỏ chọn tất cả các item khác
+                flashcardItems.forEach(otherItem => {
+                    otherItem.classList.remove('selected');
+                });
+                
+                // Chọn item hiện tại
+                item.classList.add('selected');
+                radio.checked = true;
+            });
+        });
+    });
+</script>
+{% endblock %}

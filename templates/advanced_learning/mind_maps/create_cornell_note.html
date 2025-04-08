@@ -1,0 +1,208 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Tạo Ghi Chú Cornell từ Sơ Đồ Tư Duy - {{ mind_map.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .cornell-preview-container {
+        margin-bottom: 30px;
+    }
+    
+    .cornell-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    
+    .cornell-preview {
+        padding: 20px;
+    }
+    
+    .cornell-layout {
+        display: flex;
+        flex-wrap: wrap;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+    
+    .cornell-cue {
+        flex: 0 0 30%;
+        padding: 15px;
+        border-right: 1px solid #dee2e6;
+        background-color: #f8f9fa;
+    }
+    
+    .cornell-main {
+        flex: 0 0 70%;
+        padding: 15px;
+    }
+    
+    .cornell-summary {
+        width: 100%;
+        padding: 15px;
+        border-top: 1px solid #dee2e6;
+        background-color: #f8f9fa;
+    }
+    
+    .note-content {
+        white-space: pre-wrap;
+    }
+    
+    .mindmap-preview {
+        height: 300px;
+        width: 100%;
+        border: 1px solid #dee2e6;
+        background-color: #fff;
+        margin-bottom: 20px;
+    }
+    
+    .integration-info {
+        margin-top: 20px;
+    }
+    
+    @media (max-width: 768px) {
+        .cornell-layout {
+            flex-direction: column;
+        }
+        
+        .cornell-cue, .cornell-main {
+            flex: 0 0 100%;
+        }
+        
+        .cornell-cue {
+            border-right: none;
+            border-bottom: 1px solid #dee2e6;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-edit text-primary"></i> Tạo Ghi Chú Cornell từ Sơ Đồ Tư Duy
+        </h1>
+        <p class="lead">Tạo ghi chú Cornell từ sơ đồ tư duy "{{ mind_map.title }}" để tổ chức thông tin hiệu quả.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:mind_map_detail' map_id=mind_map.id %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Quay Lại Sơ Đồ
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card cornell-card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-project-diagram"></i> Sơ Đồ Tư Duy Nguồn</h5>
+            </div>
+            <div class="card-body">
+                <div class="mindmap-preview">
+                    <div id="jsmind_container"></div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Hệ thống sẽ tạo ghi chú Cornell dựa trên nội dung sơ đồ tư duy của bạn. Chủ đề trung tâm và các nút con sẽ được sử dụng để tạo cột gợi ý và ghi chú chính.
+                </div>
+                
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-magic"></i> Tạo Ghi Chú Cornell
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card cornell-card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-edit"></i> Xem Trước Ghi Chú Cornell</h5>
+            </div>
+            <div class="cornell-preview">
+                <p class="text-muted mb-4">Đây chỉ là xem trước, ghi chú Cornell thực tế sẽ được tạo khi bạn nhấn nút "Tạo Ghi Chú Cornell".</p>
+                
+                <div class="cornell-layout">
+                    <div class="cornell-cue">
+                        <h5 class="mb-3">Cột Gợi Ý</h5>
+                        <div class="note-content">{{ mind_map.central_topic }}?
+{% for child in mind_map.map_data.children|slice:":3" %}
+- {{ child.text }}?
+{% endfor %}</div>
+                    </div>
+                    
+                    <div class="cornell-main">
+                        <h5 class="mb-3">Ghi Chú Chính</h5>
+                        <div class="note-content">{{ mind_map.central_topic }}:
+{% for child in mind_map.map_data.children|slice:":3" %}
+- {{ child.text }}
+{% for grandchild in child.children|slice:":2" %}  * {{ grandchild.text }}
+{% endfor %}{% endfor %}</div>
+                    </div>
+                    
+                    <div class="cornell-summary">
+                        <h5 class="mb-3">Tóm Tắt</h5>
+                        <div class="note-content">Sơ đồ tư duy '{{ mind_map.title }}' tập trung vào chủ đề {{ mind_map.central_topic }} với các ý chính bao gồm: {% for child in mind_map.map_data.children|slice:":3" %}{{ child.text }}{% if not forloop.last %}, {% endif %}{% endfor %}.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="integration-info mt-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Về Phương Pháp Cornell</h5>
+                </div>
+                <div class="card-body">
+                    <p>Phương pháp ghi chú Cornell là một hệ thống ghi chú được phát triển bởi Walter Pauk tại Đại học Cornell. Phương pháp này giúp tổ chức thông tin một cách hiệu quả và cải thiện việc ghi nhớ.</p>
+                    
+                    <h5>Cấu trúc của ghi chú Cornell:</h5>
+                    <ul>
+                        <li><strong>Cột gợi ý:</strong> Dùng để ghi các từ khóa, câu hỏi hoặc gợi ý.</li>
+                        <li><strong>Ghi chú chính:</strong> Nơi ghi lại thông tin chi tiết.</li>
+                        <li><strong>Tóm tắt:</strong> Tổng hợp những điểm chính của ghi chú.</li>
+                    </ul>
+                    
+                    <div class="alert alert-primary">
+                        <i class="fas fa-lightbulb"></i> <strong>Mẹo:</strong> Kết hợp ghi chú Cornell với sơ đồ tư duy giúp bạn hiểu và ghi nhớ thông tin hiệu quả hơn.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/jsmind@0.6.4/js/jsmind.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsmind@0.6.4/js/jsmind.draggable.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Khởi tạo JSMind
+        var options = {
+            container: 'jsmind_container',
+            theme: 'primary',
+            editable: false,
+            mode: 'view',
+            support_html: true,
+            view: {
+                line_width: 2,
+                line_color: '#555'
+            }
+        };
+        
+        var jm = new jsMind(options);
+        var mind_data = {{ mind_map.map_data|safe }};
+        jm.show(mind_data);
+    });
+</script>
+{% endblock %}

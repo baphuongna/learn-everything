@@ -12,22 +12,22 @@
         margin-bottom: 15px;
         border-left: 4px solid #fd7e14;
     }
-    
+
     .note-card:hover {
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         transform: translateY(-2px);
     }
-    
+
     .note-title {
         font-weight: 600;
         color: #fd7e14;
     }
-    
+
     .note-meta {
         font-size: 0.85rem;
         color: #6c757d;
     }
-    
+
     .note-content {
         max-height: 100px;
         overflow: hidden;
@@ -36,37 +36,37 @@
         -webkit-line-clamp: 3;
         -webkit-box-orient: vertical;
     }
-    
+
     .search-card {
         border-radius: 10px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         margin-bottom: 20px;
     }
-    
+
     .empty-state {
         text-align: center;
         padding: 40px 20px;
     }
-    
+
     .empty-state i {
         font-size: 4rem;
         color: #dee2e6;
         margin-bottom: 20px;
     }
-    
+
     .feynman-steps {
         counter-reset: step-counter;
         list-style-type: none;
         padding-left: 0;
     }
-    
+
     .feynman-steps li {
         position: relative;
         padding-left: 50px;
         margin-bottom: 15px;
         counter-increment: step-counter;
     }
-    
+
     .feynman-steps li::before {
         content: counter(step-counter);
         position: absolute;
@@ -99,6 +99,20 @@
         </a>
     </div>
 </div>
+
+<!-- Thông tin ôn tập -->
+{% if notes_to_review_count > 0 %}
+<div class="alert alert-warning mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <i class="fas fa-sync-alt"></i> Bạn có <strong>{{ notes_to_review_count }}</strong> ghi chú Feynman cần ôn tập hôm nay.
+        </div>
+        <a href="{% url 'advanced_learning:feynman_notes_to_review' %}" class="btn btn-warning btn-sm">
+            <i class="fas fa-check"></i> Ôn Tập Ngay
+        </a>
+    </div>
+</div>
+{% endif %}
 
 <!-- Tìm kiếm và lọc -->
 <div class="card search-card mb-4">

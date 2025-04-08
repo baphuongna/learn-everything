@@ -9,7 +9,7 @@
         max-width: 1200px;
         margin: 0 auto;
     }
-    
+
     .stats-card {
         border-radius: 15px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -17,151 +17,151 @@
         margin-bottom: 20px;
         overflow: hidden;
     }
-    
+
     .stats-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
     }
-    
+
     .stats-card .card-body {
         padding: 20px;
     }
-    
+
     .stats-icon {
         font-size: 2.5rem;
         margin-bottom: 15px;
     }
-    
+
     .stats-value {
         font-size: 2.5rem;
         font-weight: bold;
     }
-    
+
     .stats-label {
         font-size: 1rem;
         color: #6c757d;
     }
-    
+
     .chart-card {
         border-radius: 15px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         margin-bottom: 20px;
     }
-    
+
     .chart-header {
         padding: 15px 20px;
         border-bottom: 1px solid #eee;
     }
-    
+
     .chart-body {
         padding: 20px;
         height: 300px;
     }
-    
+
     .trend-indicator {
         display: inline-flex;
         align-items: center;
         margin-left: 10px;
         font-size: 0.9rem;
     }
-    
+
     .trend-up {
         color: #28a745;
     }
-    
+
     .trend-down {
         color: #dc3545;
     }
-    
+
     .trend-neutral {
         color: #6c757d;
     }
-    
+
     .feature-usage-card {
         border-radius: 15px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         margin-bottom: 20px;
     }
-    
+
     .feature-usage-header {
         padding: 15px 20px;
         border-bottom: 1px solid #eee;
     }
-    
+
     .feature-usage-body {
         padding: 20px;
     }
-    
+
     .feature-item {
         margin-bottom: 15px;
     }
-    
+
     .feature-label {
         font-weight: 600;
         margin-bottom: 5px;
     }
-    
+
     .feature-progress {
         height: 8px;
         border-radius: 4px;
     }
-    
+
     .progress-pomodoro {
         background-color: #dc3545;
     }
-    
+
     .progress-cornell {
         background-color: #0d6efd;
     }
-    
+
     .progress-mindmap {
         background-color: #198754;
     }
-    
+
     .progress-feynman {
         background-color: #ffc107;
     }
-    
+
     .progress-project {
         background-color: #17a2b8;
     }
-    
+
     .progress-competition {
         background-color: #fd7e14;
     }
-    
+
     .recommendation-card {
         border-radius: 15px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         margin-bottom: 20px;
     }
-    
+
     .recommendation-header {
         padding: 15px 20px;
         border-bottom: 1px solid #eee;
     }
-    
+
     .recommendation-body {
         padding: 20px;
     }
-    
+
     .recommendation-item {
         margin-bottom: 15px;
         padding: 15px;
         border-radius: 10px;
         background-color: #f8f9fa;
     }
-    
+
     .recommendation-icon {
         font-size: 1.5rem;
         margin-right: 10px;
     }
-    
+
     .recommendation-title {
         font-weight: 600;
         margin-bottom: 5px;
     }
-    
+
     .recommendation-text {
         color: #6c757d;
     }
@@ -183,7 +183,7 @@
             </a>
         </div>
     </div>
-    
+
     <!-- Thống kê tổng quan -->
     <div class="row mb-4">
         <div class="col-md-4 mb-4">
@@ -212,7 +212,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-4 mb-4">
             <div class="card stats-card h-100">
                 <div class="card-body text-center">
@@ -239,7 +239,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-4 mb-4">
             <div class="card stats-card h-100">
                 <div class="card-body text-center">
@@ -255,7 +255,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Biểu đồ thời gian học tập -->
     <div class="row mb-4">
         <div class="col-md-12">
@@ -269,7 +269,57 @@
             </div>
         </div>
     </div>
-    
+
+    <!-- Biểu đồ so sánh việc sử dụng các tính năng học tập nâng cao -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card chart-card">
+                <div class="chart-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-pie text-primary"></i> So Sánh Sử Dụng Tính Năng</h5>
+                </div>
+                <div class="chart-body">
+                    <canvas id="featureComparisonChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card chart-card">
+                <div class="chart-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar text-primary"></i> Số Lượng Sử Dụng Tính Năng</h5>
+                </div>
+                <div class="chart-body">
+                    <canvas id="featureBarChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Biểu đồ tiến độ dự án và điểm thi đấu -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card chart-card">
+                <div class="chart-header">
+                    <h5 class="mb-0"><i class="fas fa-tasks text-info"></i> Tiến Độ Dự Án Theo Thời Gian</h5>
+                </div>
+                <div class="chart-body">
+                    <canvas id="projectProgressChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card chart-card">
+                <div class="chart-header">
+                    <h5 class="mb-0"><i class="fas fa-trophy text-warning"></i> Điểm Thi Đấu Theo Thời Gian</h5>
+                </div>
+                <div class="chart-body">
+                    <canvas id="competitionPointsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
         <!-- Sử dụng tính năng -->
         <div class="col-md-6 mb-4">
@@ -287,7 +337,7 @@
                             <div class="progress-bar progress-pomodoro" role="progressbar" style="width: {{ feature_usage.Pomodoro }}%;" aria-valuenow="{{ feature_usage.Pomodoro }}" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                     </div>
-                    
+
                     <div class="feature-item">
                         <div class="d-flex justify-content-between">
                             <div class="feature-label">Cornell Notes</div>
@@ -297,7 +347,7 @@
                             <div class="progress-bar progress-cornell" role="progressbar" style="width: {{ feature_usage.Cornell_Notes }}%;" aria-valuenow="{{ feature_usage.Cornell_Notes }}" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                     </div>
-                    
+
                     <div class="feature-item">
                         <div class="d-flex justify-content-between">
                             <div class="feature-label">Mind Maps</div>
@@ -307,7 +357,7 @@
                             <div class="progress-bar progress-mindmap" role="progressbar" style="width: {{ feature_usage.Mind_Maps }}%;" aria-valuenow="{{ feature_usage.Mind_Maps }}" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                     </div>
-                    
+
                     <div class="feature-item">
                         <div class="d-flex justify-content-between">
                             <div class="feature-label">Feynman Notes</div>
@@ -317,7 +367,7 @@
                             <div class="progress-bar progress-feynman" role="progressbar" style="width: {{ feature_usage.Feynman_Notes }}%;" aria-valuenow="{{ feature_usage.Feynman_Notes }}" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                     </div>
-                    
+
                     <div class="feature-item">
                         <div class="d-flex justify-content-between">
                             <div class="feature-label">Projects</div>
@@ -327,7 +377,7 @@
                             <div class="progress-bar progress-project" role="progressbar" style="width: {{ feature_usage.Projects }}%;" aria-valuenow="{{ feature_usage.Projects }}" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                     </div>
-                    
+
                     <div class="feature-item">
                         <div class="d-flex justify-content-between">
                             <div class="feature-label">Competitions</div>
@@ -340,7 +390,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Khuyến nghị học tập -->
         <div class="col-md-6 mb-4">
             <div class="card recommendation-card">
@@ -361,7 +411,7 @@
                             </div>
                         </div>
                     {% endif %}
-                    
+
                     {% if learning_trends.notes_trend < 0 %}
                         <div class="recommendation-item">
                             <div class="d-flex align-items-center">
@@ -375,7 +425,7 @@
                             </div>
                         </div>
                     {% endif %}
-                    
+
                     {% if learning_trends.project_trend < 0 %}
                         <div class="recommendation-item">
                             <div class="d-flex align-items-center">
@@ -389,7 +439,7 @@
                             </div>
                         </div>
                     {% endif %}
-                    
+
                     {% if feature_usage.Competitions == 0 %}
                         <div class="recommendation-item">
                             <div class="d-flex align-items-center">
@@ -403,7 +453,7 @@
                             </div>
                         </div>
                     {% endif %}
-                    
+
                     {% if feature_usage.Pomodoro > 0 and feature_usage.Cornell_Notes == 0 and feature_usage.Mind_Maps == 0 and feature_usage.Feynman_Notes == 0 %}
                         <div class="recommendation-item">
                             <div class="d-flex align-items-center">
@@ -417,7 +467,7 @@
                             </div>
                         </div>
                     {% endif %}
-                    
+
                     {% if total_study_minutes < 60 %}
                         <div class="recommendation-item">
                             <div class="d-flex align-items-center">
@@ -431,7 +481,7 @@
                             </div>
                         </div>
                     {% endif %}
-                    
+
                     {% if learning_trends.pomodoro_trend >= 0 and learning_trends.notes_trend >= 0 and learning_trends.project_trend >= 0 and total_study_minutes >= 60 %}
                         <div class="recommendation-item">
                             <div class="d-flex align-items-center">
@@ -459,7 +509,7 @@
         // Dữ liệu cho biểu đồ thời gian học tập
         const studyTimeLabels = {{ pomodoro_labels|safe }};
         const studyTimeData = {{ pomodoro_values|safe }};
-        
+
         // Tạo biểu đồ thời gian học tập
         const studyTimeChart = new Chart(
             document.getElementById('studyTimeChart'),
@@ -485,6 +535,204 @@
                             title: {
                                 display: true,
                                 text: 'Phút'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Ngày'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    }
+                }
+            }
+        );
+
+        // Dữ liệu cho biểu đồ so sánh tính năng
+        const featureLabels = {{ feature_comparison.labels|safe }};
+        const featureValues = {{ feature_comparison.values|safe }};
+        const featureColors = {{ feature_comparison.colors|safe }};
+
+        // Tạo biểu đồ tròn so sánh tính năng
+        const featureComparisonChart = new Chart(
+            document.getElementById('featureComparisonChart'),
+            {
+                type: 'pie',
+                data: {
+                    labels: featureLabels,
+                    datasets: [{
+                        data: featureValues,
+                        backgroundColor: featureColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                boxWidth: 15,
+                                padding: 15
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((value / total) * 100);
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        );
+
+        // Tạo biểu đồ cột so sánh tính năng
+        const featureBarChart = new Chart(
+            document.getElementById('featureBarChart'),
+            {
+                type: 'bar',
+                data: {
+                    labels: featureLabels,
+                    datasets: [{
+                        label: 'Số lần sử dụng',
+                        data: featureValues,
+                        backgroundColor: featureColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Số lần'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        );
+
+        // Dữ liệu cho biểu đồ tiến độ dự án
+        const projectProgressLabels = {{ project_progress_labels|safe }};
+        const projectProgressValues = {{ project_progress_values|safe }};
+
+        // Tạo biểu đồ tiến độ dự án
+        const projectProgressChart = new Chart(
+            document.getElementById('projectProgressChart'),
+            {
+                type: 'line',
+                data: {
+                    labels: projectProgressLabels,
+                    datasets: [{
+                        label: 'Tiến độ trung bình (%)',
+                        data: projectProgressValues,
+                        fill: true,
+                        backgroundColor: 'rgba(23, 162, 184, 0.2)',
+                        borderColor: 'rgba(23, 162, 184, 1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Tiến độ (%)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Ngày'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    }
+                }
+            }
+        );
+
+        // Dữ liệu cho biểu đồ điểm thi đấu
+        const competitionPointsLabels = {{ competition_points_labels|safe }};
+        const competitionPointsValues = {{ competition_points_values|safe }};
+        const competitionPointsCumulative = {{ competition_points_cumulative|safe }};
+
+        // Tạo biểu đồ điểm thi đấu
+        const competitionPointsChart = new Chart(
+            document.getElementById('competitionPointsChart'),
+            {
+                type: 'bar',
+                data: {
+                    labels: competitionPointsLabels,
+                    datasets: [
+                        {
+                            label: 'Điểm hàng ngày',
+                            data: competitionPointsValues,
+                            backgroundColor: 'rgba(253, 126, 20, 0.7)',
+                            borderColor: 'rgba(253, 126, 20, 1)',
+                            borderWidth: 1,
+                            order: 2
+                        },
+                        {
+                            label: 'Điểm tích lũy',
+                            data: competitionPointsCumulative,
+                            type: 'line',
+                            fill: false,
+                            backgroundColor: 'rgba(255, 193, 7, 0.2)',
+                            borderColor: 'rgba(255, 193, 7, 1)',
+                            tension: 0.4,
+                            order: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Điểm'
                             }
                         },
                         x: {

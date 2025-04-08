@@ -1,0 +1,256 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Ôn Tập Ghi Chú Cornell - {{ note.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .review-container {
+        margin-bottom: 30px;
+    }
+    
+    .review-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    
+    .review-header {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .review-layout {
+        display: flex;
+        flex-wrap: wrap;
+    }
+    
+    .review-cue {
+        flex: 0 0 30%;
+        padding: 15px;
+        border-right: 1px solid #dee2e6;
+        background-color: #f8f9fa;
+    }
+    
+    .review-main {
+        flex: 0 0 70%;
+        padding: 15px;
+    }
+    
+    .review-summary {
+        width: 100%;
+        padding: 15px;
+        border-top: 1px solid #dee2e6;
+        background-color: #f8f9fa;
+    }
+    
+    .note-content {
+        white-space: pre-wrap;
+    }
+    
+    .note-meta {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 10px;
+    }
+    
+    .review-badge {
+        background-color: #17a2b8;
+        color: white;
+        padding: 3px 8px;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        margin-left: 10px;
+    }
+    
+    .review-progress {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+    }
+    
+    .review-actions {
+        margin-top: 20px;
+        text-align: center;
+    }
+    
+    .hidden-content {
+        position: relative;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 10px;
+    }
+    
+    .hidden-content-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border-radius: 5px;
+    }
+    
+    @media (max-width: 768px) {
+        .review-layout {
+            flex-direction: column;
+        }
+        
+        .review-cue, .review-main {
+            flex: 0 0 100%;
+        }
+        
+        .review-cue {
+            border-right: none;
+            border-bottom: 1px solid #dee2e6;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-sync-alt text-primary"></i> Ôn Tập Ghi Chú
+            <span class="review-badge"><i class="fas fa-brain"></i> Spaced Repetition</span>
+        </h1>
+        <p class="lead">Ôn tập ghi chú "{{ note.title }}" để cải thiện khả năng ghi nhớ dài hạn.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:cornell_note_detail' note_id=note.id %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Quay Lại Ghi Chú
+        </a>
+    </div>
+</div>
+
+<div class="review-container">
+    <div class="review-card">
+        <div class="review-header">
+            <h4>{{ note.title }}</h4>
+            <div class="note-meta">
+                {% if note.subject %}Chủ đề: <strong>{{ note.subject.name }}</strong>{% endif %}
+                {% if note.topic %} | Chủ đề con: <strong>{{ note.topic.name }}</strong>{% endif %}
+                <br>
+                Số lần ôn tập: <strong>{{ note.review_count }}</strong>
+                {% if note.last_review_date %}
+                | Lần ôn tập gần nhất: <strong>{{ note.last_review_date|date:"d/m/Y" }}</strong>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="review-layout">
+            <div class="review-cue">
+                <h5 class="mb-3">Cột Gợi Ý</h5>
+                <div class="note-content">{{ note.cue_column|linebreaks }}</div>
+            </div>
+            
+            <div class="review-main">
+                <h5 class="mb-3">Ghi Chú Chính</h5>
+                <div class="hidden-content">
+                    <div class="note-content">{{ note.main_notes|linebreaks }}</div>
+                    <div class="hidden-content-overlay" id="main-notes-overlay">
+                        <button class="btn btn-primary">Hiện Ghi Chú Chính</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="review-summary">
+                <h5 class="mb-3">Tóm Tắt</h5>
+                <div class="hidden-content">
+                    <div class="note-content">{{ note.summary|linebreaks }}</div>
+                    <div class="hidden-content-overlay" id="summary-overlay">
+                        <button class="btn btn-primary">Hiện Tóm Tắt</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="review-progress">
+        <h5>Hướng Dẫn Ôn Tập</h5>
+        <ol>
+            <li>Đọc các câu hỏi và từ khóa trong cột gợi ý.</li>
+            <li>Cố gắng nhớ lại thông tin liên quan đến từng gợi ý.</li>
+            <li>Kiểm tra câu trả lời của bạn bằng cách hiện ghi chú chính.</li>
+            <li>Đọc tóm tắt để củng cố kiến thức.</li>
+            <li>Đánh dấu đã ôn tập khi hoàn thành.</li>
+        </ol>
+    </div>
+    
+    <div class="review-actions">
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next }}">
+            <button type="submit" class="btn btn-success btn-lg">
+                <i class="fas fa-check-circle"></i> Đánh Dấu Đã Ôn Tập
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Về Spaced Repetition</h5>
+            </div>
+            <div class="card-body">
+                <p>Spaced Repetition (Lặp lại ngắt quãng) là một kỹ thuật học tập hiệu quả dựa trên nghiên cứu khoa học về trí nhớ. Kỹ thuật này giúp bạn ghi nhớ thông tin lâu dài bằng cách ôn tập theo các khoảng thời gian tăng dần.</p>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Nguyên tắc hoạt động:</h5>
+                        <ul>
+                            <li>Ôn tập thông tin ngay trước khi bạn sắp quên</li>
+                            <li>Khoảng thời gian giữa các lần ôn tập tăng dần</li>
+                            <li>Thông tin được chuyển từ trí nhớ ngắn hạn sang trí nhớ dài hạn</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Lịch ôn tập điển hình:</h5>
+                        <ul>
+                            <li>Lần 1: Ngay sau khi học</li>
+                            <li>Lần 2: 1 ngày sau</li>
+                            <li>Lần 3: 3 ngày sau</li>
+                            <li>Lần 4: 7 ngày sau</li>
+                            <li>Lần 5: 14 ngày sau</li>
+                            <li>Lần 6: 30 ngày sau</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Hiện ghi chú chính khi nhấn nút
+        const mainNotesOverlay = document.getElementById('main-notes-overlay');
+        if (mainNotesOverlay) {
+            mainNotesOverlay.addEventListener('click', function() {
+                this.style.display = 'none';
+            });
+        }
+        
+        // Hiện tóm tắt khi nhấn nút
+        const summaryOverlay = document.getElementById('summary-overlay');
+        if (summaryOverlay) {
+            summaryOverlay.addEventListener('click', function() {
+                this.style.display = 'none';
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,241 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Tạo Quiz từ Sơ Đồ Tư Duy - {{ mind_map.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .quiz-preview-container {
+        margin-bottom: 30px;
+    }
+    
+    .quiz-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    
+    .quiz-preview {
+        padding: 20px;
+    }
+    
+    .quiz-item {
+        margin-bottom: 30px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        border: 1px solid #dee2e6;
+    }
+    
+    .quiz-question {
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 15px;
+        color: #212529;
+    }
+    
+    .quiz-answers {
+        list-style-type: none;
+        padding-left: 0;
+    }
+    
+    .quiz-answer {
+        padding: 10px 15px;
+        margin-bottom: 10px;
+        background-color: white;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .quiz-answer:hover {
+        background-color: #e9ecef;
+    }
+    
+    .quiz-answer.correct {
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+        color: #155724;
+    }
+    
+    .quiz-answer.incorrect {
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+        color: #721c24;
+    }
+    
+    .mindmap-preview {
+        height: 300px;
+        width: 100%;
+        border: 1px solid #dee2e6;
+        background-color: #fff;
+        margin-bottom: 20px;
+    }
+    
+    .integration-info {
+        margin-top: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-question-circle text-primary"></i> Tạo Quiz từ Sơ Đồ Tư Duy
+        </h1>
+        <p class="lead">Tạo bài kiểm tra từ sơ đồ tư duy "{{ mind_map.title }}" để kiểm tra kiến thức của bạn.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:mind_map_detail' map_id=mind_map.id %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Quay Lại Sơ Đồ
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card quiz-card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-project-diagram"></i> Sơ Đồ Tư Duy Nguồn</h5>
+            </div>
+            <div class="card-body">
+                <div class="mindmap-preview">
+                    <div id="jsmind_container"></div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Hệ thống sẽ tạo quiz dựa trên nội dung sơ đồ tư duy của bạn. Chủ đề trung tâm và các nút con sẽ được sử dụng để tạo các câu hỏi và câu trả lời.
+                </div>
+                
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-magic"></i> Tạo Quiz
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card quiz-card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-question-circle"></i> Xem Trước Quiz</h5>
+            </div>
+            <div class="quiz-preview">
+                <p class="text-muted mb-4">Đây chỉ là xem trước, quiz thực tế sẽ được tạo khi bạn nhấn nút "Tạo Quiz".</p>
+                
+                <!-- Câu hỏi về chủ đề trung tâm -->
+                <div class="quiz-item">
+                    <div class="quiz-question">1. Chủ đề trung tâm của sơ đồ tư duy này là gì?</div>
+                    <ul class="quiz-answers">
+                        <li class="quiz-answer" data-correct="true">{{ mind_map.central_topic }}</li>
+                        {% for child in mind_map.map_data.children|slice:":3" %}
+                            <li class="quiz-answer">{{ child.text }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                
+                <!-- Câu hỏi về các nút con -->
+                {% if mind_map.map_data.children %}
+                    {% with first_child=mind_map.map_data.children.0 %}
+                        {% if first_child %}
+                            <div class="quiz-item">
+                                <div class="quiz-question">2. "{{ first_child.text }}" là một phần của chủ đề nào?</div>
+                                <ul class="quiz-answers">
+                                    <li class="quiz-answer" data-correct="true">{{ mind_map.central_topic }}</li>
+                                    {% for child in mind_map.map_data.children|slice:"1:4" %}
+                                        <li class="quiz-answer">{{ child.text }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> Sơ đồ tư duy của bạn chưa có nút con. Hãy thêm các nút con để tạo quiz hiệu quả.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="integration-info mt-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Về Quiz</h5>
+                </div>
+                <div class="card-body">
+                    <p>Quiz là công cụ học tập hiệu quả giúp kiểm tra kiến thức và củng cố trí nhớ thông qua việc kiểm tra tích cực.</p>
+                    
+                    <h5>Lợi ích:</h5>
+                    <ul>
+                        <li>Kiểm tra mức độ hiểu bài</li>
+                        <li>Xác định các lỗ hổng kiến thức</li>
+                        <li>Củng cố trí nhớ dài hạn</li>
+                        <li>Tạo động lực học tập</li>
+                    </ul>
+                    
+                    <div class="alert alert-primary">
+                        <i class="fas fa-lightbulb"></i> <strong>Mẹo:</strong> Làm quiz thường xuyên sẽ giúp bạn ghi nhớ thông tin tốt hơn 50% so với chỉ đọc lại tài liệu.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/jsmind@0.6.4/js/jsmind.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsmind@0.6.4/js/jsmind.draggable.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Khởi tạo JSMind
+        var options = {
+            container: 'jsmind_container',
+            theme: 'primary',
+            editable: false,
+            mode: 'view',
+            support_html: true,
+            view: {
+                line_width: 2,
+                line_color: '#555'
+            }
+        };
+        
+        var jm = new jsMind(options);
+        var mind_data = {{ mind_map.map_data|safe }};
+        jm.show(mind_data);
+        
+        // Xử lý khi nhấp vào câu trả lời
+        const answers = document.querySelectorAll('.quiz-answer');
+        answers.forEach(answer => {
+            answer.addEventListener('click', function() {
+                // Xóa các lớp correct/incorrect trước đó
+                const siblings = this.parentNode.querySelectorAll('.quiz-answer');
+                siblings.forEach(sibling => {
+                    sibling.classList.remove('correct', 'incorrect');
+                });
+                
+                // Đánh dấu câu trả lời đúng/sai
+                if (this.dataset.correct) {
+                    this.classList.add('correct');
+                } else {
+                    this.classList.add('incorrect');
+                    // Hiển thị câu trả lời đúng
+                    siblings.forEach(sibling => {
+                        if (sibling.dataset.correct) {
+                            sibling.classList.add('correct');
+                        }
+                    });
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

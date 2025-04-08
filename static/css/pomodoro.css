@@ -1,0 +1,366 @@
+/**
+ * Pomodoro Timer CSS
+ * Styles cho tính năng Pomodoro Timer
+ */
+
+/* Biến CSS cho cả light mode và dark mode */
+:root {
+    --pomodoro-bg-color: #ffffff;
+    --pomodoro-text-color: #333333;
+    --pomodoro-primary-color: #007bff;
+    --pomodoro-secondary-color: #6c757d;
+    --pomodoro-success-color: #28a745;
+    --pomodoro-danger-color: #dc3545;
+    --pomodoro-warning-color: #ffc107;
+    --pomodoro-info-color: #17a2b8;
+    --pomodoro-light-color: #f8f9fa;
+    --pomodoro-dark-color: #343a40;
+    --pomodoro-card-bg: #ffffff;
+    --pomodoro-card-border: rgba(0, 0, 0, 0.125);
+    --pomodoro-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    --pomodoro-transition: all 0.3s ease;
+}
+
+/* Dark mode */
+[data-bs-theme="dark"] {
+    --pomodoro-bg-color: #212529;
+    --pomodoro-text-color: #f8f9fa;
+    --pomodoro-primary-color: #0d6efd;
+    --pomodoro-secondary-color: #6c757d;
+    --pomodoro-success-color: #198754;
+    --pomodoro-danger-color: #dc3545;
+    --pomodoro-warning-color: #ffc107;
+    --pomodoro-info-color: #0dcaf0;
+    --pomodoro-light-color: #f8f9fa;
+    --pomodoro-dark-color: #212529;
+    --pomodoro-card-bg: #2c3034;
+    --pomodoro-card-border: rgba(255, 255, 255, 0.125);
+    --pomodoro-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Styles chung */
+.pomodoro-container {
+    background-color: var(--pomodoro-bg-color);
+    color: var(--pomodoro-text-color);
+    transition: var(--pomodoro-transition);
+}
+
+/* Timer display */
+.timer-display {
+    font-size: 5rem;
+    font-weight: bold;
+    text-align: center;
+    color: var(--pomodoro-text-color);
+    transition: var(--pomodoro-transition);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    margin: 20px 0;
+    font-family: 'Roboto Mono', monospace;
+}
+
+/* Timer phase */
+.timer-phase {
+    text-align: center;
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+    font-weight: 500;
+    color: var(--pomodoro-text-color);
+    transition: var(--pomodoro-transition);
+}
+
+/* Timer controls */
+.timer-controls {
+    text-align: center;
+    margin-top: 25px;
+}
+
+.timer-controls button {
+    margin: 0 10px;
+    font-size: 1.2rem;
+    padding: 10px 25px;
+    border-radius: 50px;
+    transition: var(--pomodoro-transition);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.timer-controls button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.timer-controls button:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Pomodoro counter */
+.pomodoro-counter {
+    text-align: center;
+    margin-top: 25px;
+    padding: 15px;
+    background-color: var(--pomodoro-light-color);
+    border-radius: 10px;
+    transition: var(--pomodoro-transition);
+}
+
+[data-bs-theme="dark"] .pomodoro-counter {
+    background-color: var(--pomodoro-dark-color);
+}
+
+.pomodoro-counter .tomato {
+    color: var(--pomodoro-danger-color);
+    font-size: 1.5rem;
+    margin: 0 3px;
+    transition: var(--pomodoro-transition);
+}
+
+.pomodoro-counter .tomato:hover {
+    transform: scale(1.2);
+}
+
+/* Timer card */
+.timer-card {
+    border-radius: 15px;
+    box-shadow: var(--pomodoro-shadow);
+    transition: var(--pomodoro-transition);
+    background-color: var(--pomodoro-card-bg);
+    border: 1px solid var(--pomodoro-card-border);
+    overflow: hidden;
+}
+
+.timer-card.work {
+    border-top: 5px solid var(--pomodoro-danger-color);
+}
+
+.timer-card.break {
+    border-top: 5px solid var(--pomodoro-success-color);
+}
+
+.timer-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Progress bar */
+.progress {
+    height: 10px;
+    margin-top: 20px;
+    border-radius: 5px;
+    overflow: hidden;
+    background-color: var(--pomodoro-light-color);
+    transition: var(--pomodoro-transition);
+}
+
+[data-bs-theme="dark"] .progress {
+    background-color: var(--pomodoro-dark-color);
+}
+
+.progress-bar {
+    transition: width 1s linear;
+}
+
+/* Settings card */
+.settings-card {
+    border-radius: 15px;
+    box-shadow: var(--pomodoro-shadow);
+    transition: var(--pomodoro-transition);
+    background-color: var(--pomodoro-card-bg);
+    border: 1px solid var(--pomodoro-card-border);
+    height: 100%;
+}
+
+.settings-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.settings-card .card-header {
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    transition: var(--pomodoro-transition);
+}
+
+/* Thông tin về phương pháp Pomodoro */
+.info-card {
+    border-radius: 15px;
+    box-shadow: var(--pomodoro-shadow);
+    transition: var(--pomodoro-transition);
+    background-color: var(--pomodoro-card-bg);
+    border: 1px solid var(--pomodoro-card-border);
+    margin-top: 30px;
+}
+
+.info-card .card-header {
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    transition: var(--pomodoro-transition);
+}
+
+/* Biểu đồ thống kê */
+.stats-card {
+    border-radius: 15px;
+    box-shadow: var(--pomodoro-shadow);
+    transition: var(--pomodoro-transition);
+    background-color: var(--pomodoro-card-bg);
+    border: 1px solid var(--pomodoro-card-border);
+    margin-top: 30px;
+}
+
+.stats-card .card-header {
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    transition: var(--pomodoro-transition);
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+    padding: 20px;
+}
+
+/* Tích hợp với các tính năng khác */
+.integration-card {
+    border-radius: 15px;
+    box-shadow: var(--pomodoro-shadow);
+    transition: var(--pomodoro-transition);
+    background-color: var(--pomodoro-card-bg);
+    border: 1px solid var(--pomodoro-card-border);
+    margin-top: 30px;
+}
+
+.integration-card .card-header {
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    transition: var(--pomodoro-transition);
+}
+
+.integration-item {
+    padding: 15px;
+    border-bottom: 1px solid var(--pomodoro-card-border);
+    transition: var(--pomodoro-transition);
+}
+
+.integration-item:last-child {
+    border-bottom: none;
+}
+
+.integration-item:hover {
+    background-color: var(--pomodoro-light-color);
+}
+
+[data-bs-theme="dark"] .integration-item:hover {
+    background-color: var(--pomodoro-dark-color);
+}
+
+/* Chuyển đổi dark mode */
+.theme-switch-wrapper {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.theme-switch {
+    display: inline-block;
+    height: 34px;
+    position: relative;
+    width: 60px;
+}
+
+.theme-switch input {
+    display: none;
+}
+
+.slider {
+    background-color: #ccc;
+    bottom: 0;
+    cursor: pointer;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    background-color: white;
+    bottom: 4px;
+    content: "";
+    height: 26px;
+    left: 4px;
+    position: absolute;
+    transition: .4s;
+    width: 26px;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: var(--pomodoro-primary-color);
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.theme-switch-wrapper span {
+    margin-left: 10px;
+    font-size: 1rem;
+}
+
+/* Hiệu ứng animation */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.pulse-animation {
+    animation: pulse 2s infinite;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .timer-display {
+        font-size: 3.5rem;
+    }
+    
+    .timer-phase {
+        font-size: 1.5rem;
+    }
+    
+    .timer-controls button {
+        margin: 5px;
+        font-size: 1rem;
+        padding: 8px 16px;
+    }
+    
+    .chart-container {
+        height: 250px;
+    }
+}
+
+@media (max-width: 576px) {
+    .timer-display {
+        font-size: 3rem;
+    }
+    
+    .timer-phase {
+        font-size: 1.2rem;
+    }
+    
+    .timer-controls button {
+        margin: 3px;
+        font-size: 0.9rem;
+        padding: 6px 12px;
+    }
+    
+    .chart-container {
+        height: 200px;
+    }
+}

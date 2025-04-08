@@ -1,0 +1,227 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Ôn Tập Ghi Chú Feynman - {{ note.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .review-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    .review-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    
+    .review-section {
+        padding: 20px;
+    }
+    
+    .review-header {
+        background-color: #f8f9fa;
+        padding: 15px 20px;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .review-content {
+        padding: 20px;
+    }
+    
+    .review-footer {
+        background-color: #f8f9fa;
+        padding: 15px 20px;
+        border-top: 1px solid #dee2e6;
+    }
+    
+    .step-number {
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+        background-color: #fd7e14;
+        color: white;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 30px;
+        margin-right: 10px;
+        font-weight: bold;
+    }
+    
+    .note-content {
+        white-space: pre-wrap;
+        line-height: 1.6;
+    }
+    
+    .review-progress {
+        margin-bottom: 20px;
+    }
+    
+    .review-progress .progress {
+        height: 10px;
+        border-radius: 5px;
+    }
+    
+    .review-tips {
+        background-color: #e9f7fe;
+        border-left: 4px solid #3498db;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 0 5px 5px 0;
+    }
+    
+    .review-tips h5 {
+        color: #3498db;
+        margin-bottom: 10px;
+    }
+    
+    .review-tips ul {
+        margin-bottom: 0;
+    }
+    
+    .review-actions {
+        margin-top: 30px;
+    }
+    
+    .review-timer {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #fd7e14;
+        margin-bottom: 20px;
+    }
+    
+    .review-timer i {
+        margin-right: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-sync-alt text-warning"></i> Ôn Tập Ghi Chú Feynman
+        </h1>
+        <p class="lead">Ôn tập ghi chú "{{ note.title }}" để củng cố kiến thức và ghi nhớ lâu hơn.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:feynman_note_detail' note_id=note.id %}" class="btn btn-outline-warning">
+            <i class="fas fa-arrow-left"></i> Quay Lại Ghi Chú
+        </a>
+    </div>
+</div>
+
+<div class="review-container">
+    <div class="review-progress">
+        <h5>Tiến Trình Ôn Tập</h5>
+        <div class="progress">
+            <div class="progress-bar bg-warning" role="progressbar" style="width: {{ note.review_count|default:0|add:1 }}0%;" aria-valuenow="{{ note.review_count|default:0|add:1 }}0" aria-valuemin="0" aria-valuemax="100">{{ note.review_count|default:0|add:1 }}0%</div>
+        </div>
+        <div class="d-flex justify-content-between mt-2">
+            <small>Lần ôn tập: {{ note.review_count|default:0|add:1 }}</small>
+            <small>Mục tiêu: 10 lần</small>
+        </div>
+    </div>
+    
+    <div class="review-timer text-center">
+        <i class="fas fa-stopwatch"></i> <span id="timer">05:00</span>
+    </div>
+    
+    <div class="review-tips">
+        <h5><i class="fas fa-lightbulb"></i> Mẹo Ôn Tập Hiệu Quả</h5>
+        <ul>
+            <li>Đọc lại ghi chú và cố gắng giải thích lại bằng lời của bạn.</li>
+            <li>Xác định những phần bạn còn chưa hiểu rõ và tập trung vào chúng.</li>
+            <li>Kết nối kiến thức mới với những gì bạn đã biết.</li>
+            <li>Sử dụng ví dụ thực tế để củng cố hiểu biết.</li>
+        </ul>
+    </div>
+    
+    <div class="card review-card">
+        <div class="review-header">
+            <h4>{{ note.title }}</h4>
+            <p class="text-muted mb-0">
+                {% if note.subject %}Chủ đề: <strong>{{ note.subject.name }}</strong>{% endif %}
+            </p>
+        </div>
+        
+        <div class="review-content">
+            <div class="mb-4">
+                <h5><span class="step-number">1</span> Khái Niệm</h5>
+                <div class="note-content">{{ note.concept|linebreaks }}</div>
+            </div>
+            
+            <div class="mb-4">
+                <h5><span class="step-number">2</span> Giải Thích Bằng Ngôn Ngữ Đơn Giản</h5>
+                <div class="note-content">{{ note.explanation|linebreaks }}</div>
+            </div>
+            
+            {% if note.gaps_identified %}
+            <div class="mb-4">
+                <h5><span class="step-number">3</span> Lỗ Hổng Kiến Thức Đã Xác Định</h5>
+                <div class="note-content">{{ note.gaps_identified|linebreaks }}</div>
+            </div>
+            {% endif %}
+            
+            {% if note.refined_explanation %}
+            <div>
+                <h5><span class="step-number">4</span> Giải Thích Đã Cải Thiện</h5>
+                <div class="note-content">{{ note.refined_explanation|linebreaks }}</div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="review-footer">
+            <h5>Câu Hỏi Ôn Tập</h5>
+            <ol>
+                <li>Bạn có thể giải thích khái niệm "{{ note.title }}" bằng lời của bạn không?</li>
+                <li>Những điểm chính của khái niệm này là gì?</li>
+                <li>Làm thế nào để áp dụng khái niệm này vào thực tế?</li>
+                <li>Bạn có thể đưa ra một ví dụ cụ thể về khái niệm này không?</li>
+                <li>Khái niệm này liên quan như thế nào đến những gì bạn đã biết?</li>
+            </ol>
+        </div>
+    </div>
+    
+    <div class="review-actions text-center">
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next }}">
+            <button type="submit" class="btn btn-warning btn-lg">
+                <i class="fas fa-check-circle"></i> Đánh Dấu Đã Ôn Tập
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Thiết lập đồng hồ đếm ngược 5 phút
+        var timeLeft = 5 * 60; // 5 phút = 300 giây
+        var timerElement = document.getElementById('timer');
+        
+        var timerInterval = setInterval(function() {
+            var minutes = Math.floor(timeLeft / 60);
+            var seconds = timeLeft % 60;
+            
+            // Định dạng thời gian
+            minutes = minutes < 10 ? "0" + minutes : minutes;
+            seconds = seconds < 10 ? "0" + seconds : seconds;
+            
+            timerElement.textContent = minutes + ":" + seconds;
+            
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                timerElement.textContent = "00:00";
+                alert("Thời gian ôn tập đã hết! Bạn có thể tiếp tục ôn tập hoặc đánh dấu đã hoàn thành.");
+            } else {
+                timeLeft--;
+            }
+        }, 1000);
+    });
+</script>
+{% endblock %}

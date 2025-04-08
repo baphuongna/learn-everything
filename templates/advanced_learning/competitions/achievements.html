@@ -1,0 +1,346 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Thành Tích{% endblock %}
+
+{% block extra_css %}
+<style>
+    .achievements-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    .achievement-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+        border: 1px solid #dee2e6;
+        overflow: hidden;
+    }
+    
+    .achievement-card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .achievement-header {
+        padding: 15px 20px;
+        border-bottom: 1px solid #dee2e6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .achievement-title {
+        font-weight: 600;
+        margin-bottom: 0;
+        color: #6f42c1;
+    }
+    
+    .achievement-body {
+        padding: 20px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .achievement-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background-color: #f3ebff;
+        color: #6f42c1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin-right: 20px;
+        flex-shrink: 0;
+    }
+    
+    .achievement-content {
+        flex: 1;
+    }
+    
+    .achievement-description {
+        margin-bottom: 10px;
+    }
+    
+    .achievement-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .achievement-date {
+        font-style: italic;
+    }
+    
+    .achievement-points {
+        font-weight: 600;
+        color: #6f42c1;
+    }
+    
+    .achievement-locked {
+        opacity: 0.7;
+    }
+    
+    .achievement-locked .achievement-icon {
+        background-color: #f8f9fa;
+        color: #adb5bd;
+    }
+    
+    .achievement-locked-overlay {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background-color: rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #6c757d;
+    }
+    
+    .achievement-progress {
+        margin-top: 10px;
+    }
+    
+    .achievement-progress-bar {
+        height: 8px;
+        border-radius: 4px;
+        background-color: #e9ecef;
+        overflow: hidden;
+    }
+    
+    .achievement-progress-value {
+        height: 100%;
+        background-color: #6f42c1;
+    }
+    
+    .achievement-progress-text {
+        font-size: 0.8rem;
+        color: #6c757d;
+        text-align: right;
+        margin-top: 5px;
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: #6f42c1;
+        display: flex;
+        align-items: center;
+    }
+    
+    .section-title i {
+        margin-right: 10px;
+    }
+    
+    .stats-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .stat-card {
+        flex: 1;
+        min-width: 200px;
+        background-color: #fff;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        text-align: center;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #6f42c1;
+        margin-bottom: 5px;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 50px 20px;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        color: #dee2e6;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-medal text-warning"></i> Thành Tích
+        </h1>
+        <p class="lead">Khám phá và mở khóa các thành tích trong cuộc thi.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:competition_list' %}" class="btn btn-outline-purple">
+            <i class="fas fa-arrow-left"></i> Quay Lại Cuộc Thi
+        </a>
+    </div>
+</div>
+
+<div class="achievements-container">
+    <!-- Thống kê -->
+    <div class="stats-container">
+        <div class="stat-card">
+            <div class="stat-value">{{ user_achievements|length }}</div>
+            <div class="stat-label">Thành tích đã đạt được</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-value">{{ unearned_achievements|length }}</div>
+            <div class="stat-label">Thành tích chưa mở khóa</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-value">
+                {% with total=user_achievements|length|add:unearned_achievements|length %}
+                {% if total > 0 %}
+                {{ user_achievements|length|floatformat:0 }}%
+                {% else %}
+                0%
+                {% endif %}
+                {% endwith %}
+            </div>
+            <div class="stat-label">Tiến độ hoàn thành</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-value">
+                {% with total_points=0 %}
+                {% for achievement in user_achievements %}
+                    {% with total_points=total_points|add:achievement.achievement.points %}
+                    {% endwith %}
+                {% endfor %}
+                {{ total_points }}
+                {% endwith %}
+            </div>
+            <div class="stat-label">Tổng điểm thành tích</div>
+        </div>
+    </div>
+    
+    <!-- Thành tích đã đạt được -->
+    <h2 class="section-title">
+        <i class="fas fa-unlock text-success"></i> Thành Tích Đã Đạt Được
+    </h2>
+    
+    {% if user_achievements %}
+    <div class="row">
+        {% for user_achievement in user_achievements %}
+        <div class="col-md-6">
+            <div class="achievement-card">
+                <div class="achievement-header">
+                    <div class="achievement-title">{{ user_achievement.achievement.title }}</div>
+                    <span class="badge bg-success">Đã đạt được</span>
+                </div>
+                <div class="achievement-body">
+                    <div class="achievement-icon">
+                        <i class="{{ user_achievement.achievement.icon }}"></i>
+                    </div>
+                    <div class="achievement-content">
+                        <div class="achievement-description">
+                            {{ user_achievement.achievement.description }}
+                        </div>
+                        <div class="achievement-meta">
+                            <div class="achievement-date">
+                                Đạt được vào: {{ user_achievement.earned_at|date:"d/m/Y H:i" }}
+                            </div>
+                            <div class="achievement-points">
+                                {{ user_achievement.achievement.points }} điểm
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-medal"></i>
+        <h3>Chưa có thành tích nào</h3>
+        <p>Hãy tham gia các cuộc thi để đạt được thành tích!</p>
+        <a href="{% url 'advanced_learning:competition_list' %}" class="btn btn-purple mt-3">
+            <i class="fas fa-play"></i> Tham Gia Cuộc Thi
+        </a>
+    </div>
+    {% endif %}
+    
+    <!-- Thành tích chưa mở khóa -->
+    <h2 class="section-title mt-5">
+        <i class="fas fa-lock text-secondary"></i> Thành Tích Chưa Mở Khóa
+    </h2>
+    
+    {% if unearned_achievements %}
+    <div class="row">
+        {% for achievement in unearned_achievements %}
+        <div class="col-md-6">
+            <div class="achievement-card achievement-locked">
+                <div class="achievement-header">
+                    <div class="achievement-title">{{ achievement.title }}</div>
+                    <span class="badge bg-secondary">Chưa mở khóa</span>
+                </div>
+                <div class="achievement-body">
+                    <div class="achievement-icon">
+                        <i class="{{ achievement.icon }}"></i>
+                    </div>
+                    <div class="achievement-content">
+                        <div class="achievement-description">
+                            {{ achievement.description }}
+                        </div>
+                        <div class="achievement-meta">
+                            <div class="achievement-hint">
+                                {{ achievement.hint }}
+                            </div>
+                            <div class="achievement-points">
+                                {{ achievement.points }} điểm
+                            </div>
+                        </div>
+                        
+                        {% if achievement.progress_current and achievement.progress_max %}
+                        <div class="achievement-progress">
+                            <div class="achievement-progress-bar">
+                                <div class="achievement-progress-value" style="width: {{ achievement.progress_current|floatformat:0 }}%;"></div>
+                            </div>
+                            <div class="achievement-progress-text">
+                                {{ achievement.progress_current|floatformat:0 }}% hoàn thành
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-check-circle"></i>
+        <h3>Bạn đã đạt được tất cả thành tích!</h3>
+        <p>Chúc mừng! Bạn đã mở khóa tất cả các thành tích có sẵn.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

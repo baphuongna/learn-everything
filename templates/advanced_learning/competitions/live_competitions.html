@@ -1,0 +1,423 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Cuộc Thi Trực Tiếp{% endblock %}
+
+{% block extra_css %}
+<style>
+    .live-competitions-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    .filter-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+        border: 1px solid #dee2e6;
+    }
+    
+    .live-competition-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+        border: 1px solid #dee2e6;
+        overflow: hidden;
+    }
+    
+    .live-competition-card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .live-competition-header {
+        padding: 15px 20px;
+        border-bottom: 1px solid #dee2e6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .live-competition-header-waiting {
+        background-color: #e2f0fd;
+    }
+    
+    .live-competition-header-active {
+        background-color: #d4edda;
+    }
+    
+    .live-competition-header-completed {
+        background-color: #f8f9fa;
+    }
+    
+    .live-competition-header-cancelled {
+        background-color: #f8d7da;
+    }
+    
+    .live-competition-title {
+        font-weight: 600;
+        margin-bottom: 0;
+    }
+    
+    .live-competition-body {
+        padding: 20px;
+    }
+    
+    .live-competition-info {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .live-competition-info-item {
+        display: flex;
+        align-items: center;
+        font-size: 0.9rem;
+    }
+    
+    .live-competition-info-item i {
+        margin-right: 5px;
+        color: #6f42c1;
+    }
+    
+    .live-competition-description {
+        margin-bottom: 15px;
+    }
+    
+    .live-competition-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 50px 20px;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        margin-top: 30px;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        color: #dee2e6;
+        margin-bottom: 20px;
+    }
+    
+    .featured-section {
+        margin-bottom: 30px;
+    }
+    
+    .featured-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: #6f42c1;
+        display: flex;
+        align-items: center;
+    }
+    
+    .featured-title i {
+        margin-right: 10px;
+    }
+    
+    .featured-competitions {
+        display: flex;
+        overflow-x: auto;
+        gap: 15px;
+        padding-bottom: 10px;
+    }
+    
+    .featured-competition-card {
+        min-width: 300px;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        border: 1px solid #dee2e6;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .featured-competition-card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-bolt text-warning"></i> Cuộc Thi Trực Tiếp
+        </h1>
+        <p class="lead">Tham gia các cuộc thi trực tiếp với người chơi khác.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:create_live_competition' %}" class="btn btn-purple">
+            <i class="fas fa-plus"></i> Tạo Cuộc Thi Trực Tiếp
+        </a>
+    </div>
+</div>
+
+<div class="live-competitions-container">
+    <!-- Bộ lọc -->
+    <div class="card filter-card">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-6">
+                    <label for="search" class="form-label">Tìm kiếm</label>
+                    <input type="text" class="form-control" id="search" name="search" value="{{ search_query }}" placeholder="Nhập từ khóa...">
+                </div>
+                <div class="col-md-4">
+                    <label for="status" class="form-label">Trạng thái</label>
+                    <select class="form-select" id="status" name="status" onchange="this.form.submit()">
+                        <option value="">Tất cả trạng thái</option>
+                        {% for status_code, status_name in status_choices %}
+                        <option value="{{ status_code }}" {% if selected_status == status_code %}selected{% endif %}>{{ status_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-purple w-100">
+                        <i class="fas fa-search"></i> Tìm
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Cuộc thi đang diễn ra -->
+    <div class="featured-section">
+        <h2 class="featured-title">
+            <i class="fas fa-play-circle text-success"></i> Đang Diễn Ra
+        </h2>
+        
+        {% if live_competitions.filter.status == 'active' %}
+        <div class="featured-competitions">
+            {% for live_competition in live_competitions %}
+                {% if live_competition.status == 'active' %}
+                <div class="featured-competition-card">
+                    <div class="live-competition-header live-competition-header-active">
+                        <div class="live-competition-title">{{ live_competition.title }}</div>
+                        <span class="badge bg-success">Đang diễn ra</span>
+                    </div>
+                    <div class="live-competition-body">
+                        <div class="live-competition-info">
+                            <div class="live-competition-info-item">
+                                <i class="fas fa-user"></i> {{ live_competition.host.username }}
+                            </div>
+                            <div class="live-competition-info-item">
+                                <i class="fas fa-users"></i> {{ live_competition.get_participants_count }} người tham gia
+                            </div>
+                        </div>
+                        
+                        <div class="live-competition-actions">
+                            {% if live_competition.id in user_live_competitions %}
+                            <a href="{% url 'advanced_learning:live_competition_detail' live_competition_id=live_competition.id %}" class="btn btn-success">
+                                <i class="fas fa-play"></i> Tiếp tục
+                            </a>
+                            {% else %}
+                            <a href="{% url 'advanced_learning:live_competition_detail' live_competition_id=live_competition.id %}" class="btn btn-outline-purple">
+                                <i class="fas fa-eye"></i> Xem
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+            
+            {% if not live_competitions.filter.status == 'active' %}
+            <div class="empty-state">
+                <p>Không có cuộc thi nào đang diễn ra.</p>
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>Không có cuộc thi nào đang diễn ra.</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Cuộc thi chờ bắt đầu -->
+    <div class="featured-section">
+        <h2 class="featured-title">
+            <i class="fas fa-hourglass-half text-info"></i> Chờ Bắt Đầu
+        </h2>
+        
+        {% if live_competitions.filter.status == 'waiting' %}
+        <div class="featured-competitions">
+            {% for live_competition in live_competitions %}
+                {% if live_competition.status == 'waiting' %}
+                <div class="featured-competition-card">
+                    <div class="live-competition-header live-competition-header-waiting">
+                        <div class="live-competition-title">{{ live_competition.title }}</div>
+                        <span class="badge bg-info">Chờ bắt đầu</span>
+                    </div>
+                    <div class="live-competition-body">
+                        <div class="live-competition-info">
+                            <div class="live-competition-info-item">
+                                <i class="fas fa-user"></i> {{ live_competition.host.username }}
+                            </div>
+                            <div class="live-competition-info-item">
+                                <i class="fas fa-users"></i> {{ live_competition.get_participants_count }} người tham gia
+                            </div>
+                        </div>
+                        
+                        <div class="live-competition-actions">
+                            {% if live_competition.id in user_live_competitions %}
+                            <a href="{% url 'advanced_learning:live_competition_detail' live_competition_id=live_competition.id %}" class="btn btn-info">
+                                <i class="fas fa-door-open"></i> Vào phòng
+                            </a>
+                            {% else %}
+                            <a href="{% url 'advanced_learning:live_competition_detail' live_competition_id=live_competition.id %}" class="btn btn-outline-purple">
+                                <i class="fas fa-eye"></i> Xem
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+            
+            {% if not live_competitions.filter.status == 'waiting' %}
+            <div class="empty-state">
+                <p>Không có cuộc thi nào đang chờ bắt đầu.</p>
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>Không có cuộc thi nào đang chờ bắt đầu.</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Danh sách tất cả cuộc thi -->
+    <h2 class="featured-title">
+        <i class="fas fa-list text-purple"></i> Tất Cả Cuộc Thi
+    </h2>
+    
+    {% if live_competitions %}
+        {% for live_competition in live_competitions %}
+        <div class="live-competition-card">
+            <div class="live-competition-header 
+                {% if live_competition.status == 'waiting' %}live-competition-header-waiting
+                {% elif live_competition.status == 'active' %}live-competition-header-active
+                {% elif live_competition.status == 'completed' %}live-competition-header-completed
+                {% elif live_competition.status == 'cancelled' %}live-competition-header-cancelled{% endif %}">
+                <div class="live-competition-title">{{ live_competition.title }}</div>
+                <span class="badge 
+                    {% if live_competition.status == 'waiting' %}bg-info
+                    {% elif live_competition.status == 'active' %}bg-success
+                    {% elif live_competition.status == 'completed' %}bg-secondary
+                    {% elif live_competition.status == 'cancelled' %}bg-danger{% endif %}">
+                    {% if live_competition.status == 'waiting' %}Chờ bắt đầu
+                    {% elif live_competition.status == 'active' %}Đang diễn ra
+                    {% elif live_competition.status == 'completed' %}Đã kết thúc
+                    {% elif live_competition.status == 'cancelled' %}Đã hủy{% endif %}
+                </span>
+            </div>
+            <div class="live-competition-body">
+                <div class="live-competition-info">
+                    <div class="live-competition-info-item">
+                        <i class="fas fa-user"></i> {{ live_competition.host.username }}
+                    </div>
+                    <div class="live-competition-info-item">
+                        <i class="fas fa-users"></i> {{ live_competition.get_participants_count }} người tham gia
+                    </div>
+                    <div class="live-competition-info-item">
+                        <i class="fas fa-trophy"></i> {{ live_competition.competition.title }}
+                    </div>
+                    {% if live_competition.start_time %}
+                    <div class="live-competition-info-item">
+                        <i class="fas fa-clock"></i> {{ live_competition.start_time|date:"d/m/Y H:i" }}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                {% if live_competition.description %}
+                <div class="live-competition-description">
+                    {{ live_competition.description|truncatechars:150 }}
+                </div>
+                {% endif %}
+                
+                <div class="live-competition-actions">
+                    <a href="{% url 'advanced_learning:live_competition_detail' live_competition_id=live_competition.id %}" class="btn btn-outline-purple">
+                        <i class="fas fa-eye"></i> Xem Chi Tiết
+                    </a>
+                    
+                    {% if live_competition.status == 'waiting' %}
+                        {% if live_competition.id in user_live_competitions %}
+                            {% if live_competition.host == request.user %}
+                            <form method="post" action="{% url 'advanced_learning:start_live_competition' live_competition_id=live_competition.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-play"></i> Bắt Đầu
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'advanced_learning:cancel_live_competition' live_competition_id=live_competition.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger" onclick="return confirm('Bạn có chắc chắn muốn hủy cuộc thi này?')">
+                                    <i class="fas fa-times"></i> Hủy
+                                </button>
+                            </form>
+                            {% else %}
+                            <form method="post" action="{% url 'advanced_learning:leave_live_competition' live_competition_id=live_competition.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-danger">
+                                    <i class="fas fa-sign-out-alt"></i> Rời Khỏi
+                                </button>
+                            </form>
+                            {% endif %}
+                        {% else %}
+                            {% if not live_competition.is_full %}
+                            <form method="post" action="{% url 'advanced_learning:join_live_competition' live_competition_id=live_competition.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-sign-in-alt"></i> Tham Gia
+                                </button>
+                            </form>
+                            {% else %}
+                            <button class="btn btn-secondary" disabled>
+                                <i class="fas fa-users-slash"></i> Đã Đầy
+                            </button>
+                            {% endif %}
+                        {% endif %}
+                    {% elif live_competition.status == 'active' %}
+                        {% if live_competition.id in user_live_competitions %}
+                        <a href="{% url 'advanced_learning:live_competition_detail' live_competition_id=live_competition.id %}" class="btn btn-success">
+                            <i class="fas fa-play"></i> Tiếp Tục
+                        </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-bolt"></i>
+            <h3>Không có cuộc thi trực tiếp nào</h3>
+            <p>Hãy tạo cuộc thi trực tiếp đầu tiên của bạn!</p>
+            <a href="{% url 'advanced_learning:create_live_competition' %}" class="btn btn-purple mt-3">
+                <i class="fas fa-plus"></i> Tạo Cuộc Thi Trực Tiếp
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tự động làm mới trang sau mỗi 30 giây để cập nhật trạng thái
+        setTimeout(function() {
+            location.reload();
+        }, 30000);
+    });
+</script>
+{% endblock %}

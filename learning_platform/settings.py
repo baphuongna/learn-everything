@@ -288,15 +288,19 @@ SUMMERNOTE_CONFIG = {
 }
 
 # Content Security Policy settings
-CSP_DEFAULT_SRC = ("'self'",)
-CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net")
-CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com")
-CSP_FONT_SRC = ("'self'", "https://fonts.gstatic.com")
-CSP_IMG_SRC = ("'self'", "data:", "blob:")
-CSP_CONNECT_SRC = ("'self'",)
-CSP_FRAME_SRC = ("'self'",)
-CSP_OBJECT_SRC = ("'none'",)
-CSP_BASE_URI = ("'self'",)
+CONTENT_SECURITY_POLICY = {
+    'DIRECTIVES': {
+        'default-src': ("'self'",),
+        'script-src': ("'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net"),
+        'style-src': ("'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com"),
+        'font-src': ("'self'", "https://fonts.gstatic.com"),
+        'img-src': ("'self'", "data:", "blob:"),
+        'connect-src': ("'self'",),
+        'frame-src': ("'self'",),
+        'object-src': ("'none'",),
+        'base-uri': ("'self'",),
+    }
+}
 
 # Password validation settings
 PASSWORD_HASHERS = [

@@ -10,7 +10,7 @@
         max-width: 1200px;
         margin: 0 auto;
     }
-    
+
     .mindmap-section {
         background-color: #f8f9fa;
         border-radius: 10px;
@@ -18,14 +18,14 @@
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         margin-bottom: 20px;
     }
-    
+
     .mindmap-section h5 {
         margin-bottom: 15px;
         color: #28a745;
         border-bottom: 1px solid #dee2e6;
         padding-bottom: 10px;
     }
-    
+
     .mindmap-viewer {
         width: 100%;
         height: 600px;
@@ -34,22 +34,22 @@
         overflow: hidden;
         margin-bottom: 20px;
     }
-    
+
     #jsmind_container {
         width: 100%;
         height: 100%;
     }
-    
+
     .mindmap-meta {
         font-size: 0.9rem;
         color: #6c757d;
     }
-    
+
     .action-buttons {
         margin-top: 30px;
         text-align: center;
     }
-    
+
     .viewer-tools {
         margin-bottom: 15px;
         padding: 10px;
@@ -57,16 +57,16 @@
         border-radius: 5px;
         border: 1px solid #dee2e6;
     }
-    
+
     @media print {
         .no-print {
             display: none;
         }
-        
+
         body {
             font-size: 12pt;
         }
-        
+
         .mindmap-section {
             box-shadow: none;
             border: 1px solid #dee2e6;
@@ -92,12 +92,27 @@
         </p>
     </div>
     <div class="col-md-4 text-end">
-        <a href="{% url 'advanced_learning:mind_map_list' %}" class="btn btn-outline-success">
-            <i class="fas fa-arrow-left"></i> Quay Lại Danh Sách
-        </a>
-        <button onclick="window.print()" class="btn btn-outline-secondary ms-2">
-            <i class="fas fa-print"></i> In
-        </button>
+        <div class="mb-2">
+            <a href="{% url 'advanced_learning:mind_map_list' %}" class="btn btn-outline-success">
+                <i class="fas fa-arrow-left"></i> Quay Lại Danh Sách
+            </a>
+            <button onclick="window.print()" class="btn btn-outline-secondary ms-2">
+                <i class="fas fa-print"></i> In
+            </button>
+        </div>
+        <div>
+            <div class="btn-group">
+                <a href="#" class="btn btn-outline-primary btn-sm" id="export-image-btn">
+                    <i class="fas fa-image"></i> Xuất Hình Ảnh
+                </a>
+                <a href="{% url 'advanced_learning:mind_map_export_pdf' map_id=mind_map.id %}" class="btn btn-outline-danger btn-sm">
+                    <i class="fas fa-file-pdf"></i> Xuất PDF
+                </a>
+                <a href="{% url 'advanced_learning:mind_map_share' map_id=mind_map.id %}" class="btn btn-outline-success btn-sm">
+                    <i class="fas fa-share-alt"></i> Chia Sẻ
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -108,7 +123,7 @@
             <strong>Chủ đề trung tâm:</strong> {{ mind_map.central_topic }}
             {% if mind_map.subject %} | <strong>Chủ đề:</strong> {{ mind_map.subject.name }}{% endif %}
         </p>
-        
+
         <div class="viewer-tools no-print">
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-outline-primary" id="zoom-in-btn">
@@ -125,12 +140,12 @@
                 </button>
             </div>
         </div>
-        
+
         <div class="mindmap-viewer">
             <div id="jsmind_container"></div>
         </div>
     </div>
-    
+
     <div class="action-buttons no-print">
         <a href="{% url 'advanced_learning:mind_map_edit' map_id=mind_map.id %}" class="btn btn-success">
             <i class="fas fa-edit"></i> Chỉnh Sửa
@@ -139,11 +154,52 @@
             <i class="fas fa-trash"></i> Xóa
         </a>
     </div>
+
+    <!-- Tích hợp với các tính năng khác -->
+    <div class="mindmap-section no-print">
+        <h5><i class="fas fa-link"></i> Tích Hợp Học Tập</h5>
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-layer-group text-primary"></i> Flashcards</h5>
+                        <p class="card-text">Tạo bộ flashcards từ sơ đồ tư duy này để ôn tập hiệu quả.</p>
+                        <a href="{% url 'advanced_learning:mind_map_create_flashcards' map_id=mind_map.id %}" class="btn btn-outline-primary">
+                            <i class="fas fa-magic"></i> Tạo Flashcards
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-question-circle text-primary"></i> Quiz</h5>
+                        <p class="card-text">Tạo bài kiểm tra từ sơ đồ tư duy này để kiểm tra kiến thức.</p>
+                        <a href="{% url 'advanced_learning:mind_map_create_quiz' map_id=mind_map.id %}" class="btn btn-outline-primary">
+                            <i class="fas fa-magic"></i> Tạo Quiz
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-edit text-primary"></i> Ghi Chú Cornell</h5>
+                        <p class="card-text">Tạo ghi chú Cornell từ sơ đồ tư duy này để tổ chức thông tin.</p>
+                        <a href="{% url 'advanced_learning:mind_map_create_cornell_note' map_id=mind_map.id %}" class="btn btn-outline-primary">
+                            <i class="fas fa-magic"></i> Tạo Ghi Chú
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/jsmind@0.6.4/js/jsmind.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsmind@0.6.4/js/jsmind.screenshot.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Khởi tạo JSMind
@@ -158,12 +214,12 @@
                 line_color: '#555'
             }
         };
-        
+
         var jm = new jsMind(options);
-        
+
         // Lấy dữ liệu từ model
         var mapData = {{ mind_map.map_data|safe }};
-        
+
         // Chuyển đổi dữ liệu sang định dạng JSMind
         var jm_data = {
             "meta": {
@@ -174,30 +230,61 @@
             "format": "node_tree",
             "data": convertToJSMindFormat(mapData)
         };
-        
+
         // Hiển thị sơ đồ
         jm.show(jm_data);
-        
+
         // Xử lý nút phóng to
         document.getElementById('zoom-in-btn').addEventListener('click', function() {
             jm.view.zoomIn();
         });
-        
+
         // Xử lý nút thu nhỏ
         document.getElementById('zoom-out-btn').addEventListener('click', function() {
             jm.view.zoomOut();
         });
-        
+
         // Xử lý nút mở rộng tất cả
         document.getElementById('expand-all-btn').addEventListener('click', function() {
             jm.expand_all();
         });
-        
+
         // Xử lý nút thu gọn tất cả
         document.getElementById('collapse-all-btn').addEventListener('click', function() {
             jm.collapse_all();
         });
-        
+
+        // Xử lý xuất hình ảnh
+        document.getElementById('export-image-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+
+            // Tạo form để gửi dữ liệu hình ảnh
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{% url "advanced_learning:mind_map_export_image" map_id=mind_map.id %}';
+
+            // Lấy dữ liệu hình ảnh từ jsMind
+            var image_data = jm.screenshot.shootAsDataURL();
+
+            // Tạo input ẩn để chứa dữ liệu hình ảnh
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'image_data';
+            input.value = image_data;
+
+            // Thêm CSRF token
+            var csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = '{{ csrf_token }}';
+
+            // Thêm input vào form và gửi form
+            form.appendChild(input);
+            form.appendChild(csrfInput);
+            document.body.appendChild(form);
+            form.submit();
+        });
+
         // Hàm chuyển đổi dữ liệu từ định dạng lưu trữ sang định dạng JSMind
         function convertToJSMindFormat(data) {
             var result = {
@@ -206,18 +293,18 @@
                 "direction": "right",
                 "expanded": true
             };
-            
+
             if (data.background) {
                 result.background = data.background;
             }
-            
+
             if (data.children && data.children.length > 0) {
                 result.children = [];
                 for (var i = 0; i < data.children.length; i++) {
                     result.children.push(convertToJSMindFormat(data.children[i]));
                 }
             }
-            
+
             return result;
         }
     });

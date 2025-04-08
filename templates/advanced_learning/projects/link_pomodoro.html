@@ -1,0 +1,331 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Tạo Phiên Pomodoro cho Dự Án - {{ project.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pomodoro-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .pomodoro-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    
+    .project-info {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .project-title {
+        color: #17a2b8;
+        margin-bottom: 10px;
+    }
+    
+    .duration-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .duration-option {
+        flex: 1;
+        min-width: 100px;
+        text-align: center;
+        padding: 15px;
+        border-radius: 10px;
+        border: 2px solid #dee2e6;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .duration-option:hover {
+        border-color: #17a2b8;
+        background-color: #e9f7fb;
+    }
+    
+    .duration-option.selected {
+        border-color: #17a2b8;
+        background-color: #e9f7fb;
+    }
+    
+    .duration-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #17a2b8;
+        margin-bottom: 5px;
+    }
+    
+    .duration-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .pomodoro-history {
+        margin-top: 30px;
+    }
+    
+    .pomodoro-session-item {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-left: 4px solid #17a2b8;
+        transition: all 0.3s ease;
+    }
+    
+    .pomodoro-session-item:hover {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    
+    .pomodoro-session-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    
+    .pomodoro-session-title {
+        font-weight: 600;
+        color: #17a2b8;
+    }
+    
+    .pomodoro-session-date {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    
+    .pomodoro-session-stats {
+        display: flex;
+        gap: 15px;
+    }
+    
+    .pomodoro-session-stat {
+        display: flex;
+        align-items: center;
+        font-size: 0.85rem;
+    }
+    
+    .pomodoro-session-stat i {
+        margin-right: 5px;
+        color: #17a2b8;
+    }
+    
+    .pomodoro-status {
+        font-size: 0.85rem;
+        padding: 3px 8px;
+        border-radius: 10px;
+    }
+    
+    .status-completed {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .status-in-progress {
+        background-color: #cce5ff;
+        color: #004085;
+    }
+    
+    .status-created {
+        background-color: #f8f9fa;
+        color: #6c757d;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 30px;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+    }
+    
+    .empty-state-icon {
+        font-size: 3rem;
+        color: #dee2e6;
+        margin-bottom: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-clock text-info"></i> Tạo Phiên Pomodoro cho Dự Án
+        </h1>
+        <p class="lead">Tạo phiên Pomodoro để làm việc hiệu quả trên dự án "{{ project.title }}".</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:project_detail' project_id=project.id %}" class="btn btn-outline-info">
+            <i class="fas fa-arrow-left"></i> Quay Lại Dự Án
+        </a>
+    </div>
+</div>
+
+<div class="pomodoro-container">
+    <div class="project-info">
+        <h4 class="project-title">{{ project.title }}</h4>
+        <div class="progress mb-3">
+            <div class="progress-bar bg-info" role="progressbar" style="width: {{ user_project.progress }}%;" aria-valuenow="{{ user_project.progress }}" aria-valuemin="0" aria-valuemax="100">{{ user_project.progress }}%</div>
+        </div>
+        <p><strong>Trạng thái:</strong>
+            <span class="badge {% if user_project.status == 'not_started' %}bg-secondary{% elif user_project.status == 'in_progress' %}bg-primary{% else %}bg-success{% endif %}">
+                {% if user_project.status == 'not_started' %}
+                    Chưa bắt đầu
+                {% elif user_project.status == 'in_progress' %}
+                    Đang thực hiện
+                {% else %}
+                    Đã hoàn thành
+                {% endif %}
+            </span>
+        </p>
+    </div>
+    
+    <div class="card pomodoro-card">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="fas fa-plus"></i> Tạo Phiên Pomodoro Mới</h5>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label class="form-label">Chọn thời gian làm việc:</label>
+                    <div class="duration-options">
+                        <div class="duration-option" data-value="25">
+                            <div class="duration-value">25</div>
+                            <div class="duration-label">phút</div>
+                            <div class="duration-description">Chuẩn</div>
+                        </div>
+                        <div class="duration-option" data-value="15">
+                            <div class="duration-value">15</div>
+                            <div class="duration-label">phút</div>
+                            <div class="duration-description">Ngắn</div>
+                        </div>
+                        <div class="duration-option" data-value="45">
+                            <div class="duration-value">45</div>
+                            <div class="duration-label">phút</div>
+                            <div class="duration-description">Dài</div>
+                        </div>
+                        <div class="duration-option" data-value="60">
+                            <div class="duration-value">60</div>
+                            <div class="duration-label">phút</div>
+                            <div class="duration-description">Rất dài</div>
+                        </div>
+                    </div>
+                    <input type="hidden" name="duration" id="duration-input" value="25">
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-info">
+                        <i class="fas fa-play"></i> Bắt Đầu Phiên Pomodoro
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    {% if pomodoro_sessions %}
+    <div class="pomodoro-history">
+        <h4 class="mb-3"><i class="fas fa-history text-info"></i> Lịch Sử Phiên Pomodoro</h4>
+        
+        {% for session in pomodoro_sessions %}
+        <div class="pomodoro-session-item">
+            <div class="pomodoro-session-header">
+                <div class="pomodoro-session-title">
+                    Phiên Pomodoro #{{ session.id }}
+                    <span class="pomodoro-status {% if session.status == 'completed' %}status-completed{% elif session.status == 'in_progress' %}status-in-progress{% else %}status-created{% endif %}">
+                        {% if session.status == 'completed' %}
+                            Đã hoàn thành
+                        {% elif session.status == 'in_progress' %}
+                            Đang thực hiện
+                        {% else %}
+                            Đã tạo
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="pomodoro-session-date">
+                    {{ session.created_at|date:"d/m/Y H:i" }}
+                </div>
+            </div>
+            <div class="pomodoro-session-stats">
+                <div class="pomodoro-session-stat">
+                    <i class="fas fa-clock"></i> {{ session.duration }} phút
+                </div>
+                {% if session.completed_pomodoros %}
+                <div class="pomodoro-session-stat">
+                    <i class="fas fa-check-circle"></i> {{ session.completed_pomodoros }} pomodoro hoàn thành
+                </div>
+                {% endif %}
+                {% if session.status == 'in_progress' %}
+                <div class="ms-auto">
+                    <a href="{% url 'pomodoro:resume_session' session_id=session.id %}" class="btn btn-sm btn-outline-info">
+                        <i class="fas fa-play"></i> Tiếp tục
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <div class="card pomodoro-card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="fas fa-info-circle"></i> Về Phương Pháp Pomodoro</h5>
+        </div>
+        <div class="card-body">
+            <h5>Phương pháp Pomodoro là gì?</h5>
+            <p>Phương pháp Pomodoro là một kỹ thuật quản lý thời gian giúp cải thiện năng suất làm việc và học tập. Phương pháp này chia thời gian làm việc thành các khoảng thời gian ngắn (thường là 25 phút) gọi là "pomodoros", xen kẽ với các khoảng nghỉ ngắn.</p>
+            
+            <h5>Các bước cơ bản:</h5>
+            <ol>
+                <li>Chọn một nhiệm vụ cần thực hiện</li>
+                <li>Đặt hẹn giờ Pomodoro (thường là 25 phút)</li>
+                <li>Làm việc tập trung cho đến khi hết giờ</li>
+                <li>Nghỉ ngắn (5 phút)</li>
+                <li>Sau 4 pomodoros, nghỉ dài hơn (15-30 phút)</li>
+            </ol>
+            
+            <div class="alert alert-info">
+                <i class="fas fa-lightbulb"></i> <strong>Mẹo:</strong> Trong thời gian làm việc, hãy tập trung hoàn toàn vào nhiệm vụ và tránh mọi sự xao nhãng.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const durationOptions = document.querySelectorAll('.duration-option');
+        const durationInput = document.getElementById('duration-input');
+        
+        // Đặt trạng thái mặc định
+        durationOptions[0].classList.add('selected');
+        
+        durationOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                // Bỏ chọn tất cả các option
+                durationOptions.forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                
+                // Chọn option hiện tại
+                this.classList.add('selected');
+                
+                // Cập nhật giá trị input
+                const duration = this.getAttribute('data-value');
+                durationInput.value = duration;
+            });
+        });
+    });
+</script>
+{% endblock %}

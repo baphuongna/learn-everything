@@ -61,6 +61,8 @@ learning_platform/
 - `RewardPoint`: Điểm thưởng của người dùng
 - `Reward`: Phần thưởng có thể đổi
 - `UserReward`: Phần thưởng đã đổi của người dùng
+- `LearningGoal`: Mục tiêu học tập của người dùng
+- `DailyStudyLog`: Theo dõi thời gian học tập hàng ngày
 
 **Tính năng chính:**
 - Đăng ký, đăng nhập, đăng xuất
@@ -71,6 +73,8 @@ learning_platform/
 - Hệ thống thành tích và huy hiệu
 - Hệ thống điểm thưởng và phần thưởng
 - Theo dõi chuỗi ngày liên tiếp hoàn thành mục tiêu
+- Quản lý mục tiêu học tập với các loại mục tiêu khác nhau
+- Theo dõi thời gian học tập hàng ngày và phân tích theo môn học
 
 ### 3.2. Content
 
@@ -128,28 +132,42 @@ learning_platform/
 - Ôn tập ghi nhớ theo phương pháp Spaced Repetition
 - Đánh dấu ghi nhớ yêu thích
 
-### 3.6. Learning Goals
+### 3.6. Advanced Learning Features
 
 **Mô hình dữ liệu:**
-- `LearningGoal`: Mục tiêu học tập của người dùng
-- `GoalProgress`: Tiến độ đạt mục tiêu
-- `GoalCollaborator`: Người cộng tác trong mục tiêu
-- `GoalComment`: Bình luận về mục tiêu
-- `GoalInvitation`: Lời mời tham gia mục tiêu
+- `CornellNote`: Ghi chú theo phương pháp Cornell
+- `MindMap`: Sơ đồ tư duy
+- `FeynmanNote`: Ghi chú theo phương pháp Feynman
+- `Project`: Dự án học tập
+- `ProjectTask`: Nhiệm vụ trong dự án
+- `UserProject`: Dự án của người dùng
+- `InteractiveExercise`: Bài tập thực hành tương tác
+- `CompetitionMode`: Chế độ thi đấu
+- `CompetitionQuestion`: Câu hỏi trong cuộc thi
+- `CompetitionAnswer`: Câu trả lời cho câu hỏi
+- `CompetitionParticipant`: Người tham gia cuộc thi
+- `PomodoroSession`: Phiên học tập Pomodoro
 
 **Tính năng chính:**
-- Tạo và quản lý mục tiêu học tập
-- Theo dõi tiến độ đạt mục tiêu
-- Nhắc nhở khi chưa đạt mục tiêu
-- Báo cáo tiến độ định kỳ
-- Biểu đồ tiến độ theo thời gian
-- Thống kê mục tiêu theo danh mục
-- Chia sẻ mục tiêu với bạn bè hoặc nhóm học tập
-- Cộng tác trong mục tiêu học tập
-- Bình luận và thảo luận về mục tiêu
-- Xuất mục tiêu sang định dạng iCalendar
-- Tích hợp với Google Calendar
-- Phần thưởng khi hoàn thành mục tiêu
+- **Ghi chú Cornell**: Tạo và quản lý ghi chú có cấu trúc
+- **Mind Mapping**: Tạo sơ đồ tư duy trực quan
+  - Tạo Mind Map từ dự án học tập
+- **Feynman Technique**: Giải thích khái niệm phức tạp bằng ngôn ngữ đơn giản
+  - Tạo Feynman Note từ cuộc thi đấu
+- **Học tập dựa trên dự án**: Tạo và quản lý dự án học tập
+- **Bài tập thực hành tương tác**: Môi trường thực hành trực tiếp
+  - Tạo ghi chú Cornell từ bài tập
+- **Chế độ thi đấu**: Học tập dưới áp lực thời gian
+  - Thi đấu trực tiếp
+  - Thi đấu theo nhóm
+  - Bảng xếp hạng
+  - Thành tích
+- **Pomodoro Timer**: Hẹn giờ học tập theo phương pháp Pomodoro
+- **Phân tích học tập**: Biểu đồ và thống kê học tập
+  - Biểu đồ so sánh tính năng
+  - Biểu đồ tiến độ dự án
+  - Biểu đồ điểm thi đấu
+- **API cho tích hợp bên ngoài**: API cho các tính năng học tập nâng cao
 
 ## 4. Công nghệ và thư viện
 
@@ -363,6 +381,7 @@ learning_platform/
 - **Hệ thống Mind Mapping**: Công cụ tạo sơ đồ tư duy trực quan
 - **Pomodoro Timer tích hợp**: Hẹn giờ học tập theo phương pháp Pomodoro
 - **Chế độ thi đấu**: Học tập dưới áp lực thời gian để tăng khả năng tập trung
+  - **Đã phát triển**: Thi đấu trực tiếp, thi đấu theo nhóm, đăng ký nhận thông báo, chia sẻ kết quả, bảng xếp hạng, thành tích
 
 #### 8.1.2. Tính năng xã hội và cộng đồng
 - **Diễn đàn thảo luận**: Diễn đàn riêng cho từng chủ đề học tập
@@ -397,12 +416,14 @@ learning_platform/
 #### 8.1.5. Tính năng phân tích và báo cáo
 - **Biểu đồ tiến độ học tập**: Biểu đồ trực quan về tiến độ học tập theo thời gian
 - **Phân tích thời gian học tập**: Thống kê thời gian học tập theo ngày, tuần, tháng
+  - **Đã phát triển**: Biểu đồ so sánh việc sử dụng các tính năng học tập nâng cao, biểu đồ tiến độ dự án theo thời gian, biểu đồ điểm thi đấu theo thời gian
 - **Báo cáo định kỳ**: Báo cáo hàng tuần/hàng tháng về tiến độ
 - **Dự đoán thời gian học tập**: Ước tính thời gian cần thiết để hoàn thành mục tiêu
 - **Phân tích mẫu quên**: Theo dõi các khái niệm thường bị quên
 - **Thống kê chi tiết**: Tỷ lệ đúng/sai trong các bài kiểm tra
 - **Xuất báo cáo**: Xuất báo cáo dưới dạng PDF, Excel
 - **Biểu đồ thống kê mục tiêu**: Thống kê mục tiêu theo danh mục và trạng thái
+  - **Đã phát triển**: Mục tiêu học tập, theo dõi thời gian học tập hàng ngày, thống kê theo môn học
 - **Biểu đồ hoàn thành mục tiêu**: Theo dõi tỷ lệ hoàn thành mục tiêu theo thời gian
 - **Chuỗi ngày liên tiếp**: Theo dõi chuỗi ngày liên tiếp hoàn thành mục tiêu
 
@@ -415,7 +436,10 @@ learning_platform/
 - **Tích hợp Google Calendar**: Thêm mục tiêu vào Google Calendar
 - **Chế độ ban đêm**: Giao diện tối giảm mỏi mắt
 - **Tùy chỉnh thông báo**: Chọn loại thông báo nhận được
+  - **Đã phát triển**: Thông báo khi có cuộc thi mới hoặc dự án mới
 - **Tích hợp công cụ ghi chú**: Đồng bộ hóa với Notion, Evernote, OneNote
+- **API cho tích hợp bên ngoài**:
+  - **Đã phát triển**: API cho mục tiêu học tập, nhật ký học tập, thống kê học tập, tích hợp tính năng
 
 #### 8.1.7. Mở rộng nội dung và đa dạng hóa
 - **Thêm nhiều ngôn ngữ**: Mở rộng danh sách ngôn ngữ có thể học

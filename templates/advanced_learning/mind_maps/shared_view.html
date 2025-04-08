@@ -1,0 +1,176 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ mind_map.title }} - Sơ Đồ Tư Duy Được Chia Sẻ{% endblock %}
+
+{% block extra_css %}
+<style>
+    .mindmap-container {
+        margin-bottom: 30px;
+    }
+    
+    .mindmap-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    
+    .mindmap-header {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .mindmap-editor {
+        height: 600px;
+        width: 100%;
+        border: 1px solid #dee2e6;
+        background-color: #fff;
+    }
+    
+    .mindmap-meta {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 10px;
+    }
+    
+    .shared-badge {
+        background-color: #28a745;
+        color: white;
+        padding: 3px 8px;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        margin-left: 10px;
+    }
+    
+    @media (max-width: 768px) {
+        .mindmap-editor {
+            height: 400px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-project-diagram text-primary"></i> {{ mind_map.title }}
+            <span class="shared-badge"><i class="fas fa-share-alt"></i> Được Chia Sẻ</span>
+        </h1>
+        <div class="mindmap-meta">
+            {% if mind_map.subject %}Chủ đề: <strong>{{ mind_map.subject.name }}</strong>{% endif %}
+            <br>
+            Tạo: {{ mind_map.created_at|date:"d/m/Y H:i" }}
+            {% if mind_map.updated_at != mind_map.created_at %}
+            | Cập nhật: {{ mind_map.updated_at|date:"d/m/Y H:i" }}
+            {% endif %}
+            <br>
+            Được chia sẻ bởi: <strong>{{ mind_map.user.username }}</strong>
+        </div>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="#" class="btn btn-outline-primary" id="export-image-btn">
+            <i class="fas fa-image"></i> Tải Hình Ảnh
+        </a>
+        <a href="{% url 'advanced_learning:mind_map_export_pdf' map_id=mind_map.id %}" class="btn btn-outline-danger">
+            <i class="fas fa-file-pdf"></i> Tải PDF
+        </a>
+    </div>
+</div>
+
+<div class="mindmap-container">
+    <div class="mindmap-card">
+        <div class="mindmap-editor">
+            <div id="jsmind_container"></div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Về Sơ Đồ Tư Duy</h5>
+            </div>
+            <div class="card-body">
+                <p>Sơ đồ tư duy là một công cụ trực quan giúp tổ chức thông tin, ý tưởng và khái niệm. Phương pháp này giúp bạn hiểu và ghi nhớ thông tin hiệu quả hơn thông qua việc tạo ra các kết nối trực quan.</p>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Lợi ích của sơ đồ tư duy:</h5>
+                        <ul>
+                            <li>Giúp tổ chức thông tin một cách có hệ thống</li>
+                            <li>Cải thiện khả năng ghi nhớ và hiểu bài</li>
+                            <li>Phát triển tư duy sáng tạo</li>
+                            <li>Giúp nhìn thấy bức tranh tổng thể</li>
+                            <li>Hỗ trợ giải quyết vấn đề hiệu quả</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Cách sử dụng sơ đồ tư duy:</h5>
+                        <ul>
+                            <li>Bắt đầu với một ý tưởng trung tâm</li>
+                            <li>Thêm các nhánh chính từ ý tưởng trung tâm</li>
+                            <li>Phát triển các nhánh phụ từ các nhánh chính</li>
+                            <li>Sử dụng màu sắc, hình ảnh để tăng tính trực quan</li>
+                            <li>Liên kết các ý tưởng liên quan với nhau</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12 text-center">
+        <p>Bạn muốn tạo sơ đồ tư duy của riêng mình?</p>
+        <a href="{% url 'accounts:register' %}" class="btn btn-primary">Đăng Ký Ngay</a>
+        <span class="mx-2">hoặc</span>
+        <a href="{% url 'accounts:login' %}" class="btn btn-outline-primary">Đăng Nhập</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/jsmind@0.6.4/js/jsmind.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsmind@0.6.4/js/jsmind.draggable.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Khởi tạo JSMind
+        var options = {
+            container: 'jsmind_container',
+            theme: 'primary',
+            editable: false,
+            mode: 'view',
+            support_html: true,
+            view: {
+                line_width: 2,
+                line_color: '#555'
+            }
+        };
+        
+        var jm = new jsMind(options);
+        var mind_data = {{ mind_map.map_data|safe }};
+        jm.show(mind_data);
+        
+        // Xử lý xuất hình ảnh
+        document.getElementById('export-image-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Lấy dữ liệu hình ảnh từ jsMind
+            var image_data = jm.screenshot.shootAsDataURL();
+            
+            // Tạo thẻ a tạm thời để tải hình ảnh
+            var link = document.createElement('a');
+            link.href = image_data;
+            link.download = '{{ mind_map.title|slugify }}.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    });
+</script>
+{% endblock %}

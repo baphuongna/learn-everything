@@ -1,0 +1,171 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Chia Sẻ Ghi Chú Cornell - {{ note.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .share-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    
+    .share-url-container {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    
+    .share-url {
+        font-family: monospace;
+        word-break: break-all;
+    }
+    
+    .copy-btn {
+        cursor: pointer;
+    }
+    
+    .social-share {
+        margin-top: 20px;
+    }
+    
+    .social-share a {
+        display: inline-block;
+        margin-right: 10px;
+        font-size: 1.5rem;
+    }
+    
+    .social-share .facebook {
+        color: #3b5998;
+    }
+    
+    .social-share .twitter {
+        color: #1da1f2;
+    }
+    
+    .social-share .linkedin {
+        color: #0077b5;
+    }
+    
+    .social-share .whatsapp {
+        color: #25d366;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-share-alt text-primary"></i> Chia Sẻ Ghi Chú Cornell
+        </h1>
+        <p class="lead">Chia sẻ ghi chú "{{ note.title }}" với bạn bè hoặc đồng nghiệp.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:cornell_note_detail' note_id=note.id %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Quay Lại Ghi Chú
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card share-card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-link"></i> Liên Kết Chia Sẻ</h5>
+            </div>
+            <div class="card-body">
+                {% if share_url %}
+                <p>Ghi chú của bạn đã được chia sẻ. Sử dụng liên kết dưới đây để chia sẻ với người khác:</p>
+                
+                <div class="share-url-container">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="share-url" id="share-url">{{ share_url }}</span>
+                        <button class="btn btn-sm btn-outline-primary copy-btn" onclick="copyToClipboard()">
+                            <i class="fas fa-copy"></i> Sao chép
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="social-share">
+                    <p><strong>Chia sẻ qua mạng xã hội:</strong></p>
+                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ share_url|urlencode }}" target="_blank" class="facebook" title="Chia sẻ qua Facebook">
+                        <i class="fab fa-facebook-square"></i>
+                    </a>
+                    <a href="https://twitter.com/intent/tweet?url={{ share_url|urlencode }}&text=Xem%20ghi%20ch%C3%BA%20Cornell%20c%E1%BB%A7a%20t%C3%B4i:%20{{ note.title|urlencode }}" target="_blank" class="twitter" title="Chia sẻ qua Twitter">
+                        <i class="fab fa-twitter-square"></i>
+                    </a>
+                    <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ share_url|urlencode }}&title={{ note.title|urlencode }}&summary=Ghi%20ch%C3%BA%20Cornell" target="_blank" class="linkedin" title="Chia sẻ qua LinkedIn">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                    <a href="https://api.whatsapp.com/send?text=Xem%20ghi%20ch%C3%BA%20Cornell%20c%E1%BB%A7a%20t%C3%B4i:%20{{ note.title|urlencode }}%20{{ share_url|urlencode }}" target="_blank" class="whatsapp" title="Chia sẻ qua WhatsApp">
+                        <i class="fab fa-whatsapp-square"></i>
+                    </a>
+                </div>
+                {% else %}
+                <p>Ghi chú của bạn chưa được chia sẻ. Nhấn nút "Chia Sẻ Ghi Chú" để tạo liên kết chia sẻ.</p>
+                {% endif %}
+                
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Gửi qua email (tùy chọn)</label>
+                        <div class="input-group">
+                            <input type="email" class="form-control" id="email" name="email" placeholder="Nhập địa chỉ email người nhận">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> Gửi
+                            </button>
+                        </div>
+                        <div class="form-text">Chúng tôi sẽ gửi email chứa liên kết đến ghi chú của bạn.</div>
+                    </div>
+                    
+                    {% if not share_url %}
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-share-alt"></i> Chia Sẻ Ghi Chú
+                    </button>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card share-card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Thông Tin</h5>
+            </div>
+            <div class="card-body">
+                <h5>Về Chia Sẻ Ghi Chú</h5>
+                <ul>
+                    <li>Người nhận không cần đăng nhập để xem ghi chú được chia sẻ.</li>
+                    <li>Họ chỉ có thể xem, không thể chỉnh sửa ghi chú của bạn.</li>
+                    <li>Bạn có thể ngừng chia sẻ bất kỳ lúc nào bằng cách vô hiệu hóa liên kết.</li>
+                    <li>Liên kết chia sẻ không có thời hạn.</li>
+                </ul>
+                
+                <h5>Quyền Riêng Tư</h5>
+                <p>Chỉ những người có liên kết mới có thể xem ghi chú của bạn. Hãy cẩn thận khi chia sẻ thông tin nhạy cảm.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function copyToClipboard() {
+        const shareUrl = document.getElementById('share-url');
+        const tempInput = document.createElement('input');
+        tempInput.value = shareUrl.textContent;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+        
+        // Hiển thị thông báo
+        alert('Đã sao chép liên kết vào clipboard!');
+    }
+</script>
+{% endblock %}

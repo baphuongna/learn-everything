@@ -1,0 +1,289 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Lịch Sử Nộp Bài - {{ exercise.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .submissions-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    .submission-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+        border: 1px solid #dee2e6;
+        overflow: hidden;
+    }
+    
+    .submission-card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .submission-header {
+        padding: 15px 20px;
+        border-bottom: 1px solid #dee2e6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .submission-header-correct {
+        background-color: #d4edda;
+    }
+    
+    .submission-header-incorrect {
+        background-color: #f8d7da;
+    }
+    
+    .submission-title {
+        font-weight: 600;
+        margin-bottom: 0;
+    }
+    
+    .submission-date {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .submission-body {
+        padding: 20px;
+    }
+    
+    .submission-content {
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        padding: 15px;
+        font-family: monospace;
+        white-space: pre-wrap;
+        margin-bottom: 20px;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .submission-feedback {
+        margin-top: 15px;
+        padding: 10px 15px;
+        border-radius: 5px;
+    }
+    
+    .submission-feedback-correct {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .submission-feedback-incorrect {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    
+    .submission-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-top: 15px;
+    }
+    
+    .submission-stat {
+        display: flex;
+        align-items: center;
+        font-size: 0.9rem;
+        background-color: #f8f9fa;
+        padding: 5px 10px;
+        border-radius: 5px;
+    }
+    
+    .submission-stat i {
+        margin-right: 5px;
+        color: #6f42c1;
+    }
+    
+    .execution-result {
+        background-color: #212529;
+        color: #f8f9fa;
+        font-family: monospace;
+        padding: 15px;
+        border-radius: 5px;
+        margin-top: 20px;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    
+    .test-case {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 10px;
+    }
+    
+    .test-case-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    
+    .test-case-title {
+        font-weight: 600;
+    }
+    
+    .test-case-status {
+        font-size: 0.9rem;
+        padding: 3px 8px;
+        border-radius: 10px;
+    }
+    
+    .test-case-passed {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .test-case-failed {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    
+    .test-case-details {
+        font-family: monospace;
+        font-size: 0.9rem;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 50px 20px;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        margin-top: 30px;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        color: #dee2e6;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-history text-purple"></i> Lịch Sử Nộp Bài
+        </h1>
+        <p class="lead">Lịch sử nộp bài của bạn cho bài tập "{{ exercise.title }}".</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:exercise_detail' exercise_id=exercise.id %}" class="btn btn-outline-purple">
+            <i class="fas fa-arrow-left"></i> Quay Lại Bài Tập
+        </a>
+    </div>
+</div>
+
+<div class="submissions-container">
+    {% if submissions %}
+        {% for submission in submissions %}
+        <div class="submission-card">
+            <div class="submission-header {% if submission.is_correct %}submission-header-correct{% else %}submission-header-incorrect{% endif %}">
+                <div class="submission-title">
+                    Bài nộp #{{ forloop.counter }}
+                    {% if submission.is_correct %}
+                    <span class="badge bg-success">Đúng</span>
+                    {% else %}
+                    <span class="badge bg-danger">Sai</span>
+                    {% endif %}
+                </div>
+                <div class="submission-date">
+                    {{ submission.created_at|date:"d/m/Y H:i:s" }}
+                </div>
+            </div>
+            <div class="submission-body">
+                <h5>Nội dung bài nộp:</h5>
+                <div class="submission-content">{{ submission.submission_content }}</div>
+                
+                {% if submission.feedback %}
+                <div class="submission-feedback {% if submission.is_correct %}submission-feedback-correct{% else %}submission-feedback-incorrect{% endif %}">
+                    <strong>Phản hồi:</strong> {{ submission.feedback }}
+                </div>
+                {% endif %}
+                
+                <div class="submission-stats">
+                    {% if submission.execution_time %}
+                    <div class="submission-stat">
+                        <i class="fas fa-clock"></i> Thời gian thực thi: {{ submission.execution_time|floatformat:3 }}s
+                    </div>
+                    {% endif %}
+                    
+                    {% if submission.points_earned > 0 %}
+                    <div class="submission-stat">
+                        <i class="fas fa-star"></i> Điểm: {{ submission.points_earned }}
+                    </div>
+                    {% endif %}
+                    
+                    {% if submission.hints_used %}
+                    <div class="submission-stat">
+                        <i class="fas fa-lightbulb"></i> Gợi ý đã sử dụng: {{ submission.hints_used|length }}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                {% if submission.execution_result %}
+                <div class="mt-4">
+                    <h5>Kết quả thực thi:</h5>
+                    
+                    {% if submission.execution_result.output %}
+                    <div class="execution-result">
+                        <pre>{{ submission.execution_result.output }}</pre>
+                    </div>
+                    {% endif %}
+                    
+                    {% if submission.execution_result.error %}
+                    <div class="execution-result">
+                        <span style="color: #ff6b6b;">Lỗi: {{ submission.execution_result.error }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if submission.execution_result.test_results %}
+                    <h5 class="mt-4">Kết quả kiểm tra:</h5>
+                    <div class="test-cases-container">
+                        {% for test in submission.execution_result.test_results %}
+                        <div class="test-case">
+                            <div class="test-case-header">
+                                <div class="test-case-title">Test case #{{ forloop.counter }}</div>
+                                <div class="test-case-status {% if test.passed %}test-case-passed{% else %}test-case-failed{% endif %}">
+                                    {% if test.passed %}Đã vượt qua{% else %}Không vượt qua{% endif %}
+                                </div>
+                            </div>
+                            <div class="test-case-details">
+                                <div class="test-case-input"><strong>Input:</strong> {{ test.input }}</div>
+                                <div class="test-case-expected"><strong>Kết quả mong đợi:</strong> {{ test.expected }}</div>
+                                <div class="test-case-actual"><strong>Kết quả thực tế:</strong> {{ test.actual }}</div>
+                                {% if test.error %}
+                                <div class="test-case-error"><strong>Lỗi:</strong> {{ test.error }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-history"></i>
+            <h3>Chưa có bài nộp nào</h3>
+            <p>Bạn chưa nộp bài tập này. Hãy quay lại và thử làm bài tập.</p>
+            <a href="{% url 'advanced_learning:exercise_detail' exercise_id=exercise.id %}" class="btn btn-purple mt-3">
+                <i class="fas fa-play"></i> Làm Bài Tập
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

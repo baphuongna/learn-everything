@@ -1,0 +1,332 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Tải Lên Kết Quả Dự Án - {{ project.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .upload-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .upload-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    
+    .project-info {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .project-title {
+        color: #17a2b8;
+        margin-bottom: 10px;
+    }
+    
+    .file-upload-area {
+        border: 2px dashed #dee2e6;
+        border-radius: 10px;
+        padding: 30px;
+        text-align: center;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+    
+    .file-upload-area:hover {
+        border-color: #17a2b8;
+    }
+    
+    .file-upload-icon {
+        font-size: 3rem;
+        color: #17a2b8;
+        margin-bottom: 15px;
+    }
+    
+    .file-upload-text {
+        margin-bottom: 20px;
+    }
+    
+    .file-types {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-top: 10px;
+    }
+    
+    .custom-file-input::-webkit-file-upload-button {
+        visibility: hidden;
+    }
+    
+    .custom-file-input::before {
+        content: 'Chọn file';
+        display: inline-block;
+        background: #17a2b8;
+        color: white;
+        border-radius: 5px;
+        padding: 8px 15px;
+        outline: none;
+        white-space: nowrap;
+        cursor: pointer;
+        font-weight: 600;
+    }
+    
+    .custom-file-input:hover::before {
+        background: #138496;
+    }
+    
+    .custom-file-input:active::before {
+        background: #117a8b;
+    }
+    
+    .file-preview {
+        margin-top: 20px;
+        display: none;
+    }
+    
+    .file-preview-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    
+    .file-preview-name {
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .file-preview-size {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .file-preview-remove {
+        color: #dc3545;
+        cursor: pointer;
+    }
+    
+    .file-preview-image {
+        max-width: 100%;
+        max-height: 200px;
+        border-radius: 5px;
+        margin-top: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-upload text-info"></i> Tải Lên Kết Quả Dự Án
+        </h1>
+        <p class="lead">Tải lên kết quả của dự án "{{ project.title }}" để lưu trữ và chia sẻ.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:project_detail' project_id=project.id %}" class="btn btn-outline-info">
+            <i class="fas fa-arrow-left"></i> Quay Lại Dự Án
+        </a>
+    </div>
+</div>
+
+<div class="upload-container">
+    <div class="project-info">
+        <h4 class="project-title">{{ project.title }}</h4>
+        <div class="progress mb-3">
+            <div class="progress-bar bg-info" role="progressbar" style="width: {{ user_project.progress }}%;" aria-valuenow="{{ user_project.progress }}" aria-valuemin="0" aria-valuemax="100">{{ user_project.progress }}%</div>
+        </div>
+        <p><strong>Trạng thái:</strong>
+            <span class="badge {% if user_project.status == 'not_started' %}bg-secondary{% elif user_project.status == 'in_progress' %}bg-primary{% else %}bg-success{% endif %}">
+                {% if user_project.status == 'not_started' %}
+                    Chưa bắt đầu
+                {% elif user_project.status == 'in_progress' %}
+                    Đang thực hiện
+                {% else %}
+                    Đã hoàn thành
+                {% endif %}
+            </span>
+        </p>
+    </div>
+    
+    <div class="card upload-card">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="fas fa-file-upload"></i> Tải Lên File Kết Quả</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="file-upload-area" id="drop-area">
+                    <div class="file-upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <div class="file-upload-text">
+                        <h5>Kéo và thả file vào đây</h5>
+                        <p>hoặc</p>
+                    </div>
+                    <input type="file" name="result_file" id="result-file" class="custom-file-input" required>
+                    <div class="file-types">
+                        <p>Hỗ trợ các định dạng: PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, JPG, PNG, ZIP, RAR</p>
+                    </div>
+                </div>
+                
+                <div class="file-preview" id="file-preview">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="file-preview-header">
+                                <div class="file-preview-name" id="file-name"></div>
+                                <div class="file-preview-size" id="file-size"></div>
+                                <div class="file-preview-remove" id="file-remove">
+                                    <i class="fas fa-times"></i>
+                                </div>
+                            </div>
+                            <div id="image-preview-container">
+                                <img src="" id="image-preview" class="file-preview-image" style="display: none;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="description" class="form-label">Mô tả kết quả</label>
+                    <textarea class="form-control" id="description" name="description" rows="3" placeholder="Mô tả ngắn gọn về kết quả dự án này..."></textarea>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-info">
+                        <i class="fas fa-upload"></i> Tải Lên
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="card upload-card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="fas fa-info-circle"></i> Hướng Dẫn</h5>
+        </div>
+        <div class="card-body">
+            <h5>Tại sao nên tải lên kết quả dự án?</h5>
+            <ul>
+                <li>Lưu trữ kết quả công việc của bạn để tham khảo sau này</li>
+                <li>Chia sẻ kết quả với người khác</li>
+                <li>Theo dõi tiến trình học tập của bạn qua thời gian</li>
+                <li>Xây dựng portfolio học tập cá nhân</li>
+            </ul>
+            
+            <h5>Các loại kết quả có thể tải lên:</h5>
+            <ul>
+                <li>Báo cáo dự án (PDF, DOC, DOCX)</li>
+                <li>Bài thuyết trình (PPT, PPTX)</li>
+                <li>Bảng tính dữ liệu (XLS, XLSX)</li>
+                <li>Hình ảnh kết quả (JPG, PNG)</li>
+                <li>File nén chứa nhiều tài liệu (ZIP, RAR)</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropArea = document.getElementById('drop-area');
+        const fileInput = document.getElementById('result-file');
+        const filePreview = document.getElementById('file-preview');
+        const fileName = document.getElementById('file-name');
+        const fileSize = document.getElementById('file-size');
+        const fileRemove = document.getElementById('file-remove');
+        const imagePreview = document.getElementById('image-preview');
+        
+        // Ngăn chặn hành vi mặc định của trình duyệt khi kéo thả
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        // Thêm hiệu ứng khi kéo file vào vùng thả
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            dropArea.style.borderColor = '#17a2b8';
+            dropArea.style.backgroundColor = '#e9f7fb';
+        }
+        
+        function unhighlight() {
+            dropArea.style.borderColor = '#dee2e6';
+            dropArea.style.backgroundColor = '';
+        }
+        
+        // Xử lý khi thả file
+        dropArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length > 0) {
+                fileInput.files = files;
+                updateFilePreview(files[0]);
+            }
+        }
+        
+        // Xử lý khi chọn file qua input
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                updateFilePreview(this.files[0]);
+            }
+        });
+        
+        // Cập nhật xem trước file
+        function updateFilePreview(file) {
+            filePreview.style.display = 'block';
+            fileName.textContent = file.name;
+            
+            // Hiển thị kích thước file
+            let size = file.size;
+            if (size < 1024) {
+                fileSize.textContent = size + ' bytes';
+            } else if (size < 1024 * 1024) {
+                fileSize.textContent = Math.round(size / 1024) + ' KB';
+            } else {
+                fileSize.textContent = Math.round(size / (1024 * 1024)) + ' MB';
+            }
+            
+            // Hiển thị xem trước nếu là hình ảnh
+            if (file.type.match('image.*')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                imagePreview.style.display = 'none';
+            }
+        }
+        
+        // Xử lý khi nhấn nút xóa file
+        fileRemove.addEventListener('click', function() {
+            fileInput.value = '';
+            filePreview.style.display = 'none';
+            imagePreview.style.display = 'none';
+        });
+    });
+</script>
+{% endblock %}

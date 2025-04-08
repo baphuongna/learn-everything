@@ -1,0 +1,233 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Tạo Flashcards từ Sơ Đồ Tư Duy - {{ mind_map.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .flashcard-preview-container {
+        margin-bottom: 30px;
+    }
+    
+    .flashcard-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    
+    .flashcard-preview {
+        padding: 20px;
+    }
+    
+    .flashcard-item {
+        perspective: 1000px;
+        margin-bottom: 20px;
+    }
+    
+    .flashcard-inner {
+        position: relative;
+        width: 100%;
+        height: 200px;
+        text-align: center;
+        transition: transform 0.6s;
+        transform-style: preserve-3d;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        cursor: pointer;
+    }
+    
+    .flashcard-item:hover .flashcard-inner {
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+    
+    .flashcard-front, .flashcard-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        border-radius: 10px;
+    }
+    
+    .flashcard-front {
+        background-color: #f8f9fa;
+        color: #212529;
+        border: 1px solid #dee2e6;
+    }
+    
+    .flashcard-back {
+        background-color: #007bff;
+        color: white;
+        transform: rotateY(180deg);
+        border: 1px solid #0069d9;
+    }
+    
+    .flashcard-content {
+        font-size: 1.2rem;
+        overflow-y: auto;
+        max-height: 160px;
+    }
+    
+    .mindmap-preview {
+        height: 300px;
+        width: 100%;
+        border: 1px solid #dee2e6;
+        background-color: #fff;
+        margin-bottom: 20px;
+    }
+    
+    .integration-info {
+        margin-top: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-layer-group text-primary"></i> Tạo Flashcards từ Sơ Đồ Tư Duy
+        </h1>
+        <p class="lead">Tạo bộ flashcards từ sơ đồ tư duy "{{ mind_map.title }}" để ôn tập hiệu quả.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:mind_map_detail' map_id=mind_map.id %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Quay Lại Sơ Đồ
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card flashcard-card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-project-diagram"></i> Sơ Đồ Tư Duy Nguồn</h5>
+            </div>
+            <div class="card-body">
+                <div class="mindmap-preview">
+                    <div id="jsmind_container"></div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Hệ thống sẽ tạo flashcards dựa trên nội dung sơ đồ tư duy của bạn. Chủ đề trung tâm và các nút con sẽ được sử dụng để tạo các flashcard.
+                </div>
+                
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-magic"></i> Tạo Flashcards
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card flashcard-card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-layer-group"></i> Xem Trước Flashcards</h5>
+            </div>
+            <div class="flashcard-preview">
+                <p class="text-muted mb-4">Nhấp vào flashcard để lật. Đây chỉ là xem trước, flashcards thực tế sẽ được tạo khi bạn nhấn nút "Tạo Flashcards".</p>
+                
+                <!-- Flashcard cho chủ đề trung tâm -->
+                <div class="flashcard-item">
+                    <div class="flashcard-inner" id="flashcard-1">
+                        <div class="flashcard-front">
+                            <div class="flashcard-content">{{ mind_map.central_topic }}</div>
+                        </div>
+                        <div class="flashcard-back">
+                            <div class="flashcard-content">Chủ đề trung tâm của sơ đồ tư duy</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Flashcards cho các nút con -->
+                {% for child in mind_map.map_data.children|slice:":2" %}
+                    <div class="flashcard-item">
+                        <div class="flashcard-inner" id="flashcard-{{ forloop.counter|add:1 }}">
+                            <div class="flashcard-front">
+                                <div class="flashcard-content">{{ child.text }}</div>
+                            </div>
+                            <div class="flashcard-back">
+                                <div class="flashcard-content">{{ mind_map.central_topic }}</div>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> Sơ đồ tư duy của bạn chưa có nút con. Hãy thêm các nút con để tạo flashcards hiệu quả.
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="integration-info mt-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Về Flashcards</h5>
+                </div>
+                <div class="card-body">
+                    <p>Flashcards là công cụ học tập hiệu quả giúp ghi nhớ thông tin thông qua việc lặp lại và kiểm tra tích cực.</p>
+                    
+                    <h5>Lợi ích:</h5>
+                    <ul>
+                        <li>Cải thiện khả năng ghi nhớ dài hạn</li>
+                        <li>Học tập hiệu quả thông qua kiểm tra tích cực</li>
+                        <li>Dễ dàng ôn tập mọi lúc, mọi nơi</li>
+                        <li>Kết hợp hoàn hảo với phương pháp Spaced Repetition</li>
+                    </ul>
+                    
+                    <div class="alert alert-primary">
+                        <i class="fas fa-lightbulb"></i> <strong>Mẹo:</strong> Kết hợp flashcards với Pomodoro Timer để tối ưu hóa thời gian học tập của bạn.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/jsmind@0.6.4/js/jsmind.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsmind@0.6.4/js/jsmind.draggable.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Khởi tạo JSMind
+        var options = {
+            container: 'jsmind_container',
+            theme: 'primary',
+            editable: false,
+            mode: 'view',
+            support_html: true,
+            view: {
+                line_width: 2,
+                line_color: '#555'
+            }
+        };
+        
+        var jm = new jsMind(options);
+        var mind_data = {{ mind_map.map_data|safe }};
+        jm.show(mind_data);
+        
+        // Xử lý lật flashcard khi nhấp chuột
+        const flashcards = document.querySelectorAll('.flashcard-inner');
+        flashcards.forEach(card => {
+            card.addEventListener('click', function() {
+                if (this.style.transform === "rotateY(180deg)") {
+                    this.style.transform = "rotateY(0deg)";
+                } else {
+                    this.style.transform = "rotateY(180deg)";
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

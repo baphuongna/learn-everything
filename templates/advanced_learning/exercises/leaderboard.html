@@ -1,0 +1,296 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Bảng Xếp Hạng Bài Tập{% endblock %}
+
+{% block extra_css %}
+<style>
+    .leaderboard-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    .filter-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+        border: 1px solid #dee2e6;
+    }
+    
+    .leaderboard-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+        border: 1px solid #dee2e6;
+        overflow: hidden;
+    }
+    
+    .leaderboard-header {
+        background-color: #f8f9fa;
+        padding: 15px 20px;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .leaderboard-title {
+        font-weight: 600;
+        margin-bottom: 0;
+        color: #6f42c1;
+    }
+    
+    .leaderboard-table {
+        width: 100%;
+    }
+    
+    .leaderboard-table th {
+        background-color: #f8f9fa;
+        color: #6f42c1;
+        font-weight: 600;
+        padding: 12px 15px;
+        text-align: left;
+    }
+    
+    .leaderboard-table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .leaderboard-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .leaderboard-table tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .rank {
+        font-weight: 600;
+        text-align: center;
+        width: 60px;
+    }
+    
+    .rank-1, .rank-2, .rank-3 {
+        font-size: 1.2rem;
+    }
+    
+    .rank-1 {
+        color: #ffc107;
+    }
+    
+    .rank-2 {
+        color: #6c757d;
+    }
+    
+    .rank-3 {
+        color: #cd7f32;
+    }
+    
+    .user-info {
+        display: flex;
+        align-items: center;
+    }
+    
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin-right: 10px;
+        background-color: #6f42c1;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+    }
+    
+    .user-name {
+        font-weight: 600;
+    }
+    
+    .points {
+        font-weight: 600;
+        color: #6f42c1;
+    }
+    
+    .submissions-count {
+        color: #6c757d;
+    }
+    
+    .current-user {
+        background-color: #e9f7fb;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 50px 20px;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        margin-top: 30px;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        color: #dee2e6;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-trophy text-warning"></i> Bảng Xếp Hạng Bài Tập
+        </h1>
+        <p class="lead">Xếp hạng người dùng dựa trên điểm số từ các bài tập thực hành tương tác.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:exercise_list' %}" class="btn btn-outline-purple">
+            <i class="fas fa-list"></i> Danh Sách Bài Tập
+        </a>
+    </div>
+</div>
+
+<div class="leaderboard-container">
+    <!-- Bộ lọc -->
+    <div class="card filter-card">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-6">
+                    <label for="type" class="form-label">Loại bài tập</label>
+                    <select class="form-select" id="type" name="type" onchange="this.form.submit()">
+                        <option value="">Tất cả loại</option>
+                        {% for type_code, type_name in exercise_types %}
+                        <option value="{{ type_code }}" {% if selected_type == type_code %}selected{% endif %}>{{ type_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="period" class="form-label">Khoảng thời gian</label>
+                    <select class="form-select" id="period" name="period" onchange="this.form.submit()">
+                        <option value="all" {% if selected_period == 'all' %}selected{% endif %}>Tất cả thời gian</option>
+                        <option value="day" {% if selected_period == 'day' %}selected{% endif %}>24 giờ qua</option>
+                        <option value="week" {% if selected_period == 'week' %}selected{% endif %}>7 ngày qua</option>
+                        <option value="month" {% if selected_period == 'month' %}selected{% endif %}>30 ngày qua</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Bảng xếp hạng -->
+    <div class="card leaderboard-card">
+        <div class="leaderboard-header">
+            <h5 class="leaderboard-title">
+                <i class="fas fa-crown text-warning"></i> 
+                Bảng Xếp Hạng 
+                {% if selected_type %}
+                    - {{ dict_exercise_types|get_item:selected_type }}
+                {% endif %}
+                {% if selected_period != 'all' %}
+                    {% if selected_period == 'day' %}
+                        - 24 giờ qua
+                    {% elif selected_period == 'week' %}
+                        - 7 ngày qua
+                    {% elif selected_period == 'month' %}
+                        - 30 ngày qua
+                    {% endif %}
+                {% endif %}
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            {% if user_points %}
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th class="rank">Hạng</th>
+                        <th>Người dùng</th>
+                        <th>Điểm</th>
+                        <th>Bài nộp đúng</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in user_points %}
+                    <tr {% if entry.username == request.user.username %}class="current-user"{% endif %}>
+                        <td class="rank {% if forloop.counter == 1 %}rank-1{% elif forloop.counter == 2 %}rank-2{% elif forloop.counter == 3 %}rank-3{% endif %}">
+                            {% if forloop.counter == 1 %}
+                                <i class="fas fa-trophy text-warning"></i>
+                            {% elif forloop.counter == 2 %}
+                                <i class="fas fa-medal text-secondary"></i>
+                            {% elif forloop.counter == 3 %}
+                                <i class="fas fa-award" style="color: #cd7f32;"></i>
+                            {% else %}
+                                {{ forloop.counter }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="user-info">
+                                <div class="user-avatar">
+                                    {{ entry.username|first|upper }}
+                                </div>
+                                <div class="user-name">
+                                    {{ entry.full_name }}
+                                    {% if entry.username == request.user.username %}
+                                    <span class="badge bg-info">Bạn</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="points">{{ entry.total_points }} điểm</td>
+                        <td class="submissions-count">{{ entry.correct_submissions }} bài</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-trophy"></i>
+                <h3>Chưa có dữ liệu xếp hạng</h3>
+                <p>Chưa có người dùng nào hoàn thành bài tập trong khoảng thời gian này.</p>
+                <a href="{% url 'advanced_learning:exercise_list' %}" class="btn btn-purple mt-3">
+                    <i class="fas fa-play"></i> Làm Bài Tập
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Thông tin về bảng xếp hạng -->
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="fas fa-info-circle"></i> Thông Tin</h5>
+        </div>
+        <div class="card-body">
+            <h5>Cách tính điểm:</h5>
+            <ul>
+                <li>Mỗi bài tập có số điểm khác nhau tùy thuộc vào độ khó</li>
+                <li>Điểm được tính khi bạn nộp bài đúng</li>
+                <li>Sử dụng gợi ý sẽ làm giảm điểm nhận được</li>
+                <li>Chỉ tính điểm cho lần nộp đúng đầu tiên của mỗi bài tập</li>
+            </ul>
+            
+            <h5>Thành tích:</h5>
+            <p>Đạt thứ hạng cao trên bảng xếp hạng sẽ giúp bạn mở khóa các thành tích đặc biệt!</p>
+            
+            <div class="alert alert-info">
+                <i class="fas fa-lightbulb"></i> <strong>Mẹo:</strong> Hoàn thành nhiều bài tập khó sẽ giúp bạn tích lũy điểm nhanh hơn.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Thêm filter cho template để lấy giá trị từ dictionary
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tạo dictionary cho các loại bài tập
+        const exerciseTypes = {};
+        {% for type_code, type_name in exercise_types %}
+        exerciseTypes['{{ type_code }}'] = '{{ type_name }}';
+        {% endfor %}
+        
+        // Thêm vào window để sử dụng trong template
+        window.dict_exercise_types = exerciseTypes;
+    });
+</script>
+{% endblock %}

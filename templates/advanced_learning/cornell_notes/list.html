@@ -12,22 +12,22 @@
         margin-bottom: 15px;
         border-left: 4px solid #007bff;
     }
-    
+
     .note-card:hover {
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         transform: translateY(-2px);
     }
-    
+
     .note-title {
         font-weight: 600;
         color: #007bff;
     }
-    
+
     .note-meta {
         font-size: 0.85rem;
         color: #6c757d;
     }
-    
+
     .note-content {
         max-height: 100px;
         overflow: hidden;
@@ -36,18 +36,18 @@
         -webkit-line-clamp: 3;
         -webkit-box-orient: vertical;
     }
-    
+
     .search-card {
         border-radius: 10px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         margin-bottom: 20px;
     }
-    
+
     .empty-state {
         text-align: center;
         padding: 40px 20px;
     }
-    
+
     .empty-state i {
         font-size: 4rem;
         color: #dee2e6;
@@ -65,9 +65,15 @@
         <p class="lead">Phương pháp ghi chú Cornell giúp bạn tổ chức thông tin một cách có cấu trúc và cải thiện khả năng ghi nhớ.</p>
     </div>
     <div class="col-md-4 text-end">
-        <a href="{% url 'advanced_learning:cornell_note_create' %}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Tạo Ghi Chú Mới
+        <a href="{% url 'advanced_learning:cornell_notes_to_review' %}" class="btn btn-info mb-2 w-100">
+            <i class="fas fa-sync-alt"></i> Ghi Chú Cần Ôn Tập
+            <span class="badge bg-light text-dark ms-1">{{ notes_to_review_count|default:"0" }}</span>
         </a>
+        <div>
+            <a href="{% url 'advanced_learning:cornell_note_create' %}" class="btn btn-primary w-100">
+                <i class="fas fa-plus"></i> Tạo Ghi Chú Mới
+            </a>
+        </div>
     </div>
 </div>
 

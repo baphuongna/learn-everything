@@ -1,0 +1,319 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Bảng Xếp Hạng{% endblock %}
+
+{% block extra_css %}
+<style>
+    .leaderboard-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    .filter-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+        border: 1px solid #dee2e6;
+    }
+    
+    .leaderboard-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+        border: 1px solid #dee2e6;
+        overflow: hidden;
+    }
+    
+    .leaderboard-header {
+        background-color: #6f42c1;
+        color: white;
+        padding: 15px 20px;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+    }
+    
+    .leaderboard-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 0;
+    }
+    
+    .leaderboard-body {
+        padding: 0;
+    }
+    
+    .leaderboard-table {
+        margin-bottom: 0;
+    }
+    
+    .leaderboard-table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+    }
+    
+    .leaderboard-rank {
+        width: 80px;
+        text-align: center;
+        font-weight: 600;
+    }
+    
+    .rank-1 {
+        color: #ffc107;
+    }
+    
+    .rank-2 {
+        color: #6c757d;
+    }
+    
+    .rank-3 {
+        color: #cd7f32;
+    }
+    
+    .leaderboard-user {
+        display: flex;
+        align-items: center;
+    }
+    
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #6f42c1;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        margin-right: 15px;
+    }
+    
+    .user-info {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .user-name {
+        font-weight: 600;
+    }
+    
+    .user-full-name {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    
+    .leaderboard-score {
+        font-weight: 600;
+        color: #6f42c1;
+    }
+    
+    .current-user-row {
+        background-color: #f3ebff;
+    }
+    
+    .stats-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .stat-card {
+        flex: 1;
+        min-width: 200px;
+        background-color: #fff;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        text-align: center;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #6f42c1;
+        margin-bottom: 5px;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 50px 20px;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        color: #dee2e6;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-trophy text-warning"></i> Bảng Xếp Hạng
+        </h1>
+        <p class="lead">Xem thứ hạng của bạn và những người chơi khác.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:competition_list' %}" class="btn btn-outline-purple">
+            <i class="fas fa-arrow-left"></i> Quay Lại Cuộc Thi
+        </a>
+    </div>
+</div>
+
+<div class="leaderboard-container">
+    <!-- Bộ lọc -->
+    <div class="card filter-card">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="search" class="form-label">Tìm kiếm</label>
+                    <input type="text" class="form-control" id="search" name="search" value="{{ search_query }}" placeholder="Nhập tên người dùng...">
+                </div>
+                <div class="col-md-3">
+                    <label for="subject" class="form-label">Chủ đề</label>
+                    <select class="form-select" id="subject" name="subject" onchange="this.form.submit()">
+                        <option value="">Tất cả chủ đề</option>
+                        {% for subject in subjects %}
+                        <option value="{{ subject.id }}" {% if selected_subject == subject.id|stringformat:"s" %}selected{% endif %}>{{ subject.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="period" class="form-label">Thời gian</label>
+                    <select class="form-select" id="period" name="period" onchange="this.form.submit()">
+                        <option value="all" {% if selected_period == 'all' %}selected{% endif %}>Tất cả thời gian</option>
+                        <option value="day" {% if selected_period == 'day' %}selected{% endif %}>24 giờ qua</option>
+                        <option value="week" {% if selected_period == 'week' %}selected{% endif %}>7 ngày qua</option>
+                        <option value="month" {% if selected_period == 'month' %}selected{% endif %}>30 ngày qua</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-purple w-100">
+                        <i class="fas fa-search"></i> Tìm
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Thống kê -->
+    <div class="stats-container">
+        <div class="stat-card">
+            <div class="stat-value">{{ user_stats|length }}</div>
+            <div class="stat-label">Người tham gia</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-value">
+                {% if current_user_rank %}
+                #{{ current_user_rank }}
+                {% else %}
+                -
+                {% endif %}
+            </div>
+            <div class="stat-label">Thứ hạng của bạn</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-value">
+                {% with top_user=user_stats|first %}
+                {% if top_user %}
+                {{ top_user.total_score }}
+                {% else %}
+                0
+                {% endif %}
+                {% endwith %}
+            </div>
+            <div class="stat-label">Điểm cao nhất</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-value">
+                {% with top_user=user_stats|first %}
+                {% if top_user %}
+                {{ top_user.competitions_count }}
+                {% else %}
+                0
+                {% endif %}
+                {% endwith %}
+            </div>
+            <div class="stat-label">Số cuộc thi nhiều nhất</div>
+        </div>
+    </div>
+    
+    <!-- Bảng xếp hạng -->
+    <div class="card leaderboard-card">
+        <div class="leaderboard-header">
+            <h5 class="leaderboard-title">Bảng Xếp Hạng</h5>
+        </div>
+        <div class="leaderboard-body">
+            {% if user_stats %}
+            <div class="table-responsive">
+                <table class="table table-hover leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th class="leaderboard-rank">Hạng</th>
+                            <th>Người dùng</th>
+                            <th class="text-center">Số cuộc thi</th>
+                            <th class="text-center">Xếp hạng tốt nhất</th>
+                            <th class="text-end">Tổng điểm</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stat in user_stats %}
+                        <tr {% if stat.user == request.user.id %}class="current-user-row"{% endif %}>
+                            <td class="leaderboard-rank {% if forloop.counter == 1 %}rank-1{% elif forloop.counter == 2 %}rank-2{% elif forloop.counter == 3 %}rank-3{% endif %}">
+                                {% if forloop.counter == 1 %}
+                                <i class="fas fa-crown"></i>
+                                {% endif %}
+                                #{{ forloop.counter }}
+                            </td>
+                            <td>
+                                <div class="leaderboard-user">
+                                    <div class="user-avatar">
+                                        {{ stat.username|first|upper }}
+                                    </div>
+                                    <div class="user-info">
+                                        <div class="user-name">{{ stat.username }}</div>
+                                        <div class="user-full-name">{{ stat.full_name }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center">{{ stat.competitions_count }}</td>
+                            <td class="text-center">
+                                {% if stat.best_rank %}
+                                #{{ stat.best_rank }}
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td class="text-end leaderboard-score">{{ stat.total_score }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-trophy"></i>
+                <h3>Không có dữ liệu</h3>
+                <p>Chưa có người dùng nào hoàn thành cuộc thi.</p>
+                <a href="{% url 'advanced_learning:competition_list' %}" class="btn btn-purple mt-3">
+                    <i class="fas fa-play"></i> Tham Gia Cuộc Thi
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

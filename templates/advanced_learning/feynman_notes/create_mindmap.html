@@ -1,0 +1,224 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Tạo Sơ Đồ Tư Duy từ Ghi Chú Feynman - {{ note.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .mindmap-preview-container {
+        margin-bottom: 30px;
+    }
+    
+    .mindmap-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    
+    .mindmap-preview {
+        height: 400px;
+        width: 100%;
+        border: 1px solid #dee2e6;
+        background-color: #fff;
+        margin-bottom: 20px;
+    }
+    
+    .note-preview {
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid #dee2e6;
+    }
+    
+    .note-preview h5 {
+        color: #fd7e14;
+        margin-bottom: 10px;
+    }
+    
+    .step-number {
+        display: inline-block;
+        width: 25px;
+        height: 25px;
+        background-color: #fd7e14;
+        color: white;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 25px;
+        margin-right: 10px;
+        font-weight: bold;
+    }
+    
+    .integration-info {
+        margin-top: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-project-diagram text-warning"></i> Tạo Sơ Đồ Tư Duy từ Ghi Chú Feynman
+        </h1>
+        <p class="lead">Tạo sơ đồ tư duy từ ghi chú "{{ note.title }}" để tổ chức thông tin trực quan.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:feynman_note_detail' note_id=note.id %}" class="btn btn-outline-warning">
+            <i class="fas fa-arrow-left"></i> Quay Lại Ghi Chú
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mindmap-card">
+            <div class="card-header bg-warning text-white">
+                <h5 class="mb-0"><i class="fas fa-lightbulb"></i> Ghi Chú Feynman Nguồn</h5>
+            </div>
+            <div class="card-body">
+                <div class="note-preview">
+                    <h5>{{ note.title }}</h5>
+                    <p><strong><span class="step-number">1</span> Khái Niệm:</strong> {{ note.concept|truncatechars:100 }}</p>
+                    <p><strong><span class="step-number">2</span> Giải Thích:</strong> {{ note.explanation|truncatechars:100 }}</p>
+                    {% if note.gaps_identified %}
+                    <p><strong><span class="step-number">3</span> Lỗ Hổng Kiến Thức:</strong> {{ note.gaps_identified|truncatechars:100 }}</p>
+                    {% endif %}
+                    {% if note.refined_explanation %}
+                    <p><strong><span class="step-number">4</span> Giải Thích Cải Thiện:</strong> {{ note.refined_explanation|truncatechars:100 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Hệ thống sẽ tạo sơ đồ tư duy dựa trên nội dung ghi chú Feynman của bạn. Mỗi phần của ghi chú sẽ được chuyển thành các nút trong sơ đồ tư duy.
+                </div>
+                
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-magic"></i> Tạo Sơ Đồ Tư Duy
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card mindmap-card">
+            <div class="card-header bg-warning text-white">
+                <h5 class="mb-0"><i class="fas fa-project-diagram"></i> Xem Trước Sơ Đồ Tư Duy</h5>
+            </div>
+            <div class="card-body">
+                <div class="mindmap-preview">
+                    <div id="jsmind_container"></div>
+                </div>
+                
+                <p class="text-muted">Đây chỉ là xem trước, sơ đồ tư duy thực tế sẽ được tạo khi bạn nhấn nút "Tạo Sơ Đồ Tư Duy".</p>
+            </div>
+        </div>
+        
+        <div class="integration-info mt-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Về Sơ Đồ Tư Duy</h5>
+                </div>
+                <div class="card-body">
+                    <p>Sơ đồ tư duy là một công cụ trực quan giúp tổ chức thông tin, ý tưởng và khái niệm. Phương pháp này giúp bạn hiểu và ghi nhớ thông tin hiệu quả hơn thông qua việc tạo ra các kết nối trực quan.</p>
+                    
+                    <h5>Lợi ích:</h5>
+                    <ul>
+                        <li>Giúp tổ chức thông tin một cách có hệ thống</li>
+                        <li>Cải thiện khả năng ghi nhớ và hiểu bài</li>
+                        <li>Phát triển tư duy sáng tạo</li>
+                        <li>Giúp nhìn thấy bức tranh tổng thể</li>
+                        <li>Hỗ trợ giải quyết vấn đề hiệu quả</li>
+                    </ul>
+                    
+                    <div class="alert alert-primary">
+                        <i class="fas fa-lightbulb"></i> <strong>Mẹo:</strong> Kết hợp sơ đồ tư duy với phương pháp Feynman giúp bạn hiểu sâu hơn về chủ đề và nhớ lâu hơn.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/jsmind@0.6.4/js/jsmind.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsmind@0.6.4/js/jsmind.draggable.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tạo dữ liệu sơ đồ tư duy mẫu
+        var mind = {
+            "meta": {
+                "name": "{{ note.title }}",
+                "author": "{{ request.user.username }}",
+                "version": "1.0"
+            },
+            "format": "node_tree",
+            "data": {
+                "id": "root",
+                "topic": "{{ note.title }}",
+                "children": [
+                    {
+                        "id": "concept",
+                        "topic": "Khái niệm",
+                        "direction": "right",
+                        "children": [
+                            {"id": "concept_detail", "topic": "{{ note.concept|truncatechars:50 }}"}
+                        ]
+                    },
+                    {
+                        "id": "explanation",
+                        "topic": "Giải thích đơn giản",
+                        "direction": "right",
+                        "children": [
+                            {"id": "explanation_detail", "topic": "{{ note.explanation|truncatechars:50 }}"}
+                        ]
+                    }
+                    {% if note.gaps_identified %}
+                    ,{
+                        "id": "gaps",
+                        "topic": "Lỗ hổng kiến thức",
+                        "direction": "left",
+                        "children": [
+                            {"id": "gaps_detail", "topic": "{{ note.gaps_identified|truncatechars:50 }}"}
+                        ]
+                    }
+                    {% endif %}
+                    {% if note.refined_explanation %}
+                    ,{
+                        "id": "refined",
+                        "topic": "Giải thích nâng cao",
+                        "direction": "left",
+                        "children": [
+                            {"id": "refined_detail", "topic": "{{ note.refined_explanation|truncatechars:50 }}"}
+                        ]
+                    }
+                    {% endif %}
+                ]
+            }
+        };
+        
+        // Khởi tạo JSMind
+        var options = {
+            container: 'jsmind_container',
+            theme: 'warning',
+            editable: false,
+            mode: 'view',
+            support_html: true,
+            view: {
+                line_width: 2,
+                line_color: '#fd7e14'
+            }
+        };
+        
+        var jm = new jsMind(options);
+        jm.show(mind);
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,281 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Liên Kết Thành Tích với Bài Tập - {{ exercise.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .link-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .link-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    
+    .exercise-info {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .exercise-title {
+        color: #6f42c1;
+        margin-bottom: 10px;
+    }
+    
+    .achievement-item {
+        border-radius: 10px;
+        border: 1px solid #dee2e6;
+        padding: 15px;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .achievement-item:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .achievement-item.selected {
+        border-color: #6f42c1;
+        background-color: #f3ebff;
+    }
+    
+    .achievement-title {
+        font-weight: 600;
+        color: #6f42c1;
+        margin-bottom: 5px;
+    }
+    
+    .achievement-meta {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    
+    .achievement-stats {
+        display: flex;
+        gap: 15px;
+        margin-top: 10px;
+    }
+    
+    .achievement-stat {
+        display: flex;
+        align-items: center;
+        font-size: 0.85rem;
+    }
+    
+    .achievement-stat i {
+        margin-right: 5px;
+        color: #6f42c1;
+    }
+    
+    .linked-achievements {
+        margin-top: 30px;
+    }
+    
+    .linked-achievement-item {
+        background-color: #f3ebff;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-left: 4px solid #6f42c1;
+    }
+    
+    .linked-achievement-title {
+        font-weight: 600;
+        color: #6f42c1;
+        margin-bottom: 5px;
+    }
+    
+    .linked-achievement-meta {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 30px;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+    }
+    
+    .empty-state-icon {
+        font-size: 3rem;
+        color: #dee2e6;
+        margin-bottom: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-trophy text-warning"></i> Liên Kết Thành Tích với Bài Tập
+        </h1>
+        <p class="lead">Liên kết thành tích với bài tập "{{ exercise.title }}" để thưởng cho người dùng khi hoàn thành.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:exercise_detail' exercise_id=exercise.id %}" class="btn btn-outline-purple">
+            <i class="fas fa-arrow-left"></i> Quay Lại Bài Tập
+        </a>
+    </div>
+</div>
+
+<div class="link-container">
+    <div class="exercise-info">
+        <h4 class="exercise-title">{{ exercise.title }}</h4>
+        <p><strong>Loại bài tập:</strong> {{ exercise.get_exercise_type_display }}</p>
+        <p><strong>Độ khó:</strong> {{ exercise.difficulty_level }}/5</p>
+        <p><strong>Điểm thưởng:</strong> {{ exercise.points }} điểm</p>
+    </div>
+    
+    {% if linked_achievements %}
+    <div class="linked-achievements">
+        <h4 class="mb-3"><i class="fas fa-link text-purple"></i> Thành Tích Đã Liên Kết</h4>
+        
+        {% for achievement in linked_achievements %}
+        <div class="linked-achievement-item">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="linked-achievement-title">
+                        <i class="{{ achievement.icon }}"></i> {{ achievement.title }}
+                    </h5>
+                    <div class="linked-achievement-meta">
+                        {{ achievement.description }}
+                    </div>
+                    <div class="achievement-stats">
+                        <div class="achievement-stat">
+                            <i class="fas fa-star text-warning"></i> {{ achievement.points }} điểm
+                        </div>
+                        <div class="achievement-stat">
+                            <i class="fas fa-trophy"></i> {{ achievement.get_achievement_type_display }}
+                        </div>
+                    </div>
+                </div>
+                <form method="post" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="unlink">
+                    <input type="hidden" name="achievement_id" value="{{ achievement.id }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                        <i class="fas fa-unlink"></i> Hủy liên kết
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <div class="card link-card">
+        <div class="card-header bg-purple text-white">
+            <h5 class="mb-0"><i class="fas fa-plus"></i> Liên Kết Thành Tích Mới</h5>
+        </div>
+        <div class="card-body">
+            {% if achievements %}
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="link">
+                
+                <div class="mb-3">
+                    <label class="form-label">Chọn thành tích để liên kết:</label>
+                    
+                    {% for achievement in achievements %}
+                        {% if achievement not in linked_achievements %}
+                        <div class="form-check achievement-item">
+                            <input class="form-check-input" type="radio" name="achievement" id="achievement-{{ achievement.id }}" value="{{ achievement.id }}" required>
+                            <label class="form-check-label w-100" for="achievement-{{ achievement.id }}">
+                                <div class="achievement-title">
+                                    <i class="{{ achievement.icon }}"></i> {{ achievement.title }}
+                                </div>
+                                <div class="achievement-meta">
+                                    {{ achievement.description }}
+                                </div>
+                                <div class="achievement-stats">
+                                    <div class="achievement-stat">
+                                        <i class="fas fa-star text-warning"></i> {{ achievement.points }} điểm
+                                    </div>
+                                    <div class="achievement-stat">
+                                        <i class="fas fa-trophy"></i> {{ achievement.get_achievement_type_display }}
+                                    </div>
+                                    {% if achievement.is_hidden %}
+                                    <div class="achievement-stat">
+                                        <i class="fas fa-eye-slash"></i> Ẩn
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </label>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-purple">
+                        <i class="fas fa-link"></i> Liên Kết Thành Tích
+                    </button>
+                </div>
+            </form>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <h5>Không có thành tích nào khả dụng</h5>
+                <p>Không có thành tích nào khả dụng để liên kết với bài tập này.</p>
+                <a href="{% url 'admin:advanced_learning_achievement_add' %}" class="btn btn-purple mt-3" target="_blank">
+                    <i class="fas fa-plus"></i> Tạo Thành Tích Mới
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="card link-card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="fas fa-info-circle"></i> Thông Tin</h5>
+        </div>
+        <div class="card-body">
+            <h5>Về thành tích:</h5>
+            <ul>
+                <li>Thành tích sẽ được trao cho người dùng khi họ hoàn thành bài tập này</li>
+                <li>Mỗi thành tích có số điểm riêng, người dùng sẽ nhận được điểm này khi đạt được thành tích</li>
+                <li>Thành tích ẩn sẽ không hiển thị cho người dùng cho đến khi họ đạt được nó</li>
+                <li>Bạn có thể liên kết nhiều thành tích với một bài tập</li>
+            </ul>
+            
+            <div class="alert alert-info">
+                <i class="fas fa-lightbulb"></i> <strong>Mẹo:</strong> Sử dụng thành tích để tạo động lực cho người dùng hoàn thành các bài tập khó.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const achievementItems = document.querySelectorAll('.achievement-item');
+        
+        achievementItems.forEach(item => {
+            const radio = item.querySelector('input[type="radio"]');
+            
+            item.addEventListener('click', function() {
+                // Bỏ chọn tất cả các item khác
+                achievementItems.forEach(otherItem => {
+                    otherItem.classList.remove('selected');
+                });
+                
+                // Chọn item hiện tại
+                item.classList.add('selected');
+                radio.checked = true;
+            });
+        });
+    });
+</script>
+{% endblock %}

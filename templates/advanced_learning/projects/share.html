@@ -1,0 +1,307 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Chia Sẻ Dự Án - {{ project.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .share-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .share-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    
+    .project-info {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .project-title {
+        color: #17a2b8;
+        margin-bottom: 10px;
+    }
+    
+    .share-url-container {
+        background-color: #e9f7fb;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .share-url {
+        font-family: monospace;
+        word-break: break-all;
+    }
+    
+    .share-options {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    
+    .share-option {
+        flex: 1;
+        text-align: center;
+        padding: 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .share-option:hover {
+        transform: translateY(-3px);
+    }
+    
+    .share-option-icon {
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+    
+    .share-email {
+        background-color: #d1ecf1;
+    }
+    
+    .share-email .share-option-icon {
+        color: #0c5460;
+    }
+    
+    .share-copy {
+        background-color: #d4edda;
+    }
+    
+    .share-copy .share-option-icon {
+        color: #155724;
+    }
+    
+    .share-qr {
+        background-color: #fff3cd;
+    }
+    
+    .share-qr .share-option-icon {
+        color: #856404;
+    }
+    
+    .qr-code-container {
+        text-align: center;
+        margin-top: 20px;
+        display: none;
+    }
+    
+    .qr-code {
+        max-width: 200px;
+        margin: 0 auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-share-alt text-info"></i> Chia Sẻ Dự Án
+        </h1>
+        <p class="lead">Chia sẻ dự án "{{ project.title }}" với người khác.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:project_detail' project_id=project.id %}" class="btn btn-outline-info">
+            <i class="fas fa-arrow-left"></i> Quay Lại Dự Án
+        </a>
+    </div>
+</div>
+
+<div class="share-container">
+    <div class="project-info">
+        <h4 class="project-title">{{ project.title }}</h4>
+        <div class="progress mb-3">
+            <div class="progress-bar bg-info" role="progressbar" style="width: {{ user_project.progress }}%;" aria-valuenow="{{ user_project.progress }}" aria-valuemin="0" aria-valuemax="100">{{ user_project.progress }}%</div>
+        </div>
+        <p><strong>Trạng thái:</strong>
+            <span class="badge {% if user_project.status == 'not_started' %}bg-secondary{% elif user_project.status == 'in_progress' %}bg-primary{% else %}bg-success{% endif %}">
+                {% if user_project.status == 'not_started' %}
+                    Chưa bắt đầu
+                {% elif user_project.status == 'in_progress' %}
+                    Đang thực hiện
+                {% else %}
+                    Đã hoàn thành
+                {% endif %}
+            </span>
+        </p>
+    </div>
+    
+    <div class="card share-card">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="fas fa-link"></i> Liên Kết Chia Sẻ</h5>
+        </div>
+        <div class="card-body">
+            {% if share_url %}
+            <div class="share-url-container">
+                <label class="form-label">Liên kết chia sẻ dự án:</label>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control share-url" id="share-url" value="{{ share_url }}" readonly>
+                    <button class="btn btn-outline-info" type="button" id="copy-button">
+                        <i class="fas fa-copy"></i> Sao chép
+                    </button>
+                </div>
+                <div class="form-text">Bất kỳ ai có liên kết này đều có thể xem dự án của bạn.</div>
+            </div>
+            
+            <div class="share-options">
+                <div class="share-option share-email" id="share-email">
+                    <div class="share-option-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="share-option-text">Chia sẻ qua Email</div>
+                </div>
+                
+                <div class="share-option share-copy" id="share-copy">
+                    <div class="share-option-icon">
+                        <i class="fas fa-copy"></i>
+                    </div>
+                    <div class="share-option-text">Sao chép liên kết</div>
+                </div>
+                
+                <div class="share-option share-qr" id="share-qr">
+                    <div class="share-option-icon">
+                        <i class="fas fa-qrcode"></i>
+                    </div>
+                    <div class="share-option-text">Tạo mã QR</div>
+                </div>
+            </div>
+            
+            <div class="qr-code-container" id="qr-code-container">
+                <h5 class="mb-3">Mã QR cho liên kết chia sẻ</h5>
+                <div class="qr-code" id="qr-code"></div>
+                <button class="btn btn-outline-info mt-3" id="download-qr">
+                    <i class="fas fa-download"></i> Tải xuống mã QR
+                </button>
+            </div>
+            
+            <div id="email-form" style="display: none;" class="mt-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Địa chỉ email người nhận:</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <button type="submit" class="btn btn-info">
+                        <i class="fas fa-paper-plane"></i> Gửi Email
+                    </button>
+                </form>
+            </div>
+            {% else %}
+            <form method="post">
+                {% csrf_token %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Bạn chưa tạo liên kết chia sẻ cho dự án này.
+                </div>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-info">
+                        <i class="fas fa-share-alt"></i> Tạo Liên Kết Chia Sẻ
+                    </button>
+                </div>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="card share-card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="fas fa-info-circle"></i> Thông Tin</h5>
+        </div>
+        <div class="card-body">
+            <h5>Về tính năng chia sẻ dự án:</h5>
+            <ul>
+                <li>Người nhận liên kết có thể xem chi tiết dự án và tiến độ của bạn</li>
+                <li>Họ có thể xem các kết quả dự án mà bạn đã tải lên</li>
+                <li>Họ không thể chỉnh sửa hoặc xóa dự án của bạn</li>
+                <li>Bạn có thể hủy chia sẻ bất kỳ lúc nào bằng cách tạo liên kết mới</li>
+            </ul>
+            
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i> <strong>Lưu ý:</strong> Chỉ chia sẻ liên kết với những người bạn tin tưởng.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/qrcode.js@1.0.0/qrcode.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const copyButton = document.getElementById('copy-button');
+        const shareUrl = document.getElementById('share-url');
+        const shareEmail = document.getElementById('share-email');
+        const shareCopy = document.getElementById('share-copy');
+        const shareQr = document.getElementById('share-qr');
+        const emailForm = document.getElementById('email-form');
+        const qrCodeContainer = document.getElementById('qr-code-container');
+        const qrCode = document.getElementById('qr-code');
+        const downloadQr = document.getElementById('download-qr');
+        
+        // Xử lý sao chép liên kết
+        function copyToClipboard() {
+            shareUrl.select();
+            document.execCommand('copy');
+            
+            // Hiển thị thông báo đã sao chép
+            const originalText = copyButton.innerHTML;
+            copyButton.innerHTML = '<i class="fas fa-check"></i> Đã sao chép';
+            setTimeout(() => {
+                copyButton.innerHTML = originalText;
+            }, 2000);
+        }
+        
+        if (copyButton) {
+            copyButton.addEventListener('click', copyToClipboard);
+        }
+        
+        if (shareCopy) {
+            shareCopy.addEventListener('click', copyToClipboard);
+        }
+        
+        // Xử lý hiển thị form email
+        if (shareEmail) {
+            shareEmail.addEventListener('click', function() {
+                emailForm.style.display = emailForm.style.display === 'none' ? 'block' : 'none';
+                qrCodeContainer.style.display = 'none';
+            });
+        }
+        
+        // Xử lý tạo mã QR
+        if (shareQr) {
+            shareQr.addEventListener('click', function() {
+                qrCodeContainer.style.display = qrCodeContainer.style.display === 'none' ? 'block' : 'none';
+                emailForm.style.display = 'none';
+                
+                if (qrCodeContainer.style.display === 'block' && qrCode.innerHTML === '') {
+                    // Tạo mã QR
+                    QRCode.toCanvas(qrCode, shareUrl.value, function (error) {
+                        if (error) console.error(error);
+                    });
+                }
+            });
+        }
+        
+        // Xử lý tải xuống mã QR
+        if (downloadQr) {
+            downloadQr.addEventListener('click', function() {
+                const canvas = qrCode.querySelector('canvas');
+                if (canvas) {
+                    const link = document.createElement('a');
+                    link.download = 'qrcode-{{ project.title }}.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

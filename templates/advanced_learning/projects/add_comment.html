@@ -1,0 +1,258 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Đánh Giá & Nhận Xét Dự Án - {{ project.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .comment-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .comment-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    
+    .project-info {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .project-title {
+        color: #17a2b8;
+        margin-bottom: 10px;
+    }
+    
+    .rating-container {
+        margin-bottom: 20px;
+    }
+    
+    .rating {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+    }
+    
+    .rating > input {
+        display: none;
+    }
+    
+    .rating > label {
+        position: relative;
+        width: 1.1em;
+        font-size: 2.5rem;
+        color: #FFD700;
+        cursor: pointer;
+    }
+    
+    .rating > label::before {
+        content: "\2605";
+        position: absolute;
+        opacity: 0;
+    }
+    
+    .rating > label:hover:before,
+    .rating > label:hover ~ label:before {
+        opacity: 1 !important;
+    }
+    
+    .rating > input:checked ~ label:before {
+        opacity: 1;
+    }
+    
+    .rating > input:checked ~ label:hover:before,
+    .rating > input:checked ~ label:hover ~ label:before,
+    .rating > label:hover ~ input:checked ~ label:before {
+        opacity: 0.6;
+    }
+    
+    .rating-text {
+        text-align: center;
+        font-weight: bold;
+        margin-top: 10px;
+        height: 24px;
+    }
+    
+    .existing-comments {
+        margin-top: 30px;
+    }
+    
+    .comment-item {
+        border-left: 3px solid #17a2b8;
+        padding-left: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .comment-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+    }
+    
+    .comment-author {
+        font-weight: bold;
+    }
+    
+    .comment-date {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .comment-rating {
+        color: #FFD700;
+        margin-bottom: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-comment text-warning"></i> Đánh Giá & Nhận Xét Dự Án
+        </h1>
+        <p class="lead">Chia sẻ đánh giá và nhận xét của bạn về dự án "{{ project.title }}".</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:project_detail' project_id=project.id %}" class="btn btn-outline-warning">
+            <i class="fas fa-arrow-left"></i> Quay Lại Dự Án
+        </a>
+    </div>
+</div>
+
+<div class="comment-container">
+    <div class="project-info">
+        <h4 class="project-title">{{ project.title }}</h4>
+        <div class="progress mb-3">
+            <div class="progress-bar bg-info" role="progressbar" style="width: {{ user_project.progress }}%;" aria-valuenow="{{ user_project.progress }}" aria-valuemin="0" aria-valuemax="100">{{ user_project.progress }}%</div>
+        </div>
+        <p><strong>Trạng thái:</strong>
+            <span class="badge {% if user_project.status == 'not_started' %}bg-secondary{% elif user_project.status == 'in_progress' %}bg-primary{% else %}bg-success{% endif %}">
+                {% if user_project.status == 'not_started' %}
+                    Chưa bắt đầu
+                {% elif user_project.status == 'in_progress' %}
+                    Đang thực hiện
+                {% else %}
+                    Đã hoàn thành
+                {% endif %}
+            </span>
+        </p>
+    </div>
+    
+    <div class="card comment-card">
+        <div class="card-header bg-warning text-white">
+            <h5 class="mb-0"><i class="fas fa-star"></i> Đánh Giá & Nhận Xét</h5>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="rating-container">
+                    <label class="form-label">Đánh giá dự án (1-5 sao):</label>
+                    <div class="rating">
+                        <input type="radio" id="star5" name="rating" value="5" />
+                        <label for="star5" title="Xuất sắc - 5 sao"></label>
+                        <input type="radio" id="star4" name="rating" value="4" />
+                        <label for="star4" title="Rất tốt - 4 sao"></label>
+                        <input type="radio" id="star3" name="rating" value="3" checked />
+                        <label for="star3" title="Tốt - 3 sao"></label>
+                        <input type="radio" id="star2" name="rating" value="2" />
+                        <label for="star2" title="Trung bình - 2 sao"></label>
+                        <input type="radio" id="star1" name="rating" value="1" />
+                        <label for="star1" title="Kém - 1 sao"></label>
+                    </div>
+                    <div class="rating-text" id="rating-text">Tốt - 3 sao</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="content" class="form-label">Nhận xét của bạn:</label>
+                    <textarea class="form-control" id="content" name="content" rows="5" placeholder="Chia sẻ trải nghiệm của bạn với dự án này..." required></textarea>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-paper-plane"></i> Gửi Đánh Giá & Nhận Xét
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    {% if user_project.comments.all %}
+    <div class="existing-comments">
+        <h4 class="mb-3">Nhận xét trước đây của bạn</h4>
+        
+        {% for comment in user_project.comments.all %}
+            {% if comment.author == request.user %}
+            <div class="comment-item">
+                <div class="comment-header">
+                    <div class="comment-author">{{ comment.author.username }}</div>
+                    <div class="comment-date">{{ comment.created_at|date:"d/m/Y H:i" }}</div>
+                </div>
+                <div class="comment-rating">
+                    {% for i in "12345"|make_list %}
+                        {% if forloop.counter <= comment.rating %}
+                        <i class="fas fa-star"></i>
+                        {% else %}
+                        <i class="far fa-star"></i>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="comment-content">
+                    {{ comment.content|linebreaks }}
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <div class="card comment-card mt-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="fas fa-info-circle"></i> Hướng Dẫn</h5>
+        </div>
+        <div class="card-body">
+            <h5>Mẹo để viết nhận xét hữu ích:</h5>
+            <ul>
+                <li>Chia sẻ trải nghiệm cá nhân của bạn với dự án</li>
+                <li>Nêu rõ những điểm mạnh và điểm yếu của dự án</li>
+                <li>Đề xuất cách cải thiện dự án</li>
+                <li>Mô tả những gì bạn đã học được từ dự án</li>
+                <li>Đánh giá mức độ khó và thời gian hoàn thành</li>
+            </ul>
+            
+            <div class="alert alert-info">
+                <i class="fas fa-lightbulb"></i> <strong>Lưu ý:</strong> Nhận xét của bạn sẽ giúp cải thiện dự án và hỗ trợ người học khác.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ratingInputs = document.querySelectorAll('.rating input');
+        const ratingText = document.getElementById('rating-text');
+        const ratingDescriptions = {
+            1: 'Kém - 1 sao',
+            2: 'Trung bình - 2 sao',
+            3: 'Tốt - 3 sao',
+            4: 'Rất tốt - 4 sao',
+            5: 'Xuất sắc - 5 sao'
+        };
+        
+        // Cập nhật văn bản đánh giá khi người dùng chọn số sao
+        ratingInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                ratingText.textContent = ratingDescriptions[this.value];
+            });
+        });
+    });
+</script>
+{% endblock %}

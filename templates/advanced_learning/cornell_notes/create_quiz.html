@@ -1,0 +1,240 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Tạo Quiz từ Ghi Chú Cornell - {{ note.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .quiz-preview-container {
+        margin-bottom: 30px;
+    }
+    
+    .quiz-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    
+    .quiz-preview {
+        padding: 20px;
+    }
+    
+    .quiz-item {
+        margin-bottom: 30px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        border: 1px solid #dee2e6;
+    }
+    
+    .quiz-question {
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 15px;
+        color: #212529;
+    }
+    
+    .quiz-answers {
+        list-style-type: none;
+        padding-left: 0;
+    }
+    
+    .quiz-answer {
+        padding: 10px 15px;
+        margin-bottom: 10px;
+        background-color: white;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .quiz-answer:hover {
+        background-color: #e9ecef;
+    }
+    
+    .quiz-answer.correct {
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+        color: #155724;
+    }
+    
+    .quiz-answer.incorrect {
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+        color: #721c24;
+    }
+    
+    .note-preview {
+        margin-bottom: 20px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        border: 1px solid #dee2e6;
+    }
+    
+    .note-preview h5 {
+        margin-bottom: 10px;
+        color: #007bff;
+    }
+    
+    .note-content {
+        white-space: pre-wrap;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    
+    .integration-info {
+        margin-top: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-question-circle text-primary"></i> Tạo Quiz từ Ghi Chú
+        </h1>
+        <p class="lead">Tạo bài kiểm tra từ ghi chú Cornell "{{ note.title }}" để kiểm tra kiến thức của bạn.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:cornell_note_detail' note_id=note.id %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Quay Lại Ghi Chú
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card quiz-card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-file-alt"></i> Ghi Chú Nguồn</h5>
+            </div>
+            <div class="card-body">
+                <div class="note-preview">
+                    <h5>Cột Gợi Ý</h5>
+                    <div class="note-content">{{ note.cue_column|linebreaks }}</div>
+                </div>
+                
+                <div class="note-preview">
+                    <h5>Ghi Chú Chính</h5>
+                    <div class="note-content">{{ note.main_notes|linebreaks }}</div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Hệ thống sẽ tạo quiz dựa trên nội dung ghi chú của bạn. Các câu hỏi trong cột gợi ý sẽ được sử dụng làm câu hỏi quiz, và nội dung tương ứng trong ghi chú chính sẽ được sử dụng làm câu trả lời đúng.
+                </div>
+                
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-magic"></i> Tạo Quiz
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card quiz-card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-question-circle"></i> Xem Trước Quiz</h5>
+            </div>
+            <div class="quiz-preview">
+                <p class="text-muted mb-4">Đây chỉ là xem trước, quiz thực tế sẽ được tạo khi bạn nhấn nút "Tạo Quiz".</p>
+                
+                {% if note.cue_column and "?" in note.cue_column %}
+                    {% with cues=note.cue_column.split|slice:":3" notes=note.main_notes.split|slice:":3" %}
+                        {% for cue in cues %}
+                            {% if "?" in cue %}
+                                <div class="quiz-item">
+                                    <div class="quiz-question">{{ forloop.counter }}. {{ cue }}</div>
+                                    <ul class="quiz-answers">
+                                        {% if forloop.counter <= notes|length %}
+                                            <li class="quiz-answer correct" data-correct="true">{{ notes|index:forloop.counter0 }}</li>
+                                            <li class="quiz-answer">Câu trả lời sai 1</li>
+                                            <li class="quiz-answer">Câu trả lời sai 2</li>
+                                            <li class="quiz-answer">Câu trả lời sai 3</li>
+                                        {% else %}
+                                            <li class="quiz-answer correct" data-correct="true">Câu trả lời đúng</li>
+                                            <li class="quiz-answer">Câu trả lời sai 1</li>
+                                            <li class="quiz-answer">Câu trả lời sai 2</li>
+                                            <li class="quiz-answer">Câu trả lời sai 3</li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% endwith %}
+                {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> Không thể tạo xem trước quiz. Để tạo quiz hiệu quả, hãy đảm bảo:
+                        <ul>
+                            <li>Cột gợi ý có chứa các câu hỏi (có dấu "?")</li>
+                            <li>Ghi chú chính có nội dung tương ứng với các câu hỏi</li>
+                        </ul>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="integration-info mt-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Về Quiz</h5>
+                </div>
+                <div class="card-body">
+                    <p>Quiz là công cụ học tập hiệu quả giúp kiểm tra kiến thức và củng cố trí nhớ thông qua việc kiểm tra tích cực.</p>
+                    
+                    <h5>Lợi ích:</h5>
+                    <ul>
+                        <li>Kiểm tra mức độ hiểu bài</li>
+                        <li>Xác định các lỗ hổng kiến thức</li>
+                        <li>Củng cố trí nhớ dài hạn</li>
+                        <li>Tạo động lực học tập</li>
+                    </ul>
+                    
+                    <div class="alert alert-primary">
+                        <i class="fas fa-lightbulb"></i> <strong>Mẹo:</strong> Làm quiz thường xuyên sẽ giúp bạn ghi nhớ thông tin tốt hơn 50% so với chỉ đọc lại tài liệu.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Xử lý khi nhấp vào câu trả lời
+        const answers = document.querySelectorAll('.quiz-answer');
+        answers.forEach(answer => {
+            answer.addEventListener('click', function() {
+                // Xóa các lớp correct/incorrect trước đó
+                const siblings = this.parentNode.querySelectorAll('.quiz-answer');
+                siblings.forEach(sibling => {
+                    sibling.classList.remove('correct', 'incorrect');
+                });
+                
+                // Đánh dấu câu trả lời đúng/sai
+                if (this.dataset.correct) {
+                    this.classList.add('correct');
+                } else {
+                    this.classList.add('incorrect');
+                    // Hiển thị câu trả lời đúng
+                    siblings.forEach(sibling => {
+                        if (sibling.dataset.correct) {
+                            sibling.classList.add('correct');
+                        }
+                    });
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

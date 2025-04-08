@@ -1,0 +1,245 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Tạo Cuộc Thi Trực Tiếp{% endblock %}
+
+{% block extra_css %}
+<style>
+    .create-live-competition-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .form-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    
+    .form-header {
+        background-color: #6f42c1;
+        color: white;
+        padding: 15px 20px;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+    }
+    
+    .form-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 0;
+    }
+    
+    .form-body {
+        padding: 20px;
+    }
+    
+    .competition-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+        border: 1px solid #dee2e6;
+        overflow: hidden;
+        cursor: pointer;
+    }
+    
+    .competition-card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .competition-card.selected {
+        border: 2px solid #6f42c1;
+        background-color: #f3ebff;
+    }
+    
+    .competition-header {
+        padding: 15px 20px;
+        border-bottom: 1px solid #dee2e6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .competition-title {
+        font-weight: 600;
+        margin-bottom: 0;
+    }
+    
+    .competition-body {
+        padding: 15px 20px;
+    }
+    
+    .competition-info {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .competition-info-item {
+        display: flex;
+        align-items: center;
+        font-size: 0.9rem;
+    }
+    
+    .competition-info-item i {
+        margin-right: 5px;
+        color: #6f42c1;
+    }
+    
+    .competition-description {
+        margin-bottom: 15px;
+        font-size: 0.9rem;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 30px 20px;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        color: #dee2e6;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-bolt text-warning"></i> Tạo Cuộc Thi Trực Tiếp
+        </h1>
+        <p class="lead">Tạo cuộc thi trực tiếp mới để thi đấu với người chơi khác.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:live_competitions' %}" class="btn btn-outline-purple">
+            <i class="fas fa-arrow-left"></i> Quay Lại Danh Sách
+        </a>
+    </div>
+</div>
+
+<div class="create-live-competition-container">
+    <form method="post" action="{% if selected_competition %}{% url 'advanced_learning:create_live_competition_from_competition' competition_id=selected_competition.id %}{% else %}{% url 'advanced_learning:create_live_competition' %}{% endif %}">
+        {% csrf_token %}
+        
+        <div class="card form-card">
+            <div class="form-header">
+                <h5 class="form-title">Thông Tin Cuộc Thi Trực Tiếp</h5>
+            </div>
+            <div class="form-body">
+                <div class="mb-3">
+                    <label for="title" class="form-label">Tiêu đề <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="title" name="title" required>
+                    <div class="form-text">Nhập tiêu đề cho cuộc thi trực tiếp của bạn.</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="description" class="form-label">Mô tả</label>
+                    <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    <div class="form-text">Mô tả ngắn gọn về cuộc thi trực tiếp.</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="max_participants" class="form-label">Số người tham gia tối đa</label>
+                    <input type="number" class="form-control" id="max_participants" name="max_participants" min="2" max="100" value="20">
+                    <div class="form-text">Số người tham gia tối đa cho cuộc thi này.</div>
+                </div>
+                
+                {% if selected_competition %}
+                <input type="hidden" name="competition" value="{{ selected_competition.id }}">
+                <div class="alert alert-info">
+                    <h5>Cuộc thi đã chọn:</h5>
+                    <p><strong>{{ selected_competition.title }}</strong></p>
+                    <p>{{ selected_competition.description|truncatechars:100 }}</p>
+                </div>
+                {% else %}
+                <div class="mb-3">
+                    <label class="form-label">Chọn cuộc thi <span class="text-danger">*</span></label>
+                    
+                    {% if competitions %}
+                    <div class="competitions-list">
+                        {% for competition in competitions %}
+                        <div class="competition-card" data-competition-id="{{ competition.id }}">
+                            <div class="competition-header">
+                                <div class="competition-title">{{ competition.title }}</div>
+                                <div class="form-check">
+                                    <input class="form-check-input competition-radio" type="radio" name="competition" id="competition-{{ competition.id }}" value="{{ competition.id }}" required>
+                                </div>
+                            </div>
+                            <div class="competition-body">
+                                <div class="competition-info">
+                                    <div class="competition-info-item">
+                                        <i class="fas fa-layer-group"></i> {{ competition.subject.name }}
+                                    </div>
+                                    <div class="competition-info-item">
+                                        <i class="fas fa-question-circle"></i> {{ competition.questions.count }} câu hỏi
+                                    </div>
+                                    <div class="competition-info-item">
+                                        <i class="fas fa-clock"></i> {{ competition.time_limit }} phút
+                                    </div>
+                                </div>
+                                
+                                {% if competition.description %}
+                                <div class="competition-description">
+                                    {{ competition.description|truncatechars:150 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-trophy"></i>
+                        <h5>Không có cuộc thi nào</h5>
+                        <p>Không có cuộc thi nào có thể sử dụng cho thi đấu trực tiếp.</p>
+                        <a href="{% url 'advanced_learning:create_competition' %}" class="btn btn-purple mt-3">
+                            <i class="fas fa-plus"></i> Tạo Cuộc Thi Mới
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-purple">
+                        <i class="fas fa-bolt"></i> Tạo Cuộc Thi Trực Tiếp
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Xử lý chọn cuộc thi
+        const competitionCards = document.querySelectorAll('.competition-card');
+        const competitionRadios = document.querySelectorAll('.competition-radio');
+        
+        competitionCards.forEach(card => {
+            card.addEventListener('click', function() {
+                const competitionId = this.dataset.competitionId;
+                const radio = document.getElementById('competition-' + competitionId);
+                
+                // Bỏ chọn tất cả các thẻ
+                competitionCards.forEach(c => c.classList.remove('selected'));
+                
+                // Chọn thẻ hiện tại
+                this.classList.add('selected');
+                
+                // Chọn radio button
+                radio.checked = true;
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -16,3 +16,40 @@ supabase==2.3.0
 psycopg2-binary==2.9.10
 dj-database-url==2.1.0
 requests==2.31.0
+
+# Biểu đồ và phân tích dữ liệu
+matplotlib==3.8.2
+seaborn==0.13.0
+pandas==2.1.4
+numpy==1.26.2
+
+# API và tích hợp
+django-rest-framework==0.1.0
+django-cors-headers==4.3.1
+
+# Xử lý PDF
+xhtml2pdf==0.2.11
+ReportLab==4.0.9
+
+# Thời gian và lịch
+python-dateutil==2.8.2
+tzdata==2023.3
+
+# Thông báo và email
+django-notifications-hq==1.8.3
+django-anymail==10.2
+
+# Cache và hiệu suất
+django-redis==5.4.0
+redis==5.0.1
+
+# Tìm kiếm và lọc
+django-filter==23.5
+
+# Quản lý tập tin
+django-storages==1.14.2
+
+# Thử nghiệm và kiểm thử
+pytest==7.4.3
+pytest-django==4.7.0
+coverage==7.3.2

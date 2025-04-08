@@ -1,0 +1,377 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Đăng Ký Nhận Thông Báo{% endblock %}
+
+{% block extra_css %}
+<style>
+    .subscriptions-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    .subscription-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+        border: 1px solid #dee2e6;
+        overflow: hidden;
+    }
+    
+    .subscription-card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .subscription-header {
+        padding: 15px 20px;
+        border-bottom: 1px solid #dee2e6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #f8f9fa;
+    }
+    
+    .subscription-title {
+        font-weight: 600;
+        margin-bottom: 0;
+        color: #6f42c1;
+    }
+    
+    .subscription-body {
+        padding: 20px;
+    }
+    
+    .subscription-info {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .subscription-info-item {
+        display: flex;
+        align-items: center;
+        font-size: 0.9rem;
+    }
+    
+    .subscription-info-item i {
+        margin-right: 5px;
+        color: #6f42c1;
+    }
+    
+    .subscription-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+    
+    .form-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    
+    .form-header {
+        background-color: #6f42c1;
+        color: white;
+        padding: 15px 20px;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+    }
+    
+    .form-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 0;
+    }
+    
+    .form-body {
+        padding: 20px;
+    }
+    
+    .notification-type-card {
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .notification-type-card:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .notification-type-card.selected {
+        border-color: #6f42c1;
+        background-color: #f3ebff;
+    }
+    
+    .notification-type-title {
+        font-weight: 600;
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .notification-type-title i {
+        margin-right: 10px;
+        color: #6f42c1;
+    }
+    
+    .notification-type-description {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 50px 20px;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        color: #dee2e6;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-bell text-warning"></i> Đăng Ký Nhận Thông Báo
+        </h1>
+        <p class="lead">Quản lý các đăng ký nhận thông báo về cuộc thi.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:competition_list' %}" class="btn btn-outline-purple">
+            <i class="fas fa-arrow-left"></i> Quay Lại Cuộc Thi
+        </a>
+    </div>
+</div>
+
+<div class="subscriptions-container">
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Danh sách đăng ký -->
+            <h2 class="mb-3">Đăng Ký Hiện Tại</h2>
+            
+            {% if subscriptions %}
+            {% for subscription in subscriptions %}
+            <div class="subscription-card">
+                <div class="subscription-header">
+                    <div class="subscription-title">
+                        {% if subscription.notification_type == 'all' %}
+                        Tất cả cuộc thi
+                        {% elif subscription.notification_type == 'subject' %}
+                        Cuộc thi thuộc chủ đề: {{ subscription.subject.name }}
+                        {% elif subscription.notification_type == 'specific' %}
+                        Cuộc thi cụ thể: {{ subscription.competition.title }}
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="subscription-body">
+                    <div class="subscription-info">
+                        <div class="subscription-info-item">
+                            <i class="fas fa-bell"></i> Loại thông báo: 
+                            {% if subscription.notification_type == 'all' %}
+                            Tất cả cuộc thi
+                            {% elif subscription.notification_type == 'subject' %}
+                            Theo chủ đề
+                            {% elif subscription.notification_type == 'specific' %}
+                            Cuộc thi cụ thể
+                            {% endif %}
+                        </div>
+                        <div class="subscription-info-item">
+                            <i class="fas fa-envelope"></i> Email: 
+                            {% if subscription.email_notification %}
+                            <span class="text-success">Bật</span>
+                            {% else %}
+                            <span class="text-secondary">Tắt</span>
+                            {% endif %}
+                        </div>
+                        <div class="subscription-info-item">
+                            <i class="fas fa-mobile-alt"></i> Push: 
+                            {% if subscription.push_notification %}
+                            <span class="text-success">Bật</span>
+                            {% else %}
+                            <span class="text-secondary">Tắt</span>
+                            {% endif %}
+                        </div>
+                        <div class="subscription-info-item">
+                            <i class="fas fa-calendar-alt"></i> Ngày đăng ký: {{ subscription.created_at|date:"d/m/Y" }}
+                        </div>
+                    </div>
+                    
+                    <div class="subscription-actions">
+                        <form method="post" action="{% url 'advanced_learning:unsubscribe_competition_notifications' %}" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="subscription_id" value="{{ subscription.id }}">
+                            <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Bạn có chắc chắn muốn hủy đăng ký này?')">
+                                <i class="fas fa-trash-alt"></i> Hủy Đăng Ký
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-bell-slash"></i>
+                <h3>Không có đăng ký nào</h3>
+                <p>Bạn chưa đăng ký nhận thông báo nào.</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="col-md-4">
+            <!-- Form đăng ký mới -->
+            <div class="card form-card">
+                <div class="form-header">
+                    <h5 class="form-title">Đăng Ký Mới</h5>
+                </div>
+                <div class="form-body">
+                    <form method="post" action="{% url 'advanced_learning:subscribe_competition_notifications' %}">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Loại thông báo</label>
+                            
+                            <div class="notification-type-card" data-type="all">
+                                <div class="notification-type-title">
+                                    <i class="fas fa-globe"></i> Tất cả cuộc thi
+                                </div>
+                                <div class="notification-type-description">
+                                    Nhận thông báo về tất cả các cuộc thi mới.
+                                </div>
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input notification-type-radio" type="radio" name="notification_type" id="type-all" value="all" checked>
+                                    <label class="form-check-label" for="type-all">
+                                        Chọn
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="notification-type-card" data-type="subject">
+                                <div class="notification-type-title">
+                                    <i class="fas fa-layer-group"></i> Theo chủ đề
+                                </div>
+                                <div class="notification-type-description">
+                                    Nhận thông báo về các cuộc thi thuộc chủ đề cụ thể.
+                                </div>
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input notification-type-radio" type="radio" name="notification_type" id="type-subject" value="subject">
+                                    <label class="form-check-label" for="type-subject">
+                                        Chọn
+                                    </label>
+                                </div>
+                                
+                                <div class="mt-3 subject-select d-none">
+                                    <select class="form-select" name="subject_id">
+                                        <option value="">Chọn chủ đề...</option>
+                                        {% for subject in subjects %}
+                                        <option value="{{ subject.id }}">{{ subject.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="notification-type-card" data-type="specific">
+                                <div class="notification-type-title">
+                                    <i class="fas fa-trophy"></i> Cuộc thi cụ thể
+                                </div>
+                                <div class="notification-type-description">
+                                    Nhận thông báo về một cuộc thi cụ thể.
+                                </div>
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input notification-type-radio" type="radio" name="notification_type" id="type-specific" value="specific">
+                                    <label class="form-check-label" for="type-specific">
+                                        Chọn
+                                    </label>
+                                </div>
+                                
+                                <div class="mt-3 competition-select d-none">
+                                    <input type="text" class="form-control" name="competition_id" placeholder="Nhập ID cuộc thi...">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Phương thức thông báo</label>
+                            
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="email_notification" id="email-notification" checked>
+                                <label class="form-check-label" for="email-notification">
+                                    Thông báo qua email
+                                </label>
+                            </div>
+                            
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="push_notification" id="push-notification" checked>
+                                <label class="form-check-label" for="push-notification">
+                                    Thông báo đẩy
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-purple">
+                                <i class="fas fa-bell"></i> Đăng Ký Nhận Thông Báo
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Xử lý chọn loại thông báo
+        const notificationTypeCards = document.querySelectorAll('.notification-type-card');
+        const notificationTypeRadios = document.querySelectorAll('.notification-type-radio');
+        const subjectSelect = document.querySelector('.subject-select');
+        const competitionSelect = document.querySelector('.competition-select');
+        
+        notificationTypeCards.forEach(card => {
+            card.addEventListener('click', function() {
+                const type = this.dataset.type;
+                const radio = document.getElementById('type-' + type);
+                
+                // Bỏ chọn tất cả các thẻ
+                notificationTypeCards.forEach(c => c.classList.remove('selected'));
+                
+                // Chọn thẻ hiện tại
+                this.classList.add('selected');
+                
+                // Chọn radio button
+                radio.checked = true;
+                
+                // Hiển thị/ẩn các trường tùy chọn
+                if (type === 'subject') {
+                    subjectSelect.classList.remove('d-none');
+                    competitionSelect.classList.add('d-none');
+                } else if (type === 'specific') {
+                    subjectSelect.classList.add('d-none');
+                    competitionSelect.classList.remove('d-none');
+                } else {
+                    subjectSelect.classList.add('d-none');
+                    competitionSelect.classList.add('d-none');
+                }
+            });
+        });
+        
+        // Chọn loại thông báo mặc định
+        document.querySelector('.notification-type-card[data-type="all"]').classList.add('selected');
+    });
+</script>
+{% endblock %}
