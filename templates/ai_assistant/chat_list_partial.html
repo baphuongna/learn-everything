@@ -1,0 +1,31 @@
+{% if chats %}
+    {% for chat in chats %}
+        <a href="{% url 'ai_assistant:chat_detail' chat_id=chat.id %}" class="text-decoration-none">
+            <div class="chat-item p-3 border-bottom">
+                <div class="d-flex justify-content-between">
+                    <div class="chat-title">{{ chat.title|default:"Cuộc trò chuyện" }}</div>
+                    <div class="chat-meta">{{ chat.updated_at|date:"d/m/Y H:i" }}</div>
+                </div>
+                <div class="chat-meta">
+                    {% if chat.subject %}
+                        <span class="badge bg-primary">{{ chat.subject.name }}</span>
+                    {% endif %}
+                    {% if chat.topic %}
+                        <span class="badge bg-secondary">{{ chat.topic.name }}</span>
+                    {% endif %}
+                    {% if chat.lesson %}
+                        <span class="badge bg-info">{{ chat.lesson.title }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </a>
+    {% endfor %}
+{% else %}
+    <div class="p-4 text-center text-muted">
+        <i class="fas fa-comments fa-3x mb-3"></i>
+        <p>Bạn chưa có cuộc trò chuyện nào.</p>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newChatModal">
+            <i class="fas fa-plus"></i> Tạo cuộc trò chuyện mới
+        </button>
+    </div>
+{% endif %}

@@ -4,9 +4,14 @@
 
 {% block content %}
 <div class="row mb-4">
-    <div class="col-md-12">
+    <div class="col-md-8">
         <h1 class="mb-3">Bài Kiểm Tra</h1>
         <p class="lead">Kiểm tra kiến thức của bạn và củng cố việc học tập</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'quizzes:auto_generate_quiz' %}" class="btn btn-success">
+            <i class="fas fa-magic"></i> Tự động tạo bài kiểm tra
+        </a>
     </div>
 </div>
 
@@ -16,7 +21,7 @@
         <div class="card">
             <div class="card-body" x-data="{ showFilters: false }">
                 <form id="search-form"
-                      hx-get="{% url 'quiz_list' %}"
+                      hx-get="{% url 'quizzes:quiz_list' %}"
                       hx-target="#quiz-list-container"
                       hx-trigger="submit, input[name='search'].keyup changed delay:500ms"
                       hx-indicator="#search-indicator">

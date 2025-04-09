@@ -1,0 +1,56 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ category.name }} - Câu hỏi thường gặp{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-folder text-primary"></i> {{ category.name }}
+            </h1>
+            {% if category.description %}
+                <p class="lead">{{ category.description }}</p>
+            {% endif %}
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'learning_chatbot:chatbot_home' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Quay lại Chatbot
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-question-circle"></i> Câu hỏi thường gặp</h5>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="questionsAccordion">
+                        {% for question in questions %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="heading{{ question.id }}">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ question.id }}" aria-expanded="false" aria-controls="collapse{{ question.id }}">
+                                        {{ question.question }}
+                                    </button>
+                                </h2>
+                                <div id="collapse{{ question.id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ question.id }}" data-bs-parent="#questionsAccordion">
+                                    <div class="accordion-body">
+                                        {{ question.answer|linebreaks }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="alert alert-info">
+                                Chưa có câu hỏi nào trong danh mục này.
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

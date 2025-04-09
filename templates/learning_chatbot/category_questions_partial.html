@@ -1,0 +1,9 @@
+{% for question in questions %}
+    <a href="#" class="list-group-item list-group-item-action question-item"
+       hx-get="{% url 'learning_chatbot:question_detail' question_id=question.id %}" 
+       hx-target="#question-detail">
+        {{ question.question|truncatechars:100 }}
+    </a>
+{% empty %}
+    <div class="list-group-item text-muted">Chưa có câu hỏi trong danh mục này.</div>
+{% endfor %}

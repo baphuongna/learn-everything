@@ -60,17 +60,10 @@ urlpatterns = [
          name="password_reset_complete"),
 
     # Flashcards
-    path("flashcards/", flashcards_views.flashcard_list, name="flashcard_list"),
-    path("flashcards/<int:flashcard_set_id>/", flashcards_views.flashcard_set_detail, name="flashcard_set_detail"),
-    path("flashcards/due/", flashcards_views.due_flashcards, name="due_flashcards"),
-    path("flashcards/update-recall-level/", flashcards_views.update_recall_level, name="update_recall_level"),
+    path("flashcards/", include("flashcards.urls")),
 
     # Quizzes
-    path("quizzes/", quizzes_views.quiz_list, name="quiz_list"),
-    path("quizzes/<int:quiz_id>/", quizzes_views.quiz_detail, name="quiz_detail"),
-    path("quizzes/<int:quiz_id>/start/", quizzes_views.start_quiz, name="start_quiz"),
-    path("quizzes/<int:quiz_id>/submit/", quizzes_views.submit_quiz, name="submit_quiz"),
-    path("quizzes/result/<int:attempt_id>/", quizzes_views.quiz_result, name="quiz_result"),
+    path("quizzes/", include("quizzes.urls")),
 
     # Memory Bank
     path("memory/", include("memory_bank.urls")),
@@ -95,6 +88,12 @@ urlpatterns = [
 
     # Personalization
     path('personalization/', include('personalization.urls')),
+
+    # AI Assistant
+    path('ai-assistant/', include('ai_assistant.urls')),
+
+    # Learning Chatbot
+    path('chatbot/', include('learning_chatbot.urls')),
 ]
 
 # Serve media files in development

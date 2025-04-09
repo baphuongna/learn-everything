@@ -1,0 +1,4 @@
+<option value="">-- Chọn chủ đề con --</option>
+{% for topic in topics %}
+<option value="{{ topic.id }}">{{ topic.name }}</option>
+{% endfor %}

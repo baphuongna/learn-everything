@@ -5,8 +5,10 @@ from content.models import Lesson
 class FlashcardSet(models.Model):
     """Tập hợp flashcard, liên kết với Lesson"""
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='flashcard_sets')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='flashcard_sets', null=True, blank=True)
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
+    is_auto_generated = models.BooleanField(default=False, help_text='Đánh dấu bộ flashcard được tạo tự động')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -19,8 +21,13 @@ class Flashcard(models.Model):
     front = models.TextField()
     back = models.TextField()
     image = models.ImageField(upload_to='flashcard_images/', blank=True, null=True)
+    order = models.PositiveIntegerField(default=0, help_text='Thứ tự hiển thị flashcard')
+    is_auto_generated = models.BooleanField(default=False, help_text='Đánh dấu flashcard được tạo tự động')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['order', 'created_at']
 
     def __str__(self):
         return self.front

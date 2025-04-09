@@ -26,6 +26,7 @@ numpy==1.26.2
 # API và tích hợp
 django-rest-framework==0.1.0
 django-cors-headers==4.3.1
+requests==2.31.0
 
 # Xử lý PDF
 xhtml2pdf==0.2.11
@@ -45,6 +46,12 @@ redis==5.0.1
 
 # Tìm kiếm và lọc
 django-filter==23.5
+
+# Xử lý ngôn ngữ tự nhiên
+nltk==3.9.1
+joblib==1.4.2
+regex==2024.11.6
+tqdm==4.67.1
 
 # Quản lý tập tin
 django-storages==1.14.2

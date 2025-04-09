@@ -1,0 +1,91 @@
+<!-- Tin nhắn của người dùng -->
+<div class="message user-message">
+    <div class="message-content">
+        <div class="message-text">{{ user_message }}</div>
+    </div>
+</div>
+
+<!-- Tin nhắn của trợ lý AI -->
+<div class="message ai-message">
+    <div class="message-avatar">
+        <i class="fas fa-robot"></i>
+    </div>
+    <div class="message-content">
+        <div class="message-text markdown-content">{{ ai_response|linebreaks }}</div>
+        <div class="message-actions">
+            <button class="btn btn-sm btn-outline-primary feedback-btn" 
+                    data-bs-toggle="collapse" 
+                    data-bs-target="#feedback-form-latest" 
+                    aria-expanded="false">
+                <i class="fas fa-thumbs-up"></i> Đánh giá
+            </button>
+            <div class="collapse mt-2" id="feedback-form-latest">
+                <form hx-post="{% url 'ai_assistant:submit_feedback' message_id=0 %}" 
+                      hx-target="#feedback-form-latest" 
+                      class="card card-body feedback-form">
+                    {% csrf_token %}
+                    <div class="rating mb-2">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="rating" id="rating5-latest" value="5">
+                            <label class="form-check-label" for="rating5-latest">5</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="rating" id="rating4-latest" value="4">
+                            <label class="form-check-label" for="rating4-latest">4</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="rating" id="rating3-latest" value="3">
+                            <label class="form-check-label" for="rating3-latest">3</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="rating" id="rating2-latest" value="2">
+                            <label class="form-check-label" for="rating2-latest">2</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="rating" id="rating1-latest" value="1">
+                            <label class="form-check-label" for="rating1-latest">1</label>
+                        </div>
+                    </div>
+                    <textarea name="comment" class="form-control mb-2" rows="2" placeholder="Nhận xét của bạn..."></textarea>
+                    <button type="submit" class="btn btn-sm btn-primary">Gửi đánh giá</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cập nhật form nhập tin nhắn -->
+<div id="message-form-container">
+    <form id="message-form" hx-post="" hx-target="#messages-container" hx-swap="beforeend">
+        {% csrf_token %}
+        <div class="input-group">
+            <textarea name="message" class="form-control" rows="2" placeholder="Nhập câu hỏi của bạn..." required autofocus></textarea>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-paper-plane"></i> Gửi
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Cập nhật URL cho form
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentUrl = window.location.pathname;
+        const messageForm = document.getElementById('message-form');
+        if (messageForm) {
+            messageForm.setAttribute('hx-post', currentUrl);
+        }
+        
+        // Cuộn xuống cuối cùng
+        const messagesContainer = document.getElementById('messages-container');
+        if (messagesContainer) {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        // Focus vào ô nhập tin nhắn
+        const messageInput = document.querySelector('textarea[name="message"]');
+        if (messageInput) {
+            messageInput.focus();
+        }
+    });
+</script>

@@ -1,0 +1,87 @@
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">{{ question.question }}</h5>
+    </div>
+    <div class="card-body">
+        <div class="mb-4">
+            <h6 class="text-muted mb-3">Câu trả lời:</h6>
+            <div class="answer-content">
+                {{ question.answer|linebreaks }}
+            </div>
+        </div>
+        
+        {% if question.keywords %}
+            <div class="mt-4">
+                <h6 class="text-muted mb-2">Từ khóa:</h6>
+                <div>
+                    {% for keyword in question.get_keywords_list %}
+                        <span class="badge bg-secondary me-1">{{ keyword }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+        
+        <div class="mt-4">
+            <h6 class="text-muted mb-2">Danh mục:</h6>
+            <a href="{% url 'learning_chatbot:category_questions' category_id=question.category.id %}" class="badge bg-primary">
+                {{ question.category.name }}
+            </a>
+        </div>
+        
+        {% if question.lesson %}
+            <div class="mt-4">
+                <h6 class="text-muted mb-2">Bài học liên quan:</h6>
+                <a href="#" class="badge bg-info">
+                    {{ question.lesson.title }}
+                </a>
+            </div>
+        {% endif %}
+        
+        <div class="mt-4">
+            <button class="btn btn-sm btn-primary copy-answer" data-answer="{{ question.answer }}">
+                <i class="fas fa-copy"></i> Sao chép câu trả lời
+            </button>
+            <button class="btn btn-sm btn-outline-primary ask-question" data-question="{{ question.question }}">
+                <i class="fas fa-comment"></i> Hỏi chatbot
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Xử lý sự kiện sao chép câu trả lời
+        const copyButtons = document.querySelectorAll('.copy-answer');
+        copyButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const answer = this.getAttribute('data-answer');
+                navigator.clipboard.writeText(answer).then(() => {
+                    // Thay đổi nút khi sao chép thành công
+                    const originalText = this.innerHTML;
+                    this.innerHTML = '<i class="fas fa-check"></i> Đã sao chép';
+                    setTimeout(() => {
+                        this.innerHTML = originalText;
+                    }, 2000);
+                });
+            });
+        });
+        
+        // Xử lý sự kiện hỏi chatbot
+        const askButtons = document.querySelectorAll('.ask-question');
+        askButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const question = this.getAttribute('data-question');
+                const messageInput = document.querySelector('textarea[name="message"]');
+                if (messageInput) {
+                    messageInput.value = question;
+                    messageInput.focus();
+                    // Cuộn đến form nhập tin nhắn
+                    const messageForm = document.getElementById('message-form');
+                    if (messageForm) {
+                        messageForm.scrollIntoView({ behavior: 'smooth' });
+                    }
+                }
+            });
+        });
+    });
+</script>

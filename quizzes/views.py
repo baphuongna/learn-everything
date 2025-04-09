@@ -5,6 +5,9 @@ from django.utils import timezone
 from django.db.models import Count, Q
 from django.urls import reverse
 from .models import Quiz, Question, Answer, QuizAttempt, UserAnswer
+from .forms import QuizForm, QuestionForm, AnswerForm, AutoGenerateQuizForm
+from .services import generate_quiz_from_lesson
+from content.models import Subject, Topic, Lesson
 
 def quiz_list(request):
     """Hiển thị danh sách các bài kiểm tra"""
@@ -34,7 +37,6 @@ def quiz_list(request):
         quizzes = quizzes.filter(difficulty_level=difficulty)
 
     # Lấy danh sách các chủ đề cho bộ lọc
-    from content.models import Subject
     subjects = Subject.objects.all()
 
     context = {
@@ -235,3 +237,110 @@ def quiz_result(request, attempt_id):
         return render(request, 'quizzes/quiz_result_partial.html', context)
 
     return render(request, 'quizzes/quiz_result.html', context)
+
+@login_required
+def get_topics(request):
+    """Lấy danh sách các chủ đề con theo chủ đề chính"""
+    subject_id = request.GET.get('subject', '')
+    topics = []
+
+    if subject_id:
+        topics = Topic.objects.filter(subject_id=subject_id).order_by('order')
+
+    return render(request, 'quizzes/topic_options.html', {'topics': topics})
+
+@login_required
+def get_lessons(request):
+    """Lấy danh sách các bài học theo chủ đề con"""
+    topic_id = request.GET.get('topic', '')
+    lessons = []
+
+    if topic_id:
+        lessons = Lesson.objects.filter(topic_id=topic_id).order_by('order')
+
+    return render(request, 'quizzes/lesson_options.html', {'lessons': lessons})
+
+@login_required
+def auto_generate_quiz(request):
+    """Tự động tạo bài kiểm tra từ bài học"""
+    if request.method == 'POST':
+        form = AutoGenerateQuizForm(request.POST)
+        if form.is_valid():
+            # Lấy dữ liệu từ form
+            lesson = form.cleaned_data['lesson']
+            title = form.cleaned_data['title']
+            description = form.cleaned_data['description']
+            num_questions = form.cleaned_data['num_questions']
+            time_limit = form.cleaned_data['time_limit']
+            pass_score = form.cleaned_data['pass_score']
+
+            # Tạo bài kiểm tra mới
+            quiz = Quiz.objects.create(
+                user=request.user,
+                lesson=lesson,
+                title=title,
+                description=description,
+                time_limit=time_limit,
+                pass_score=pass_score,
+                is_auto_generated=True
+            )
+
+            # Tạo các câu hỏi từ nội dung bài học
+            quiz_data = generate_quiz_from_lesson(lesson, num_questions=num_questions)
+
+            # Thêm các câu hỏi trắc nghiệm
+            for i, mc_question in enumerate(quiz_data['multiple_choice']):
+                # Tạo câu hỏi
+                question = Question.objects.create(
+                    quiz=quiz,
+                    question_text=mc_question['question'],
+                    question_type='single',
+                    order=i+1,
+                    is_auto_generated=True
+                )
+
+                # Thêm các đáp án
+                for j, answer_text in enumerate(mc_question['answers']):
+                    Answer.objects.create(
+                        question=question,
+                        answer_text=answer_text,
+                        is_correct=(j == mc_question['correct_index'])
+                    )
+
+            # Thêm các câu hỏi đúng/sai
+            offset = len(quiz_data['multiple_choice'])
+            for i, tf_question in enumerate(quiz_data['true_false']):
+                # Tạo câu hỏi
+                question = Question.objects.create(
+                    quiz=quiz,
+                    question_text=tf_question['question'],
+                    question_type='true_false',
+                    order=offset+i+1,
+                    is_auto_generated=True
+                )
+
+                # Thêm đáp án đúng
+                Answer.objects.create(
+                    question=question,
+                    answer_text='Đúng',
+                    is_correct=tf_question['is_true']
+                )
+
+                # Thêm đáp án sai
+                Answer.objects.create(
+                    question=question,
+                    answer_text='Sai',
+                    is_correct=not tf_question['is_true']
+                )
+
+            messages.success(request, f'Đã tạo bài kiểm tra "{title}" với {len(quiz_data["multiple_choice"]) + len(quiz_data["true_false"])} câu hỏi!')
+            return redirect('quiz_detail', quiz_id=quiz.id)
+    else:
+        form = AutoGenerateQuizForm()
+
+    context = {
+        'form': form,
+        'title': 'Tự động tạo bài kiểm tra'
+    }
+
+    return render(request, 'quizzes/auto_generate_quiz.html', context)

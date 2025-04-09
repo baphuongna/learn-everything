@@ -5,10 +5,12 @@ from content.models import Lesson
 class Quiz(models.Model):
     """Bộ câu hỏi trắc nghiệm, liên kết với Lesson"""
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='quizzes')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_quizzes', null=True, blank=True)
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     time_limit = models.PositiveIntegerField(help_text='Thời gian làm bài tính bằng phút', blank=True, null=True)
     pass_score = models.PositiveIntegerField(default=70, help_text='Điểm đậu tính theo phần trăm')
+    is_auto_generated = models.BooleanField(default=False, help_text='Đánh dấu bài kiểm tra được tạo tự động')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -23,7 +25,8 @@ class Question(models.Model):
     QUESTION_TYPES = [
         ('single', 'Chọn một đáp án'),
         ('multiple', 'Chọn nhiều đáp án'),
-        ('text', 'Trả lời văn bản')
+        ('text', 'Trả lời văn bản'),
+        ('true_false', 'Đúng/Sai')
     ]
 
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='questions')
@@ -31,6 +34,7 @@ class Question(models.Model):
     question_type = models.CharField(max_length=10, choices=QUESTION_TYPES, default='single')
     explanation = models.TextField(blank=True, help_text='Giải thích đáp án')
     order = models.PositiveIntegerField(default=0)
+    is_auto_generated = models.BooleanField(default=False, help_text='Đánh dấu câu hỏi được tạo tự động')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

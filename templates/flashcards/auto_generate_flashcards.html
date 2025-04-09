@@ -1,0 +1,172 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Tự động tạo Flashcards{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .info-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    
+    .step-number {
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+        background-color: #007bff;
+        color: white;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 30px;
+        margin-right: 10px;
+        font-weight: bold;
+    }
+    
+    .feature-icon {
+        font-size: 2.5rem;
+        color: #007bff;
+        margin-bottom: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-magic text-primary"></i> Tự động tạo Flashcards
+            </h1>
+            <p class="lead">Tạo bộ flashcards tự động từ nội dung bài học để ôn tập hiệu quả.</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'flashcards:flashcard_list' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Quay lại danh sách
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-7">
+            <div class="form-container">
+                <h4 class="mb-4"><i class="fas fa-cogs"></i> Cấu hình tạo Flashcards</h4>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="id_subject" class="form-label">{{ form.subject.label }}</label>
+                        {{ form.subject }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_topic" class="form-label">{{ form.topic.label }}</label>
+                        {{ form.topic }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_lesson" class="form-label">{{ form.lesson.label }}</label>
+                        {{ form.lesson }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_title" class="form-label">{{ form.title.label }}</label>
+                        {{ form.title }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_description" class="form-label">{{ form.description.label }}</label>
+                        {{ form.description }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_max_cards" class="form-label">{{ form.max_cards.label }}</label>
+                        {{ form.max_cards }}
+                        <div class="form-text">Số lượng flashcard tối đa sẽ được tạo từ nội dung bài học.</div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-magic"></i> Tạo Flashcards
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="col-md-5">
+            <div class="card info-card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Cách hoạt động</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-robot feature-icon"></i>
+                    </div>
+                    
+                    <p>Hệ thống sẽ tự động phân tích nội dung bài học và trích xuất:</p>
+                    
+                    <ul class="list-group list-group-flush mb-3">
+                        <li class="list-group-item">
+                            <i class="fas fa-key text-primary"></i> <strong>Từ khóa quan trọng</strong> trong bài học
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-book-open text-primary"></i> <strong>Định nghĩa</strong> và giải thích cho từng từ khóa
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-list text-primary"></i> <strong>Cặp từ khóa-định nghĩa</strong> có cấu trúc
+                        </li>
+                    </ul>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-lightbulb"></i> <strong>Mẹo:</strong> Chọn bài học có nhiều định nghĩa và khái niệm rõ ràng để có kết quả tốt nhất.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card info-card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-check-circle"></i> Lợi ích</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <i class="fas fa-clock text-success"></i> <strong>Tiết kiệm thời gian</strong> tạo flashcards thủ công
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-bullseye text-success"></i> <strong>Tập trung vào nội dung quan trọng</strong> trong bài học
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-sync text-success"></i> <strong>Dễ dàng chỉnh sửa</strong> sau khi tạo tự động
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Xử lý khi form được submit
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        const submitButton = form.querySelector('button[type="submit"]');
+        
+        form.addEventListener('submit', function() {
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang tạo Flashcards...';
+        });
+    });
+</script>
+{% endblock %}

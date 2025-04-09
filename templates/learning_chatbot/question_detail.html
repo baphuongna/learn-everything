@@ -1,0 +1,66 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ question.question|truncatechars:50 }} - Câu hỏi thường gặp{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-question-circle text-primary"></i> Chi tiết câu hỏi
+            </h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'learning_chatbot:chatbot_home' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Quay lại Chatbot
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">{{ question.question }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-3">Câu trả lời:</h6>
+                        <div class="answer-content">
+                            {{ question.answer|linebreaks }}
+                        </div>
+                    </div>
+                    
+                    {% if question.keywords %}
+                        <div class="mt-4">
+                            <h6 class="text-muted mb-2">Từ khóa:</h6>
+                            <div>
+                                {% for keyword in question.get_keywords_list %}
+                                    <span class="badge bg-secondary me-1">{{ keyword }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="mt-4">
+                        <h6 class="text-muted mb-2">Danh mục:</h6>
+                        <a href="{% url 'learning_chatbot:category_questions' category_id=question.category.id %}" class="badge bg-primary">
+                            {{ question.category.name }}
+                        </a>
+                    </div>
+                    
+                    {% if question.lesson %}
+                        <div class="mt-4">
+                            <h6 class="text-muted mb-2">Bài học liên quan:</h6>
+                            <a href="#" class="badge bg-info">
+                                {{ question.lesson.title }}
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

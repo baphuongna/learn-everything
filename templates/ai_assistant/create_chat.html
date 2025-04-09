@@ -1,0 +1,63 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Tạo cuộc trò chuyện mới - Trợ lý học tập AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-plus text-primary"></i> Tạo cuộc trò chuyện mới
+            </h1>
+            <p class="lead">Tạo cuộc trò chuyện mới với trợ lý học tập AI</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'ai_assistant:chat_list' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Quay lại danh sách
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" action="{% url 'ai_assistant:create_chat' %}">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="id_title" class="form-label">Tiêu đề (tùy chọn)</label>
+                            {{ form.title }}
+                            <div class="form-text">Đặt tiêu đề cho cuộc trò chuyện để dễ dàng tìm kiếm sau này.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_subject" class="form-label">Chủ đề (tùy chọn)</label>
+                            {{ form.subject }}
+                            <div class="form-text">Chọn chủ đề để trợ lý AI hiểu rõ hơn về ngữ cảnh.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_topic" class="form-label">Chủ đề con (tùy chọn)</label>
+                            {{ form.topic }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_lesson" class="form-label">Bài học (tùy chọn)</label>
+                            {{ form.lesson }}
+                            <div class="form-text">Chọn bài học cụ thể để trợ lý AI có thể trả lời dựa trên nội dung bài học.</div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-plus"></i> Tạo cuộc trò chuyện
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

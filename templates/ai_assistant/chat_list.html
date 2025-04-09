@@ -1,0 +1,207 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Trợ lý học tập AI{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chat-list {
+        max-height: 600px;
+        overflow-y: auto;
+    }
+    
+    .chat-item {
+        transition: all 0.2s ease;
+        border-left: 3px solid transparent;
+    }
+    
+    .chat-item:hover {
+        background-color: #f8f9fa;
+        border-left: 3px solid #007bff;
+    }
+    
+    .chat-item.active {
+        background-color: #e9f5ff;
+        border-left: 3px solid #007bff;
+    }
+    
+    .chat-title {
+        font-weight: 500;
+        color: #333;
+    }
+    
+    .chat-meta {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    
+    .feature-card {
+        height: 100%;
+        transition: transform 0.3s ease;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .feature-icon {
+        font-size: 2.5rem;
+        color: #007bff;
+        margin-bottom: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-robot text-primary"></i> Trợ lý học tập AI
+            </h1>
+            <p class="lead">Trợ lý AI cá nhân hóa giúp trả lời câu hỏi và hỗ trợ học tập của bạn</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newChatModal">
+                <i class="fas fa-plus"></i> Tạo cuộc trò chuyện mới
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-comments"></i> Cuộc trò chuyện của bạn</h5>
+                </div>
+                <div class="card-body p-0">
+                    <!-- Tìm kiếm -->
+                    <div class="p-3 border-bottom">
+                        <form id="search-form"
+                              hx-get="{% url 'ai_assistant:chat_list' %}"
+                              hx-target="#chat-list-container"
+                              hx-trigger="submit, input[name='search'].keyup changed delay:500ms"
+                              hx-indicator="#search-indicator">
+                            <div class="input-group">
+                                <input type="text" name="search" class="form-control" placeholder="Tìm kiếm..." value="{{ search_query }}">
+                                <button class="btn btn-outline-secondary" type="submit">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </form>
+                        <div id="search-indicator" class="htmx-indicator text-center mt-2">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                <span class="visually-hidden">Đang tải...</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Danh sách cuộc trò chuyện -->
+                    <div id="chat-list-container" class="chat-list">
+                        {% include 'ai_assistant/chat_list_partial.html' %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb"></i> Trợ lý học tập AI có thể giúp gì cho bạn?</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card feature-card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-question-circle feature-icon"></i>
+                                    <h5 class="card-title">Trả lời câu hỏi</h5>
+                                    <p class="card-text">Đặt câu hỏi về bất kỳ chủ đề nào và nhận câu trả lời chi tiết, chính xác.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card feature-card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-book feature-icon"></i>
+                                    <h5 class="card-title">Giải thích khái niệm</h5>
+                                    <p class="card-text">Nhận giải thích rõ ràng, dễ hiểu về các khái niệm phức tạp.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card feature-card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-tasks feature-icon"></i>
+                                    <h5 class="card-title">Hỗ trợ bài tập</h5>
+                                    <p class="card-text">Nhận hướng dẫn từng bước để giải quyết bài tập và bài tập về nhà.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card feature-card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-chalkboard-teacher feature-icon"></i>
+                                    <h5 class="card-title">Ôn tập kiến thức</h5>
+                                    <p class="card-text">Tạo tóm tắt, ghi chú và câu hỏi ôn tập từ nội dung bài học.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-3">
+                        <button class="btn btn-lg btn-primary" data-bs-toggle="modal" data-bs-target="#newChatModal">
+                            <i class="fas fa-comments"></i> Bắt đầu trò chuyện ngay
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal tạo cuộc trò chuyện mới -->
+<div class="modal fade" id="newChatModal" tabindex="-1" aria-labelledby="newChatModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newChatModalLabel">Tạo cuộc trò chuyện mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'ai_assistant:create_chat' %}">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="id_title" class="form-label">Tiêu đề (tùy chọn)</label>
+                        {{ new_chat_form.title }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_subject" class="form-label">Chủ đề (tùy chọn)</label>
+                        {{ new_chat_form.subject }}
+                        <div class="form-text">Chọn chủ đề để trợ lý AI hiểu rõ hơn về ngữ cảnh.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_topic" class="form-label">Chủ đề con (tùy chọn)</label>
+                        {{ new_chat_form.topic }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_lesson" class="form-label">Bài học (tùy chọn)</label>
+                        {{ new_chat_form.lesson }}
+                        <div class="form-text">Chọn bài học cụ thể để trợ lý AI có thể trả lời dựa trên nội dung bài học.</div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Tạo cuộc trò chuyện
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

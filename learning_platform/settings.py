@@ -95,6 +95,8 @@ INSTALLED_APPS = [
     "learning_goals",  # Ứng dụng mục tiêu học tập
     "achievements",  # Ứng dụng thành tích và phần thưởng
     "personalization",  # Ứng dụng cá nhân hóa
+    "ai_assistant",  # Ứng dụng trợ lý học tập AI
+    "learning_chatbot",  # Ứng dụng chatbot hỗ trợ học tập
 ]
 
 MIDDLEWARE = [
@@ -340,3 +342,9 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@learningplatf
 
 # URL của trang web (dùng cho email)
 SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000')
+
+# Cấu hình OpenAI API
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
+OPENAI_MODEL = os.environ.get('OPENAI_MODEL', 'gpt-3.5-turbo')
+OPENAI_MAX_TOKENS = int(os.environ.get('OPENAI_MAX_TOKENS', 1000))
+OPENAI_TEMPERATURE = float(os.environ.get('OPENAI_TEMPERATURE', 0.7))

@@ -3,9 +3,13 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.utils import timezone
 from django.db.models import Q
+from django.contrib import messages
 from datetime import timedelta
 import json
 from .models import FlashcardSet, Flashcard, SpacedRepetitionSchedule
+from .forms import FlashcardSetForm, FlashcardForm, AutoGenerateFlashcardsForm
+from .services import generate_flashcards_from_lesson
+from content.models import Subject, Topic, Lesson
 
 def flashcard_list(request):
     """Hiển thị danh sách các bộ flashcard"""
@@ -31,7 +35,6 @@ def flashcard_list(request):
         flashcard_sets = flashcard_sets.filter(lesson__topic__subject_id=subject_id)
 
     # Lấy danh sách các chủ đề cho bộ lọc
-    from content.models import Subject
     subjects = Subject.objects.all()
 
     # Đếm số flashcard cần ôn tập hôm nay nếu đã đăng nhập
@@ -230,3 +233,71 @@ def due_flashcards(request):
         return render(request, 'flashcards/due_flashcards_partial.html', context)
 
     return render(request, 'flashcards/due_flashcards.html', context)
+
+@login_required
+def get_topics(request):
+    """Lấy danh sách các chủ đề con theo chủ đề chính"""
+    subject_id = request.GET.get('subject', '')
+    topics = []
+
+    if subject_id:
+        topics = Topic.objects.filter(subject_id=subject_id).order_by('order')
+
+    return render(request, 'flashcards/topic_options.html', {'topics': topics})
+
+@login_required
+def get_lessons(request):
+    """Lấy danh sách các bài học theo chủ đề con"""
+    topic_id = request.GET.get('topic', '')
+    lessons = []
+
+    if topic_id:
+        lessons = Lesson.objects.filter(topic_id=topic_id).order_by('order')
+
+    return render(request, 'flashcards/lesson_options.html', {'lessons': lessons})
+
+@login_required
+def auto_generate_flashcards(request):
+    """Tự động tạo flashcards từ bài học"""
+    if request.method == 'POST':
+        form = AutoGenerateFlashcardsForm(request.POST)
+        if form.is_valid():
+            # Lấy dữ liệu từ form
+            lesson = form.cleaned_data['lesson']
+            title = form.cleaned_data['title']
+            description = form.cleaned_data['description']
+            max_cards = form.cleaned_data['max_cards']
+
+            # Tạo bộ flashcard mới
+            flashcard_set = FlashcardSet.objects.create(
+                user=request.user,
+                lesson=lesson,
+                title=title,
+                description=description,
+                is_auto_generated=True
+            )
+
+            # Tạo các flashcard từ nội dung bài học
+            flashcard_pairs = generate_flashcards_from_lesson(lesson, max_cards=max_cards)
+
+            # Thêm các flashcard vào bộ
+            for i, (front, back) in enumerate(flashcard_pairs):
+                Flashcard.objects.create(
+                    flashcard_set=flashcard_set,
+                    front=front,
+                    back=back,
+                    order=i+1,
+                    is_auto_generated=True
+                )
+
+            messages.success(request, f'Đã tạo {len(flashcard_pairs)} flashcard từ bài học "{lesson.title}"!')
+            return redirect('flashcard_set_detail', flashcard_set_id=flashcard_set.id)
+    else:
+        form = AutoGenerateFlashcardsForm()
+
+    context = {
+        'form': form,
+        'title': 'Tự động tạo Flashcards'
+    }
+
+    return render(request, 'flashcards/auto_generate_flashcards.html', context)

@@ -1,0 +1,4 @@
+<option value="">-- Chọn bài học --</option>
+{% for lesson in lessons %}
+<option value="{{ lesson.id }}">{{ lesson.title }}</option>
+{% endfor %}

@@ -1,0 +1,25 @@
+{% if questions %}
+    <h6 class="mb-3">Kết quả tìm kiếm ({{ questions.count }})</h6>
+    <div class="list-group">
+        {% for question in questions %}
+            <a href="#" class="list-group-item list-group-item-action question-item"
+               hx-get="{% url 'learning_chatbot:question_detail' question_id=question.id %}" 
+               hx-target="#question-detail">
+                <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">{{ question.question|truncatechars:80 }}</h6>
+                </div>
+                <p class="mb-1 text-muted small">{{ question.answer|truncatechars:100 }}</p>
+                <small>
+                    <span class="badge bg-primary">{{ question.category.name }}</span>
+                    {% if question.lesson %}
+                        <span class="badge bg-info">{{ question.lesson.title }}</span>
+                    {% endif %}
+                </small>
+            </a>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> Không tìm thấy kết quả nào cho <strong>{{ search_query }}</strong>.
+    </div>
+{% endif %}

@@ -32,6 +32,13 @@ learning_platform/
 ├── flashcards/          # Hệ thống flashcard và Spaced Repetition
 ├── quizzes/             # Hệ thống bài kiểm tra và đánh giá
 ├── memory_bank/         # Ngân hàng ghi nhớ
+├── advanced_learning/   # Tính năng học tập nâng cao (Cornell Notes, Mind Maps, Feynman Notes)
+├── notifications/       # Hệ thống thông báo
+├── learning_goals/      # Hệ thống mục tiêu học tập
+├── achievements/        # Hệ thống thành tích và phần thưởng
+├── personalization/     # Tính năng cá nhân hóa
+├── ai_assistant/        # Trợ lý học tập AI
+├── learning_chatbot/    # Chatbot hỗ trợ học tập
 ├── learning_platform/   # Cấu hình chính của dự án
 ├── static/              # Tài nguyên tĩnh (CSS, JS, hình ảnh)
 ├── templates/           # Templates HTML
@@ -419,12 +426,14 @@ learning_platform/
   - **Đã phát triển**: Đánh giá và theo dõi điểm mạnh/yếu theo chủ đề và chủ đề con
 
 #### 8.1.4. Tích hợp công nghệ mới
-- **Trợ lý học tập AI**: Trợ lý AI cá nhân hóa giúp trả lời câu hỏi
+- **Trợ lý học tập AI**: Trợ lý AI cá nhân hóa giúp trả lời câu hỏi ✓
+  - **Đã phát triển**: Tạo và quản lý cuộc trò chuyện, tích hợp với nội dung học tập, đánh giá câu trả lời
 - **Nhận diện giọng nói**: Luyện phát âm cho học ngôn ngữ
-- **Công nghệ AR/VR**: Trải nghiệm học tập thực tế ảo tăng cường
-- **Chatbot hỗ trợ học tập**: Hỗ trợ 24/7 cho các câu hỏi thường gặp
+- **Chatbot hỗ trợ học tập**: Hỗ trợ 24/7 cho các câu hỏi thường gặp ✓
+  - **Đã phát triển**: Tìm kiếm câu hỏi, phản hồi câu trả lời, danh mục câu hỏi, câu hỏi phổ biến
 - **Tự động tạo flashcard**: Trích xuất từ khóa và định nghĩa từ nội dung bài học
-- **Tự động tạo câu hỏi kiểm tra**: Phân tích nội dung bài học để tạo câu hỏi
+- **Tự động tạo câu hỏi kiểm tra**: Phân tích nội dung bài học để tạo câu hỏi ✓
+  - **Đã phát triển**: Tạo câu hỏi trắc nghiệm, đúng/sai từ nội dung bài học, sử dụng NLTK
 - **Công nghệ OCR**: Nhập nội dung từ hình ảnh và tài liệu quét
 
 #### 8.1.5. Tính năng phân tích và báo cáo
@@ -493,4 +502,4 @@ learning_platform/
 
 ---
 
-*Memory Bank được tạo bởi [Tên của bạn] - Cập nhật lần cuối: 15/05/2024*
+*Memory Bank được tạo bởi [Tên của bạn] - Cập nhật lần cuối: 20/05/2024*

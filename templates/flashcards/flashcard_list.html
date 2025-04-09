@@ -4,9 +4,14 @@
 
 {% block content %}
 <div class="row mb-4">
-    <div class="col-md-12">
+    <div class="col-md-8">
         <h1 class="mb-3">Flashcards</h1>
         <p class="lead">Học tập hiệu quả với phương pháp Active Recall và Spaced Repetition</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'flashcards:auto_generate_flashcards' %}" class="btn btn-success">
+            <i class="fas fa-magic"></i> Tự động tạo Flashcards
+        </a>
     </div>
 </div>
 
@@ -26,9 +31,9 @@
                         {% endif %}
                     </div>
                     <div class="col-md-4 text-end">
-                        <a href="{% url 'due_flashcards' %}"
+                        <a href="{% url 'flashcards:due_flashcards' %}"
                            class="btn btn-primary"
-                           hx-get="{% url 'due_flashcards' %}?format=partial"
+                           hx-get="{% url 'flashcards:due_flashcards' %}?format=partial"
                            hx-target="#flashcard-preview"
                            hx-swap="innerHTML"
                            hx-push-url="false">
@@ -48,7 +53,7 @@
         <div class="card">
             <div class="card-body" x-data="{ showFilters: false }">
                 <form id="search-form"
-                      hx-get="{% url 'flashcard_list' %}"
+                      hx-get="{% url 'flashcards:flashcard_list' %}"
                       hx-target="#flashcard-list-container"
                       hx-trigger="submit, input[name='search'].keyup changed delay:500ms"
                       hx-indicator="#search-indicator">
