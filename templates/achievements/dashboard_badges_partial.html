@@ -1,0 +1,15 @@
+{% load custom_filters %}
+
+{% for category, stats in badge_stats.items %}
+    <div class="badge-category mb-3">
+        <h6>{{ stats.name }}</h6>
+        <div class="progress" style="height: 20px;">
+            <div class="progress-bar bg-info" role="progressbar" style="width: {{ stats.percentage }}%;" aria-valuenow="{{ stats.percentage }}" aria-valuemin="0" aria-valuemax="100">
+                {{ stats.earned }}/{{ stats.total }} ({{ stats.percentage }}%)
+            </div>
+        </div>
+    </div>
+{% endfor %}
+<div class="text-center mt-3">
+    <a href="{% url 'achievements:badge_list' %}" class="btn btn-outline-primary">Xem Tất Cả Huy Hiệu</a>
+</div>

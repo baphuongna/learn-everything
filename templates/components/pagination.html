@@ -1,0 +1,105 @@
+{% comment %}
+Component Pagination - Hiển thị phân trang với HTMX
+
+Cách sử dụng:
+1. Trong view:
+   from django.core.paginator import Paginator
+   paginator = Paginator(items, 10)
+   page = request.GET.get('page', 1)
+   items = paginator.get_page(page)
+   context = {'items': items}
+
+2. Trong template:
+   {% include 'components/pagination.html' with page_obj=items %}
+{% endcomment %}
+
+{% if page_obj.paginator.num_pages > 1 %}
+<nav aria-label="Phân trang" class="mt-4">
+  <ul class="pagination justify-content-center">
+    {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link" 
+           href="?page=1{{ query_params }}" 
+           hx-get="?page=1{{ query_params }}" 
+           hx-target="{{ target|default:'#content' }}" 
+           hx-push-url="true"
+           hx-indicator="{{ indicator|default:'#pagination-indicator' }}">
+          <span aria-hidden="true">&laquo;&laquo;</span>
+        </a>
+      </li>
+      <li class="page-item">
+        <a class="page-link" 
+           href="?page={{ page_obj.previous_page_number }}{{ query_params }}" 
+           hx-get="?page={{ page_obj.previous_page_number }}{{ query_params }}" 
+           hx-target="{{ target|default:'#content' }}" 
+           hx-push-url="true"
+           hx-indicator="{{ indicator|default:'#pagination-indicator' }}">
+          <span aria-hidden="true">&laquo;</span>
+        </a>
+      </li>
+    {% else %}
+      <li class="page-item disabled">
+        <span class="page-link"><span aria-hidden="true">&laquo;&laquo;</span></span>
+      </li>
+      <li class="page-item disabled">
+        <span class="page-link"><span aria-hidden="true">&laquo;</span></span>
+      </li>
+    {% endif %}
+    
+    {% for i in page_obj.paginator.page_range %}
+      {% if page_obj.number == i %}
+        <li class="page-item active" aria-current="page">
+          <span class="page-link">{{ i }}</span>
+        </li>
+      {% elif i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %}
+        <li class="page-item">
+          <a class="page-link" 
+             href="?page={{ i }}{{ query_params }}" 
+             hx-get="?page={{ i }}{{ query_params }}" 
+             hx-target="{{ target|default:'#content' }}" 
+             hx-push-url="true"
+             hx-indicator="{{ indicator|default:'#pagination-indicator' }}">
+            {{ i }}
+          </a>
+        </li>
+      {% endif %}
+    {% endfor %}
+    
+    {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link" 
+           href="?page={{ page_obj.next_page_number }}{{ query_params }}" 
+           hx-get="?page={{ page_obj.next_page_number }}{{ query_params }}" 
+           hx-target="{{ target|default:'#content' }}" 
+           hx-push-url="true"
+           hx-indicator="{{ indicator|default:'#pagination-indicator' }}">
+          <span aria-hidden="true">&raquo;</span>
+        </a>
+      </li>
+      <li class="page-item">
+        <a class="page-link" 
+           href="?page={{ page_obj.paginator.num_pages }}{{ query_params }}" 
+           hx-get="?page={{ page_obj.paginator.num_pages }}{{ query_params }}" 
+           hx-target="{{ target|default:'#content' }}" 
+           hx-push-url="true"
+           hx-indicator="{{ indicator|default:'#pagination-indicator' }}">
+          <span aria-hidden="true">&raquo;&raquo;</span>
+        </a>
+      </li>
+    {% else %}
+      <li class="page-item disabled">
+        <span class="page-link"><span aria-hidden="true">&raquo;</span></span>
+      </li>
+      <li class="page-item disabled">
+        <span class="page-link"><span aria-hidden="true">&raquo;&raquo;</span></span>
+      </li>
+    {% endif %}
+  </ul>
+  
+  <div id="pagination-indicator" class="htmx-indicator text-center mt-2">
+    <div class="spinner-border spinner-border-sm text-primary" role="status">
+      <span class="visually-hidden">Đang tải...</span>
+    </div>
+  </div>
+</nav>
+{% endif %}

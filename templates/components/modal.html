@@ -1,0 +1,55 @@
+{% comment %}
+Component Modal - Hiển thị modal với HTMX và Alpine.js
+
+Cách sử dụng:
+1. Trong template:
+   {% include 'components/modal.html' with id="my-modal" title="Tiêu đề" %}
+     Nội dung modal ở đây
+   {% endinclude %}
+
+2. Với HTMX:
+   <button hx-get="/api/data" hx-target="#my-modal-body" data-bs-toggle="modal" data-bs-target="#my-modal">
+     Mở modal
+   </button>
+
+3. Với Alpine.js:
+   <button @click="$dispatch('open-modal', {id: 'my-modal'})">Mở modal</button>
+{% endcomment %}
+
+{% with id=id|default:"default-modal" title=title|default:"Modal" size=size|default:"" %}
+<div class="modal fade" id="{{ id }}" tabindex="-1" aria-labelledby="{{ id }}-label" aria-hidden="true"
+     x-data="{ 
+       show: false,
+       init() {
+         const modal = new bootstrap.Modal(this.$el);
+         this.$el.addEventListener('open-modal', (e) => {
+           if (e.detail.id === '{{ id }}') {
+             modal.show();
+           }
+         });
+       }
+     }">
+  <div class="modal-dialog {% if size %}modal-{{ size }}{% endif %}">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="{{ id }}-label">{{ title }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="{{ id }}-body">
+        {% block content %}
+          {% if content %}{{ content }}{% endif %}
+        {% endblock %}
+      </div>
+      <div class="modal-footer">
+        {% if not hide_close_button %}
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+        {% endif %}
+        {% if show_save_button %}
+        <button type="button" class="btn btn-primary" id="{{ id }}-save-btn">{{ save_button_text|default:"Lưu" }}</button>
+        {% endif %}
+        {% block footer %}{% endblock %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endwith %}

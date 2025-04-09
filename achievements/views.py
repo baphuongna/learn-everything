@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import HttpResponse
 from django.db.models import Sum
 
 from .models import Badge, UserBadge, RewardPoint, PointHistory, Reward, UserReward
@@ -9,8 +9,12 @@ from .models import Badge, UserBadge, RewardPoint, PointHistory, Reward, UserRew
 @login_required
 def achievement_dashboard(request):
     """Trang tổng quan thành tích"""
+    # Lấy tham số từ request
+    format_type = request.GET.get('format', '')
+    section = request.GET.get('section', '')
+
     # Lấy thông tin điểm thưởng
-    reward_point, created = RewardPoint.objects.get_or_create(user=request.user)
+    reward_point, _ = RewardPoint.objects.get_or_create(user=request.user)
 
     # Lấy các huy hiệu của người dùng
     user_badges = UserBadge.objects.filter(user=request.user).select_related('badge')
@@ -49,6 +53,17 @@ def achievement_dashboard(request):
         'point_history': point_history,
     }
 
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        if section == 'badges':
+            return render(request, 'achievements/dashboard_badges_partial.html', context)
+        elif section == 'rewards':
+            return render(request, 'achievements/dashboard_rewards_partial.html', context)
+        elif section == 'points':
+            return render(request, 'achievements/dashboard_points_partial.html', context)
+        else:
+            return render(request, 'achievements/dashboard_partial.html', context)
+
     return render(request, 'achievements/dashboard.html', context)
 
 @login_required
@@ -57,6 +72,7 @@ def badge_list(request):
     # Lọc theo danh mục
     category = request.GET.get('category', '')
     level = request.GET.get('level', '')
+    format_type = request.GET.get('format', '')
 
     # Lấy tất cả huy hiệu
     badges = Badge.objects.all()
@@ -84,13 +100,21 @@ def badge_list(request):
         'total_count': badges.count(),
     }
 
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'achievements/badge_list_partial.html', context)
+
     return render(request, 'achievements/badge_list.html', context)
 
 @login_required
 def reward_list(request):
     """Danh sách phần thưởng"""
+    # Lấy tham số từ request
+    format_type = request.GET.get('format', '')
+    section = request.GET.get('section', '')
+
     # Lấy điểm thưởng của người dùng
-    reward_point, created = RewardPoint.objects.get_or_create(user=request.user)
+    reward_point, _ = RewardPoint.objects.get_or_create(user=request.user)
 
     # Lấy các phần thưởng có thể đổi
     available_rewards = Reward.objects.filter(is_active=True).order_by('points_required')
@@ -111,6 +135,17 @@ def reward_list(request):
         'used_rewards': used_rewards,
     }
 
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        if section == 'available':
+            return render(request, 'achievements/reward_available_partial.html', context)
+        elif section == 'unused':
+            return render(request, 'achievements/reward_unused_partial.html', context)
+        elif section == 'used':
+            return render(request, 'achievements/reward_used_partial.html', context)
+        else:
+            return render(request, 'achievements/reward_list_partial.html', context)
+
     return render(request, 'achievements/reward_list.html', context)
 
 @login_required
@@ -123,10 +158,17 @@ def redeem_reward(request, reward_id):
     reward = get_object_or_404(Reward, id=reward_id, is_active=True)
 
     # Lấy điểm thưởng của người dùng
-    reward_point, created = RewardPoint.objects.get_or_create(user=request.user)
+    reward_point, _ = RewardPoint.objects.get_or_create(user=request.user)
 
     # Kiểm tra xem người dùng có đủ điểm không
     if reward_point.points < reward.points_required:
+        if request.htmx:
+            context = {
+                'error': f'Bạn không đủ điểm để đổi phần thưởng này. Cần {reward.points_required} điểm.',
+                'reward': reward
+            }
+            return render(request, 'achievements/redeem_error.html', context)
+
         messages.error(request, f'Bạn không đủ điểm để đổi phần thưởng này. Cần {reward.points_required} điểm.')
         return redirect('achievements:reward_list')
 
@@ -135,13 +177,32 @@ def redeem_reward(request, reward_id):
         reward_point.use_points(reward.points_required, f'Đổi phần thưởng {reward.name}')
 
         # Tạo phần thưởng cho người dùng
-        UserReward.objects.create(
+        user_reward = UserReward.objects.create(
             user=request.user,
             reward=reward
         )
 
+        if request.htmx:
+            # Lấy các phần thưởng của người dùng
+            unused_rewards = UserReward.objects.filter(user=request.user, is_used=False).select_related('reward')
+
+            context = {
+                'success': f'Bạn đã đổi thành công phần thưởng {reward.name}!',
+                'reward_point': reward_point,
+                'user_reward': user_reward,
+                'unused_rewards': unused_rewards
+            }
+            return render(request, 'achievements/redeem_success.html', context)
+
         messages.success(request, f'Bạn đã đổi thành công phần thưởng {reward.name}!')
     except Exception as e:
+        if request.htmx:
+            context = {
+                'error': f'Có lỗi xảy ra: {str(e)}',
+                'reward': reward
+            }
+            return render(request, 'achievements/redeem_error.html', context)
+
         messages.error(request, f'Có lỗi xảy ra: {str(e)}')
 
     return redirect('achievements:reward_list')
@@ -159,8 +220,26 @@ def use_reward(request, user_reward_id):
         # Đánh dấu phần thưởng đã sử dụng
         user_reward.use_reward()
 
+        if request.htmx:
+            # Lấy các phần thưởng của người dùng
+            used_rewards = UserReward.objects.filter(user=request.user, is_used=True).select_related('reward')
+
+            context = {
+                'success': f'Bạn đã sử dụng phần thưởng {user_reward.reward.name}!',
+                'user_reward': user_reward,
+                'used_rewards': used_rewards
+            }
+            return render(request, 'achievements/use_reward_success.html', context)
+
         messages.success(request, f'Bạn đã sử dụng phần thưởng {user_reward.reward.name}!')
     except Exception as e:
+        if request.htmx:
+            context = {
+                'error': f'Có lỗi xảy ra: {str(e)}',
+                'user_reward': user_reward
+            }
+            return render(request, 'achievements/use_reward_error.html', context)
+
         messages.error(request, f'Có lỗi xảy ra: {str(e)}')
 
     return redirect('achievements:reward_list')
@@ -168,8 +247,11 @@ def use_reward(request, user_reward_id):
 @login_required
 def point_history(request):
     """Lịch sử điểm thưởng"""
+    # Lấy tham số từ request
+    format_type = request.GET.get('format', '')
+
     # Lấy điểm thưởng của người dùng
-    reward_point, created = RewardPoint.objects.get_or_create(user=request.user)
+    reward_point, _ = RewardPoint.objects.get_or_create(user=request.user)
 
     # Lọc theo loại hành động
     action_type = request.GET.get('type', '')
@@ -194,5 +276,9 @@ def point_history(request):
         'total_used': total_used,
         'selected_type': action_type,
     }
+
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'achievements/point_history_partial.html', context)
 
     return render(request, 'achievements/point_history.html', context)

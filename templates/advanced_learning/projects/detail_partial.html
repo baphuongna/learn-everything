@@ -1,0 +1,178 @@
+{% load static %}
+
+<div class="project-detail" x-data="{ activeTaskId: null }">
+    <div class="project-header">
+        <h2 class="project-title">{{ project.title }}</h2>
+        <div class="project-meta">
+            <span class="badge bg-primary">{{ project.subject.name }}</span>
+            <span class="badge {% if project.difficulty_level == 1 %}bg-success{% elif project.difficulty_level == 2 %}bg-warning{% else %}bg-danger{% endif %}">
+                {% if project.difficulty_level == 1 %}
+                    Dễ
+                {% elif project.difficulty_level == 2 %}
+                    Trung bình
+                {% else %}
+                    Khó
+                {% endif %}
+            </span>
+        </div>
+        <div class="project-description">
+            {{ project.description }}
+        </div>
+        <div class="project-stats">
+            <div class="project-stat">
+                <i class="fas fa-tasks"></i> {{ tasks.count }} nhiệm vụ
+            </div>
+            <div class="project-stat">
+                <i class="fas fa-clock"></i> {{ project.estimated_hours }} giờ
+            </div>
+            <div class="project-stat">
+                <i class="fas fa-users"></i> {{ project.user_projects.count }} người tham gia
+            </div>
+            {% if user_project %}
+            <div class="project-stat">
+                <i class="fas fa-chart-line"></i> Tiến độ: {{ user_project.progress }}%
+            </div>
+            {% endif %}
+        </div>
+        
+        {% if user_project %}
+        <div class="progress-container mt-3">
+            <div class="progress-label">
+                <span>Tiến độ của bạn</span>
+                <span>{{ user_project.progress }}%</span>
+            </div>
+            <div class="progress" style="height: 20px;">
+                <div class="progress-bar bg-info" role="progressbar" style="width: {{ user_project.progress }}%" aria-valuenow="{{ user_project.progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+        
+        <div class="project-actions mt-3">
+            <div class="row">
+                <div class="col-md-6">
+                    <form method="post" action="{% url 'advanced_learning:update_project_progress' project_id=user_project.id %}"
+                          hx-post="{% url 'advanced_learning:update_project_progress' project_id=user_project.id %}"
+                          hx-target="#project-detail-container"
+                          hx-swap="innerHTML"
+                          hx-indicator="#progress-indicator">
+                        {% csrf_token %}
+                        <div class="input-group">
+                            <input type="number" class="form-control" name="progress" value="{{ user_project.progress }}" min="0" max="100">
+                            <button class="btn btn-info" type="submit">
+                                <i class="fas fa-save"></i> Cập nhật tiến độ
+                                <span id="progress-indicator" class="htmx-indicator spinner-border spinner-border-sm"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-6 text-end">
+                    {% if user_project.status != 'completed' and user_project.progress == 100 %}
+                    <form method="post" action="{% url 'advanced_learning:complete_project' project_id=user_project.id %}"
+                          hx-post="{% url 'advanced_learning:complete_project' project_id=user_project.id %}"
+                          hx-target="#project-detail-container"
+                          hx-swap="innerHTML"
+                          hx-confirm="Bạn có chắc chắn muốn đánh dấu dự án này là đã hoàn thành?"
+                          hx-indicator="#complete-indicator">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check-circle"></i> Đánh dấu hoàn thành
+                            <span id="complete-indicator" class="htmx-indicator spinner-border spinner-border-sm"></span>
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="project-actions mt-3">
+            <a href="{% url 'advanced_learning:start_project' project_id=project.id %}" class="btn btn-info"
+               hx-get="{% url 'advanced_learning:start_project' project_id=project.id %}?format=partial"
+               hx-target="#main-content"
+               hx-swap="innerHTML"
+               hx-push-url="true">
+                <i class="fas fa-play"></i> Tham gia dự án
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    
+    <h3 class="mb-3"><i class="fas fa-list-check text-info"></i> Danh Sách Nhiệm Vụ</h3>
+    
+    {% if tasks %}
+        {% for task in tasks %}
+        <div class="task-card {% if user_project and user_project.completed_tasks and task.id|stringformat:'i' in user_project.completed_tasks %}task-completed{% endif %}" 
+             @click="activeTaskId = activeTaskId === {{ task.id }} ? null : {{ task.id }}">
+            <div class="task-header">
+                <h5 class="task-title">{{ task.order }}. {{ task.title }}</h5>
+                {% if user_project and user_project.completed_tasks and task.id|stringformat:'i' in user_project.completed_tasks %}
+                <span class="badge bg-success">Đã hoàn thành</span>
+                {% endif %}
+            </div>
+            <div class="task-body" x-show="activeTaskId === {{ task.id }}" x-transition>
+                <div class="task-description">
+                    {{ task.description }}
+                </div>
+                
+                {% if user_project %}
+                <div class="task-actions mt-3 text-end">
+                    {% if user_project.completed_tasks and task.id|stringformat:'i' in user_project.completed_tasks %}
+                    <form method="post" action="{% url 'advanced_learning:mark_task_incomplete' project_id=user_project.id task_id=task.id %}"
+                          hx-post="{% url 'advanced_learning:mark_task_incomplete' project_id=user_project.id task_id=task.id %}"
+                          hx-target="#project-detail-container"
+                          hx-swap="innerHTML"
+                          hx-indicator="#task-indicator-{{ task.id }}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i> Đánh dấu chưa hoàn thành
+                            <span id="task-indicator-{{ task.id }}" class="htmx-indicator spinner-border spinner-border-sm"></span>
+                        </button>
+                    </form>
+                    {% else %}
+                    <form method="post" action="{% url 'advanced_learning:mark_task_complete' project_id=user_project.id task_id=task.id %}"
+                          hx-post="{% url 'advanced_learning:mark_task_complete' project_id=user_project.id task_id=task.id %}"
+                          hx-target="#project-detail-container"
+                          hx-swap="innerHTML"
+                          hx-indicator="#task-indicator-{{ task.id }}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-success">
+                            <i class="fas fa-check"></i> Đánh dấu hoàn thành
+                            <span id="task-indicator-{{ task.id }}" class="htmx-indicator spinner-border spinner-border-sm"></span>
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> Dự án này chưa có nhiệm vụ nào.
+        </div>
+    {% endif %}
+    
+    {% if user_project %}
+    <div class="card mt-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="fas fa-sticky-note"></i> Ghi Chú Của Bạn</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" action="{% url 'advanced_learning:update_project_notes' project_id=user_project.id %}"
+                  hx-post="{% url 'advanced_learning:update_project_notes' project_id=user_project.id %}"
+                  hx-target="#project-detail-container"
+                  hx-swap="innerHTML"
+                  hx-indicator="#notes-indicator">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <textarea class="form-control" name="notes" rows="4" placeholder="Nhập ghi chú của bạn về dự án này...">{{ user_project.notes|default:'' }}</textarea>
+                </div>
+                <div class="text-end">
+                    <button type="submit" class="btn btn-info">
+                        <i class="fas fa-save"></i> Lưu ghi chú
+                        <span id="notes-indicator" class="htmx-indicator spinner-border spinner-border-sm"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+</div>

@@ -1,0 +1,54 @@
+<div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+    <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Thống Kê</h5>
+    <button class="btn btn-sm btn-light" 
+            hx-get="{% url 'memory_home' %}?section=stats" 
+            hx-target="#stats-section" 
+            hx-swap="outerHTML"
+            hx-indicator="#stats-indicator">
+        <i class="fas fa-sync-alt"></i>
+        <span id="stats-indicator" class="htmx-indicator spinner-border spinner-border-sm"></span>
+    </button>
+</div>
+<div class="card-body">
+    <div class="row text-center">
+        <div class="col-md-4">
+            <div class="stat-item">
+                <h3>{{ total_items }}</h3>
+                <p>Ghi nhớ</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-item">
+                <h3>{{ total_categories }}</h3>
+                <p>Danh mục</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-item">
+                <h3>{{ total_review_items }}</h3>
+                <p>Cần ôn tập</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="progress mt-3" x-data="{ 
+        totalItems: {{ total_items|default:1 }},
+        reviewItems: {{ total_review_items|default:0 }}
+    }">
+        <div class="progress-bar bg-success" role="progressbar" 
+             :style="'width: ' + ((totalItems - reviewItems) / totalItems * 100) + '%'" 
+             :aria-valuenow="(totalItems - reviewItems) / totalItems * 100" 
+             aria-valuemin="0" 
+             aria-valuemax="100">
+            <span x-text="Math.round((totalItems - reviewItems) / totalItems * 100) + '%'"></span>
+        </div>
+        <div class="progress-bar bg-danger" role="progressbar" 
+             :style="'width: ' + (reviewItems / totalItems * 100) + '%'" 
+             :aria-valuenow="reviewItems / totalItems * 100" 
+             aria-valuemin="0" 
+             aria-valuemax="100">
+            <span x-text="Math.round(reviewItems / totalItems * 100) + '%'"></span>
+        </div>
+    </div>
+    <small class="text-muted d-block text-center mt-1">Tỷ lệ ghi nhớ đã ôn tập / cần ôn tập</small>
+</div>

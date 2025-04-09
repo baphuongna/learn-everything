@@ -1,0 +1,130 @@
+{% load static %}
+
+<div class="pathway-detail-container">
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <h5>{{ pathway.title }}</h5>
+            <p>{{ pathway.description }}</p>
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Chủ đề:</strong> {{ pathway.subject.name }}</p>
+                    <p><strong>Độ khó:</strong> {{ pathway.get_difficulty_level_display }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Thời gian ước tính:</strong> {{ pathway.estimated_duration_days }} ngày</p>
+                    <p><strong>Trạng thái:</strong> {% if pathway.is_active %}<span class="badge bg-success">Đang hoạt động</span>{% else %}<span class="badge bg-secondary">Không hoạt động</span>{% endif %}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="progress-circle-container text-center">
+                <div class="progress-circle mx-auto" data-value="{{ progress }}">
+                    <span class="progress-circle-left">
+                        <span class="progress-circle-bar border-primary"></span>
+                    </span>
+                    <span class="progress-circle-right">
+                        <span class="progress-circle-bar border-primary"></span>
+                    </span>
+                    <div class="progress-circle-value w-100 h-100 rounded-circle d-flex align-items-center justify-content-center">
+                        <div class="h2 font-weight-bold">{{ progress }}<sup class="small">%</sup></div>
+                    </div>
+                </div>
+                <p class="mt-2">Tiến độ hoàn thành</p>
+            </div>
+        </div>
+    </div>
+    
+    <h5 class="mb-3">Các Bước Trong Lộ Trình</h5>
+    {% if steps %}
+        <div class="list-group">
+            {% for step in steps %}
+                <div class="list-group-item list-group-item-action {% if step.is_completed %}list-group-item-success{% endif %}">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">{{ step.order }}. {{ step.title }}</h6>
+                        <small>{{ step.get_step_type_display }}</small>
+                    </div>
+                    <p class="mb-1">{{ step.description|truncatechars:100 }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small>Thời gian ước tính: {{ step.estimated_duration_minutes }} phút</small>
+                        <div>
+                            {% if not step.is_completed %}
+                                <button class="btn btn-sm btn-success"
+                                        hx-post="{% url 'pathway_step_complete' step_id=step.id %}"
+                                        hx-target="#pathway-detail-modal-body"
+                                        hx-swap="outerHTML">
+                                    <i class="fas fa-check"></i> Hoàn thành
+                                </button>
+                            {% else %}
+                                <span class="badge bg-success">Đã hoàn thành: {{ step.completed_at|date:"d/m/Y" }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            Lộ trình này chưa có bước nào. Hãy thêm bước đầu tiên để bắt đầu!
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    /* Progress Circle */
+    .progress-circle {
+        position: relative;
+        height: 120px;
+        width: 120px;
+        border-radius: 50%;
+        background-color: #f2f2f2;
+    }
+    
+    .progress-circle-bar {
+        position: absolute;
+        height: 100%;
+        width: 100%;
+        background: none;
+        border-width: 8px;
+        border-style: solid;
+        border-color: #ddd;
+        border-radius: 50%;
+    }
+    
+    .progress-circle .progress-circle-left .progress-circle-bar {
+        left: 100%;
+        border-top-right-radius: 80px;
+        border-bottom-right-radius: 80px;
+        border-left: 0;
+        transform-origin: center left;
+    }
+    
+    .progress-circle .progress-circle-right .progress-circle-bar {
+        left: -100%;
+        border-top-left-radius: 80px;
+        border-bottom-left-radius: 80px;
+        border-right: 0;
+        transform-origin: center right;
+    }
+    
+    .progress-circle-value {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+</style>
+
+<script>
+    // Progress Circle Animation
+    (function() {
+        const progressCircles = document.querySelectorAll('.progress-circle');
+        
+        progressCircles.forEach(function(circle) {
+            const value = circle.getAttribute('data-value');
+            const leftTransform = 'rotate(' + Math.min(value * 3.6, 180) + 'deg)';
+            const rightTransform = 'rotate(' + Math.max(value * 3.6 - 180, 0) + 'deg)';
+            
+            circle.querySelector('.progress-circle-left .progress-circle-bar').style.transform = leftTransform;
+            circle.querySelector('.progress-circle-right .progress-circle-bar').style.transform = rightTransform;
+        });
+    })();
+</script>

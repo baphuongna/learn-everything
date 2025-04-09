@@ -4,7 +4,16 @@
 {% block title %}Mục Tiêu Học Tập{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container mt-4" x-data="{
+    searchQuery: '',
+    showSearch: false,
+    stats: {
+        total: {{ total_goals }},
+        completed: {{ completed_goals }},
+        active: {{ active_goals }},
+        overdue: {{ overdue_goals }}
+    }
+}">
     <div class="row mb-4">
         <div class="col-md-8">
             <h1 class="mb-3">
@@ -13,56 +22,61 @@
             <p class="lead">Quản lý các mục tiêu học tập của bạn</p>
         </div>
         <div class="col-md-4 text-end">
-            <a href="{% url 'learning_goals:goal_create' %}" class="btn btn-primary">
+            <a href="{% url 'learning_goals:goal_create' %}" class="btn btn-primary"
+               hx-boost="true">
                 <i class="fas fa-plus"></i> Tạo Mục Tiêu Mới
             </a>
-            <a href="{% url 'learning_goals:dashboard' %}" class="btn btn-outline-primary ms-2">
+            <a href="{% url 'learning_goals:dashboard' %}" class="btn btn-outline-primary ms-2"
+               hx-boost="true">
                 <i class="fas fa-chart-bar"></i> Tổng Quan
             </a>
+            <button class="btn btn-outline-secondary ms-2" @click="showSearch = !showSearch">
+                <i class="fas fa-search"></i>
+            </button>
         </div>
     </div>
 
-    <!-- Bộ lọc -->
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-body">
-                    <form method="get" class="row g-3">
-                        <div class="col-md-5">
-                            <label for="type" class="form-label">Loại mục tiêu</label>
-                            <select name="type" id="type" class="form-select" onchange="this.form.submit()">
-                                <option value="">Tất cả</option>
-                                <option value="daily" {% if selected_type == 'daily' %}selected{% endif %}>Hàng ngày</option>
-                                <option value="weekly" {% if selected_type == 'weekly' %}selected{% endif %}>Hàng tuần</option>
-                                <option value="monthly" {% if selected_type == 'monthly' %}selected{% endif %}>Hàng tháng</option>
-                            </select>
-                        </div>
-                        <div class="col-md-5">
-                            <label for="status" class="form-label">Trạng thái</label>
-                            <select name="status" id="status" class="form-select" onchange="this.form.submit()">
-                                <option value="">Tất cả</option>
-                                <option value="not_started" {% if selected_status == 'not_started' %}selected{% endif %}>Chưa bắt đầu</option>
-                                <option value="in_progress" {% if selected_status == 'in_progress' %}selected{% endif %}>Đang thực hiện</option>
-                                <option value="completed" {% if selected_status == 'completed' %}selected{% endif %}>Đã hoàn thành</option>
-                                <option value="overdue" {% if selected_status == 'overdue' %}selected{% endif %}>Quá hạn</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <a href="{% url 'learning_goals:goal_list' %}" class="btn btn-outline-secondary w-100">Đặt lại</a>
-                        </div>
-                    </form>
+    <!-- Tìm kiếm nhanh -->
+    <div class="card mb-4" x-show="showSearch" x-transition>
+        <div class="card-body">
+            <form class="row g-3"
+                  hx-get="{% url 'learning_goals:goal_list' %}?format=partial"
+                  hx-target="#goal-list-container"
+                  hx-trigger="submit"
+                  hx-indicator="#search-indicator">
+                <div class="col-md-8">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="search" placeholder="Tìm kiếm mục tiêu..."
+                               x-model="searchQuery">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                        <span id="search-indicator" class="htmx-indicator spinner-border spinner-border-sm text-primary ms-2" role="status"></span>
+                    </div>
                 </div>
-            </div>
+                <div class="col-md-4">
+                    <button type="button" class="btn btn-outline-secondary w-100"
+                            @click="searchQuery = ''; showSearch = false"
+                            hx-get="{% url 'learning_goals:goal_list' %}?format=partial"
+                            hx-target="#goal-list-container"
+                            hx-trigger="click">
+                        <i class="fas fa-times"></i> Xóa bộ lọc
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
     <!-- Thống kê -->
-    <div class="row mb-4">
+    <div class="row mb-4" id="stats-container"
+         hx-get="{% url 'learning_goals:goal_list' %}?section=stats&format=partial"
+         hx-trigger="stats-updated from:body"
+         hx-swap="outerHTML">
         <div class="col-md-3">
             <div class="card bg-primary text-white">
                 <div class="card-body text-center">
                     <h5 class="card-title">Tổng Số</h5>
-                    <h2>{{ total_goals }}</h2>
+                    <h2 x-text="stats.total">{{ total_goals }}</h2>
                 </div>
             </div>
         </div>
@@ -70,7 +84,7 @@
             <div class="card bg-success text-white">
                 <div class="card-body text-center">
                     <h5 class="card-title">Đã Hoàn Thành</h5>
-                    <h2>{{ completed_goals }}</h2>
+                    <h2 x-text="stats.completed">{{ completed_goals }}</h2>
                 </div>
             </div>
         </div>
@@ -78,7 +92,7 @@
             <div class="card bg-warning text-dark">
                 <div class="card-body text-center">
                     <h5 class="card-title">Đang Thực Hiện</h5>
-                    <h2>{{ active_goals }}</h2>
+                    <h2 x-text="stats.active">{{ active_goals }}</h2>
                 </div>
             </div>
         </div>
@@ -86,108 +100,212 @@
             <div class="card bg-danger text-white">
                 <div class="card-body text-center">
                     <h5 class="card-title">Quá Hạn</h5>
-                    <h2>{{ overdue_goals }}</h2>
+                    <h2 x-text="stats.overdue">{{ overdue_goals }}</h2>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Danh sách mục tiêu -->
-    <div class="row">
-        <div class="col-md-12">
-            {% if goals %}
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Tiêu đề</th>
-                                <th>Loại</th>
-                                <th>Danh mục</th>
-                                <th>Thời gian</th>
-                                <th>Tiến độ</th>
-                                <th>Trạng thái</th>
-                                <th>Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for goal in goals %}
-                                <tr>
-                                    <td>
-                                        <a href="{% url 'learning_goals:goal_detail' goal_id=goal.id %}">{{ goal.title }}</a>
-                                    </td>
-                                    <td>{{ goal.get_goal_type_display }}</td>
-                                    <td>{{ goal.get_category_display }}</td>
-                                    <td>
-                                        <small>{{ goal.start_date|date:"d/m/Y" }} - {{ goal.end_date|date:"d/m/Y" }}</small>
-                                        {% if goal.is_active %}
-                                            <br>
-                                            <small class="text-muted">Còn {{ goal.days_remaining }} ngày</small>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <div class="progress" style="height: 10px;">
-                                            <div class="progress-bar {% if goal.is_behind_schedule and goal.status != 'completed' %}bg-warning{% else %}bg-success{% endif %}" role="progressbar" style="width: {{ goal.progress_percentage }}%;" aria-valuenow="{{ goal.progress_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
-                                        </div>
-                                        <small>{{ goal.progress_percentage }}% ({{ goal.current_value }}/{{ goal.target_value }})</small>
-                                    </td>
-                                    <td>
-                                        {% if goal.status == 'not_started' %}
-                                            <span class="badge bg-secondary">Chưa bắt đầu</span>
-                                        {% elif goal.status == 'in_progress' %}
-                                            <span class="badge bg-primary">Đang thực hiện</span>
-                                        {% elif goal.status == 'completed' %}
-                                            <span class="badge bg-success">Đã hoàn thành</span>
-                                        {% elif goal.status == 'overdue' %}
-                                            <span class="badge bg-danger">Quá hạn</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <a href="{% url 'learning_goals:goal_detail' goal_id=goal.id %}" class="btn btn-outline-primary" title="Xem chi tiết">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                            <a href="{% url 'learning_goals:goal_edit' goal_id=goal.id %}" class="btn btn-outline-secondary" title="Chỉnh sửa">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            <button type="button" class="btn btn-outline-danger" title="Xóa" data-bs-toggle="modal" data-bs-target="#deleteModal{{ goal.id }}">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                        
-                                        <!-- Modal xác nhận xóa -->
-                                        <div class="modal fade" id="deleteModal{{ goal.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ goal.id }}" aria-hidden="true">
-                                            <div class="modal-dialog">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title" id="deleteModalLabel{{ goal.id }}">Xác nhận xóa</h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                    </div>
-                                                    <div class="modal-body">
-                                                        Bạn có chắc chắn muốn xóa mục tiêu <strong>{{ goal.title }}</strong>?
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                                                        <form action="{% url 'learning_goals:goal_delete' goal_id=goal.id %}" method="post">
-                                                            {% csrf_token %}
-                                                            <button type="submit" class="btn btn-danger">Xóa</button>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i> Bạn chưa có mục tiêu học tập nào.
-                    <a href="{% url 'learning_goals:goal_create' %}" class="alert-link">Tạo mục tiêu mới</a>
-                </div>
-            {% endif %}
-        </div>
+    <div id="goal-list-container">
+        {% include 'learning_goals/goal_list_partial.html' %}
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .goal-card {
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        overflow: hidden;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .goal-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .goal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .goal-title-container {
+        flex: 1;
+    }
+
+    .goal-title {
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 5px;
+    }
+
+    .goal-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .goal-progress-container {
+        width: 200px;
+        margin-left: 15px;
+    }
+
+    .goal-dates {
+        text-align: right;
+        margin-top: 5px;
+        color: #666;
+    }
+
+    .goal-body {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .goal-description {
+        margin-bottom: 15px;
+    }
+
+    .goal-detail-item {
+        margin-bottom: 8px;
+    }
+
+    .goal-footer {
+        padding: 10px 15px;
+        text-align: center;
+    }
+
+    .filter-card {
+        background-color: #f8f9fa;
+        border: none;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 50px 0;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        margin-top: 20px;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: #6c757d;
+        margin-bottom: 20px;
+    }
+
+    /* Progress Circle */
+    .progress-circle {
+        width: 150px;
+        height: 150px;
+    }
+
+    .circular-chart {
+        width: 100%;
+        height: 100%;
+    }
+
+    .circle-bg {
+        fill: none;
+        stroke: #eee;
+        stroke-width: 3.8;
+    }
+
+    .circle {
+        fill: none;
+        stroke-width: 3.8;
+        stroke-linecap: round;
+        stroke: #4CAF50;
+        transition: stroke-dasharray 0.5s ease;
+    }
+
+    .percentage {
+        fill: #333;
+        font-family: sans-serif;
+        font-size: 0.5em;
+        text-anchor: middle;
+        font-weight: bold;
+    }
+
+    /* HTMX và Alpine.js animations */
+    .htmx-swapping {
+        opacity: 0.5;
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+
+    .fade-enter-active, .fade-leave-active {
+        transition: opacity 0.3s;
+    }
+
+    .fade-enter, .fade-leave-to {
+        opacity: 0;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Khởi tạo Alpine.js
+        if (typeof Alpine !== 'undefined') {
+            Alpine.start();
+        }
+
+        // Xử lý sự kiện HTMX sau khi swap
+        document.body.addEventListener('htmx:afterSwap', function(event) {
+            if (event.detail.target.id === 'goal-list-container' ||
+                event.detail.target.id === 'stats-container') {
+
+                // Cập nhật thống kê trong Alpine.js
+                const statsContainer = document.getElementById('stats-container');
+                if (statsContainer) {
+                    const total = statsContainer.querySelector('.bg-primary h2').textContent.trim();
+                    const completed = statsContainer.querySelector('.bg-success h2').textContent.trim();
+                    const active = statsContainer.querySelector('.bg-warning h2').textContent.trim();
+                    const overdue = statsContainer.querySelector('.bg-danger h2').textContent.trim();
+
+                    // Cập nhật Alpine.js store
+                    const alpineComponent = Alpine.getComponent(document.querySelector('[x-data]'));
+                    if (alpineComponent) {
+                        alpineComponent.stats = {
+                            total: parseInt(total) || 0,
+                            completed: parseInt(completed) || 0,
+                            active: parseInt(active) || 0,
+                            overdue: parseInt(overdue) || 0
+                        };
+                    }
+                }
+
+                // Khởi tạo lại Alpine.js cho các phần tử mới
+                if (window.Alpine) {
+                    window.Alpine.initTree(document.body);
+                }
+            }
+        });
+
+        // Xử lý sự kiện cập nhật tiến độ
+        document.body.addEventListener('htmx:afterRequest', function(event) {
+            if (event.detail.pathInfo.requestPath.includes('update_progress')) {
+                // Kích hoạt cập nhật thống kê
+                document.body.dispatchEvent(new CustomEvent('stats-updated'));
+
+                // Hiển thị thông báo thành công
+                if (window.Alpine && Alpine.store('alerts')) {
+                    Alpine.store('alerts').add('Tiến độ đã được cập nhật thành công', 'success');
+                }
+            }
+        });
+    });
+</script>
 {% endblock %}

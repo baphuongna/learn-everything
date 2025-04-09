@@ -1,0 +1,95 @@
+{% comment %}
+Component Card - Hiển thị card với HTMX và Alpine.js
+
+Cách sử dụng:
+1. Trong template:
+   {% include 'components/card.html' with 
+      title="Tiêu đề" 
+      image="/path/to/image.jpg" 
+      text="Nội dung" 
+      footer="Footer" 
+      url="/detail/1" 
+   %}
+
+2. Với HTMX:
+   {% include 'components/card.html' with 
+      title="Tiêu đề" 
+      text="Nội dung" 
+      hx_get="/api/detail/1" 
+      hx_target="#detail-container" 
+   %}
+
+3. Với Alpine.js:
+   {% include 'components/card.html' with 
+      title="Tiêu đề" 
+      text="Nội dung" 
+      alpine_data="{ expanded: false }" 
+      alpine_click="expanded = !expanded" 
+   %}
+{% endcomment %}
+
+{% with 
+  title=title|default:"" 
+  text=text|default:"" 
+  image=image|default:"" 
+  footer=footer|default:"" 
+  url=url|default:"#" 
+  hx_get=hx_get|default:"" 
+  hx_target=hx_target|default:"" 
+  hx_trigger=hx_trigger|default:"click" 
+  hx_swap=hx_swap|default:"innerHTML" 
+  alpine_data=alpine_data|default:"" 
+  alpine_click=alpine_click|default:"" 
+  class=class|default:"" 
+  header_class=header_class|default:"" 
+  body_class=body_class|default:"" 
+  footer_class=footer_class|default:""
+%}
+<div class="card {{ class }}" 
+     {% if alpine_data %}x-data="{{ alpine_data }}"{% endif %}
+     {% if hx_get %}
+     hx-get="{{ hx_get }}" 
+     hx-target="{{ hx_target }}" 
+     hx-trigger="{{ hx_trigger }}" 
+     hx-swap="{{ hx_swap }}"
+     {% endif %}>
+  
+  {% if image %}
+  <img src="{{ image }}" class="card-img-top" alt="{{ title }}">
+  {% endif %}
+  
+  {% if title %}
+  <div class="card-header {{ header_class }}">
+    {% if url and not hx_get and not alpine_click %}
+    <a href="{{ url }}" class="text-decoration-none">{{ title }}</a>
+    {% else %}
+    <h5 class="card-title mb-0" {% if alpine_click %}@click="{{ alpine_click }}"{% endif %}>{{ title }}</h5>
+    {% endif %}
+  </div>
+  {% endif %}
+  
+  <div class="card-body {{ body_class }}">
+    {% if text %}
+    <p class="card-text">{{ text }}</p>
+    {% endif %}
+    
+    {% block content %}{% endblock %}
+  </div>
+  
+  {% if footer or buttons %}
+  <div class="card-footer {{ footer_class }}">
+    {% if footer %}
+    <div class="card-text">{{ footer }}</div>
+    {% endif %}
+    
+    {% if buttons %}
+    <div class="d-flex justify-content-end">
+      {{ buttons }}
+    </div>
+    {% endif %}
+    
+    {% block footer %}{% endblock %}
+  </div>
+  {% endif %}
+</div>
+{% endwith %}

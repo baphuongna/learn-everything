@@ -1,0 +1,114 @@
+{% load custom_filters %}
+
+<div class="badge-list-container">
+    <!-- Bộ lọc -->
+    <div class="card filter-card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="btn-group w-100" role="group" x-data="{ activeCategory: '{{ selected_category }}' }">
+                        <button class="btn"
+                                :class="activeCategory === '' ? 'btn-primary' : 'btn-outline-primary'"
+                                @click="activeCategory = ''"
+                                hx-get="{% url 'achievements:badge_list' %}?format=partial"
+                                hx-target="#badge-list-container"
+                                hx-swap="innerHTML"
+                                hx-push-url="false">
+                            <i class="fas fa-list"></i> Tất Cả
+                        </button>
+                        {% for category_value, category_name in categories %}
+                            <button class="btn"
+                                    :class="activeCategory === '{{ category_value }}' ? 'btn-primary' : 'btn-outline-primary'"
+                                    @click="activeCategory = '{{ category_value }}'"
+                                    hx-get="{% url 'achievements:badge_list' %}?category={{ category_value }}&level={{ selected_level }}&format=partial"
+                                    hx-target="#badge-list-container"
+                                    hx-swap="innerHTML"
+                                    hx-push-url="false">
+                                <i class="fas fa-tag"></i> {{ category_name }}
+                            </button>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="btn-group w-100" role="group" x-data="{ activeLevel: '{{ selected_level }}' }">
+                        <button class="btn"
+                                :class="activeLevel === '' ? 'btn-success' : 'btn-outline-success'"
+                                @click="activeLevel = ''"
+                                hx-get="{% url 'achievements:badge_list' %}?category={{ selected_category }}&format=partial"
+                                hx-target="#badge-list-container"
+                                hx-swap="innerHTML"
+                                hx-push-url="false">
+                            <i class="fas fa-list"></i> Tất Cả
+                        </button>
+                        {% for level_value, level_name in levels %}
+                            <button class="btn"
+                                    :class="activeLevel === '{{ level_value }}' ? 'btn-success' : 'btn-outline-success'"
+                                    @click="activeLevel = '{{ level_value }}'"
+                                    hx-get="{% url 'achievements:badge_list' %}?category={{ selected_category }}&level={{ level_value }}&format=partial"
+                                    hx-target="#badge-list-container"
+                                    hx-swap="innerHTML"
+                                    hx-push-url="false">
+                                <i class="fas fa-star"></i> {{ level_name }}
+                            </button>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thống kê -->
+    <div class="badge-stats mb-4">
+        <div class="progress" style="height: 25px;">
+            {% with percent=earned_count|percentage:total_count %}
+            <div class="progress-bar bg-success" role="progressbar" style="width: {{ percent }}%;" aria-valuenow="{{ percent }}" aria-valuemin="0" aria-valuemax="100">
+                {{ earned_count }}/{{ total_count }} ({{ percent }}%)
+            </div>
+            {% endwith %}
+        </div>
+    </div>
+
+    <!-- Danh sách huy hiệu -->
+    <div class="row">
+        {% for badge in badges %}
+            <div class="col-md-4 col-lg-3 mb-4">
+                <div class="card h-100 {% if badge.is_earned %}earned{% endif %}" x-data="{ showDetails: false }">
+                    <div class="card-body text-center">
+                        <div class="badge-icon mb-3">
+                            <i class="{{ badge.icon }} fa-4x text-{{ badge.get_level_color }}"></i>
+                        </div>
+                        <h5 class="card-title">{{ badge.name }}</h5>
+                        <div class="badge-level mb-2">
+                            <span class="badge bg-{{ badge.get_level_color }}">{{ badge.get_level_display }}</span>
+                            <span class="badge bg-info">{{ badge.get_category_display }}</span>
+                        </div>
+                        <div class="badge-status mb-2">
+                            {% if badge.is_earned %}
+                                <span class="badge bg-success"><i class="fas fa-check-circle"></i> Đã đạt được</span>
+                            {% else %}
+                                <span class="badge bg-secondary"><i class="fas fa-lock"></i> Chưa đạt được</span>
+                            {% endif %}
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" @click="showDetails = !showDetails">
+                            <span x-show="!showDetails">Xem chi tiết</span>
+                            <span x-show="showDetails">Ẩn chi tiết</span>
+                        </button>
+                    </div>
+                    <div class="card-footer bg-transparent" x-show="showDetails" x-transition>
+                        <p class="card-text">{{ badge.description }}</p>
+                        <p class="card-text"><strong>Điều kiện:</strong> {{ badge.criteria }}</p>
+                        {% if badge.is_earned %}
+                            <p class="card-text"><strong>Đạt được:</strong> {{ badge.user_badges.first.earned_at|date:"d/m/Y" }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> Không tìm thấy huy hiệu nào phù hợp với bộ lọc.
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>

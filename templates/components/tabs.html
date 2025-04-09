@@ -1,0 +1,146 @@
+{% comment %}
+Component Tabs - Hiển thị tabs với HTMX và Alpine.js
+
+Cách sử dụng:
+1. Trong template:
+   {% include 'components/tabs.html' with id="my-tabs" %}
+     {% tab title="Tab 1" active=True %}
+       Nội dung tab 1
+     {% endtab %}
+     {% tab title="Tab 2" %}
+       Nội dung tab 2
+     {% endtab %}
+   {% endinclude %}
+
+2. Với HTMX:
+   {% include 'components/tabs.html' with id="my-tabs" %}
+     {% tab title="Tab 1" active=True %}
+       Nội dung tab 1
+     {% endtab %}
+     {% tab title="Tab 2" hx_get="/api/tab2" hx_trigger="click" %}
+       <div id="tab2-content">Đang tải...</div>
+     {% endtab %}
+   {% endinclude %}
+{% endcomment %}
+
+{% load i18n %}
+
+{% with id=id|default:"tabs" %}
+<div class="tabs-container" x-data="{ activeTab: '{{ active_tab|default:"tab-0" }}' }">
+  <ul class="nav nav-tabs" id="{{ id }}-tabs" role="tablist">
+    {% for tab in tabs %}
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" 
+              :class="activeTab === '{{ id }}-tab-{{ forloop.counter0 }}' ? 'active' : ''"
+              id="{{ id }}-tab-{{ forloop.counter0 }}" 
+              data-bs-toggle="tab" 
+              data-bs-target="#{{ id }}-content-{{ forloop.counter0 }}" 
+              type="button" 
+              role="tab" 
+              aria-controls="{{ id }}-content-{{ forloop.counter0 }}" 
+              aria-selected="false"
+              @click="activeTab = '{{ id }}-tab-{{ forloop.counter0 }}'"
+              {% if tab.hx_get %}
+              hx-get="{{ tab.hx_get }}"
+              hx-target="{{ tab.hx_target|default:'#'|add:id|add:'-content-'|add:forloop.counter0 }}"
+              hx-trigger="{{ tab.hx_trigger|default:'click once' }}"
+              {% endif %}>
+        {{ tab.title }}
+      </button>
+    </li>
+    {% endfor %}
+  </ul>
+  
+  <div class="tab-content" id="{{ id }}-content">
+    {% for tab in tabs %}
+    <div class="tab-pane fade" 
+         :class="activeTab === '{{ id }}-tab-{{ forloop.counter0 }}' ? 'show active' : ''"
+         id="{{ id }}-content-{{ forloop.counter0 }}" 
+         role="tabpanel" 
+         aria-labelledby="{{ id }}-tab-{{ forloop.counter0 }}">
+      {{ tab.content }}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endwith %}
+
+{% comment %}
+Định nghĩa tag tùy chỉnh để sử dụng trong template
+{% endcomment %}
+{% if not tabs %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const tabsContainer = document.currentScript.parentNode;
+    const tabsData = [];
+    
+    // Tìm tất cả các phần tử tab
+    const tabElements = tabsContainer.querySelectorAll('[data-tab]');
+    
+    tabElements.forEach((tabElement, index) => {
+      const title = tabElement.getAttribute('data-tab-title') || `Tab ${index + 1}`;
+      const active = tabElement.hasAttribute('data-tab-active');
+      const hxGet = tabElement.getAttribute('data-hx-get') || '';
+      const hxTarget = tabElement.getAttribute('data-hx-target') || '';
+      const hxTrigger = tabElement.getAttribute('data-hx-trigger') || '';
+      
+      tabsData.push({
+        title: title,
+        content: tabElement.innerHTML,
+        active: active,
+        hx_get: hxGet,
+        hx_target: hxTarget,
+        hx_trigger: hxTrigger
+      });
+      
+      // Xóa phần tử gốc
+      tabElement.remove();
+    });
+    
+    // Tạo template mới với dữ liệu tab
+    const tabsTemplate = document.createElement('template');
+    tabsTemplate.innerHTML = `
+      <div class="tabs-container" x-data="{ activeTab: 'tab-${tabsData.findIndex(tab => tab.active) || 0}' }">
+        <ul class="nav nav-tabs" role="tablist">
+          ${tabsData.map((tab, index) => `
+            <li class="nav-item" role="presentation">
+              <button class="nav-link ${tab.active ? 'active' : ''}" 
+                      :class="activeTab === 'tab-${index}' ? 'active' : ''"
+                      id="tab-${index}" 
+                      data-bs-toggle="tab" 
+                      data-bs-target="#content-${index}" 
+                      type="button" 
+                      role="tab" 
+                      aria-controls="content-${index}" 
+                      aria-selected="${tab.active ? 'true' : 'false'}"
+                      @click="activeTab = 'tab-${index}'"
+                      ${tab.hx_get ? `
+                      hx-get="${tab.hx_get}"
+                      hx-target="${tab.hx_target || '#content-' + index}"
+                      hx-trigger="${tab.hx_trigger || 'click once'}"
+                      ` : ''}>
+                ${tab.title}
+              </button>
+            </li>
+          `).join('')}
+        </ul>
+        
+        <div class="tab-content">
+          ${tabsData.map((tab, index) => `
+            <div class="tab-pane fade ${tab.active ? 'show active' : ''}" 
+                 :class="activeTab === 'tab-${index}' ? 'show active' : ''"
+                 id="content-${index}" 
+                 role="tabpanel" 
+                 aria-labelledby="tab-${index}">
+              ${tab.content}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+    
+    // Thêm template vào container
+    tabsContainer.appendChild(tabsTemplate.content);
+  });
+</script>
+{% endif %}

@@ -19,9 +19,21 @@
                     <div class="col-md-8">
                         <h4>Flashcards cần ôn tập hôm nay</h4>
                         <p>Ôn tập các flashcard đến hạn để tăng cường trí nhớ dài hạn.</p>
+                        {% if due_count > 0 %}
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-circle"></i> Bạn có <strong>{{ due_count }}</strong> flashcard cần ôn tập hôm nay.
+                            </div>
+                        {% endif %}
                     </div>
                     <div class="col-md-4 text-end">
-                        <a href="{% url 'due_flashcards' %}" class="btn btn-primary">Xem Flashcards Cần Ôn Tập</a>
+                        <a href="{% url 'due_flashcards' %}"
+                           class="btn btn-primary"
+                           hx-get="{% url 'due_flashcards' %}?format=partial"
+                           hx-target="#flashcard-preview"
+                           hx-swap="innerHTML"
+                           hx-push-url="false">
+                            Xem Flashcards Cần Ôn Tập
+                        </a>
                     </div>
                 </div>
             </div>
@@ -30,31 +42,61 @@
 </div>
 {% endif %}
 
-<div class="row">
-    {% for flashcard_set in flashcard_sets %}
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">{{ flashcard_set.title }}</h5>
-            </div>
-            <div class="card-body">
-                <p><strong>Bài học:</strong> {{ flashcard_set.lesson.title }}</p>
-                <p><strong>Chủ đề:</strong> {{ flashcard_set.lesson.topic.subject.name }}</p>
-                <p><strong>Số lượng flashcard:</strong> {{ flashcard_set.flashcards.count }}</p>
-                <p>{{ flashcard_set.description|truncatewords:20 }}</p>
-            </div>
-            <div class="card-footer bg-white border-top-0">
-                <a href="{% url 'flashcard_set_detail' flashcard_set.id %}" class="btn btn-primary">Học Ngay</a>
-            </div>
-        </div>
-    </div>
-    {% empty %}
+<!-- Tìm kiếm và lọc -->
+<div class="row mb-4">
     <div class="col-md-12">
-        <div class="alert alert-info">
-            Hiện tại chưa có bộ flashcard nào. Vui lòng quay lại sau.
+        <div class="card">
+            <div class="card-body" x-data="{ showFilters: false }">
+                <form id="search-form"
+                      hx-get="{% url 'flashcard_list' %}"
+                      hx-target="#flashcard-list-container"
+                      hx-trigger="submit, input[name='search'].keyup changed delay:500ms"
+                      hx-indicator="#search-indicator">
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-8">
+                            <div class="input-group">
+                                <input type="text" name="search" class="form-control" placeholder="Tìm kiếm flashcard..." value="{{ search_query }}">
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="fas fa-search"></i> Tìm kiếm
+                                </button>
+                                <button class="btn btn-outline-secondary" type="button" @click="showFilters = !showFilters">
+                                    <i class="fas" :class="showFilters ? 'fa-chevron-up' : 'fa-filter'"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div x-show="showFilters" x-transition>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="subject" class="form-label">Chủ đề</label>
+                                <select name="subject" id="subject" class="form-select" hx-trigger="change">
+                                    <option value="">Tất cả chủ đề</option>
+                                    {% for subject in subjects %}
+                                        <option value="{{ subject.id }}" {% if selected_subject == subject.id|stringformat:"i" %}selected{% endif %}>
+                                            {{ subject.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <div id="search-indicator" class="htmx-indicator text-center mt-3">
+                    <div class="spinner-border spinner-border-sm text-primary" role="status">
+                        <span class="visually-hidden">Đang tải...</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    {% endfor %}
+</div>
+
+<!-- Danh sách flashcard -->
+<div id="flashcard-list-container">
+    {% include 'flashcards/flashcard_list_partial.html' %}
 </div>
 
 <div class="row mt-5">

@@ -57,6 +57,57 @@
         border-radius: 5px;
         border: 1px solid #dee2e6;
     }
+    
+    .mindmap-toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background-color: rgba(255, 255, 255, 0.95);
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .action-icon {
+        cursor: pointer;
+        transition: all 0.2s;
+        margin: 0 5px;
+    }
+    
+    .action-icon:hover {
+        transform: scale(1.2);
+    }
+    
+    .zoom-controls {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+    
+    .zoom-btn {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 5px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .zoom-btn:hover {
+        background-color: #e9ecef;
+    }
+    
+    .zoom-level {
+        margin: 0 10px;
+        font-weight: bold;
+    }
 
     @media print {
         .no-print {
@@ -76,237 +127,203 @@
 {% endblock %}
 
 {% block content %}
-<div class="row mb-4 no-print">
-    <div class="col-md-8">
-        <h1 class="mb-3">
-            <i class="fas fa-project-diagram text-success"></i> {{ mind_map.title }}
-        </h1>
-        <p class="mindmap-meta">
-            {% if mind_map.subject %}
-            <span class="badge bg-primary">{{ mind_map.subject.name }}</span>
-            {% endif %}
-            <span class="ms-2"><i class="far fa-calendar-alt"></i> Tạo: {{ mind_map.created_at|date:"d/m/Y H:i" }}</span>
-            {% if mind_map.updated_at != mind_map.created_at %}
-            <span class="ms-2"><i class="far fa-edit"></i> Cập nhật: {{ mind_map.updated_at|date:"d/m/Y H:i" }}</span>
-            {% endif %}
-        </p>
+<div id="mindmap-detail-container" x-data="{ showToolbar: false, zoomLevel: 100 }">
+    <div class="row mb-4 no-print">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-project-diagram text-success"></i> {{ mind_map.title }}
+            </h1>
+            <p class="mindmap-meta">
+                {% if mind_map.subject %}
+                <span class="badge bg-primary">{{ mind_map.subject.name }}</span>
+                {% endif %}
+                <span class="ms-2"><i class="far fa-calendar-alt"></i> Tạo: {{ mind_map.created_at|date:"d/m/Y H:i" }}</span>
+                {% if mind_map.updated_at != mind_map.created_at %}
+                <span class="ms-2"><i class="far fa-edit"></i> Cập nhật: {{ mind_map.updated_at|date:"d/m/Y H:i" }}</span>
+                {% endif %}
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="mb-2">
+                <a href="{% url 'advanced_learning:mind_map_list' %}" class="btn btn-outline-success"
+                   hx-get="{% url 'advanced_learning:mind_map_list' %}?format=partial"
+                   hx-target="#mindmap-detail-container"
+                   hx-swap="outerHTML"
+                   hx-push-url="true">
+                    <i class="fas fa-arrow-left"></i> Quay Lại Danh Sách
+                </a>
+                <button onclick="window.print()" class="btn btn-outline-secondary ms-2">
+                    <i class="fas fa-print"></i> In
+                </button>
+            </div>
+            <div>
+                <div class="btn-group">
+                    <a href="{% url 'advanced_learning:mind_map_export_pdf' map_id=mind_map.id %}" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-file-pdf"></i> Xuất PDF
+                    </a>
+                    <a href="{% url 'advanced_learning:mind_map_export_image' map_id=mind_map.id %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-image"></i> Xuất Ảnh
+                    </a>
+                    <a href="{% url 'advanced_learning:mind_map_create_cornell_note' map_id=mind_map.id %}" class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-edit"></i> Tạo Ghi Chú
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="col-md-4 text-end">
-        <div class="mb-2">
-            <a href="{% url 'advanced_learning:mind_map_list' %}" class="btn btn-outline-success">
-                <i class="fas fa-arrow-left"></i> Quay Lại Danh Sách
+
+    <!-- Thanh công cụ nổi -->
+    <div class="mindmap-toolbar no-print" x-show="showToolbar" x-transition>
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <span class="badge bg-success">{{ mind_map.title }}</span>
+            </div>
+            <div>
+                <a href="{% url 'advanced_learning:mind_map_edit' map_id=mind_map.id %}" class="action-icon" title="Chỉnh sửa">
+                    <i class="fas fa-edit fa-lg text-warning"></i>
+                </a>
+                <a href="{% url 'advanced_learning:mind_map_export_pdf' map_id=mind_map.id %}" class="action-icon" title="Xuất PDF">
+                    <i class="fas fa-file-pdf fa-lg text-danger"></i>
+                </a>
+                <a href="{% url 'advanced_learning:mind_map_export_image' map_id=mind_map.id %}" class="action-icon" title="Xuất Ảnh">
+                    <i class="fas fa-image fa-lg text-primary"></i>
+                </a>
+                <a href="{% url 'advanced_learning:mind_map_create_cornell_note' map_id=mind_map.id %}" class="action-icon" title="Tạo Ghi Chú">
+                    <i class="fas fa-edit fa-lg text-info"></i>
+                </a>
+                <a href="{% url 'advanced_learning:mind_map_create_flashcards' map_id=mind_map.id %}" class="action-icon" title="Tạo Flashcards">
+                    <i class="fas fa-layer-group fa-lg text-warning"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="mindmap-container" @scroll.window="showToolbar = window.scrollY > 200">
+        <div class="mindmap-section">
+            <h5><i class="fas fa-info-circle"></i> Thông tin sơ đồ</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Tiêu đề:</strong> {{ mind_map.title }}</p>
+                    <p><strong>Chủ đề trung tâm:</strong> {{ mind_map.central_topic }}</p>
+                    {% if mind_map.subject %}
+                    <p><strong>Chủ đề:</strong> {{ mind_map.subject.name }}</p>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Ngày tạo:</strong> {{ mind_map.created_at|date:"d/m/Y H:i" }}</p>
+                    <p><strong>Cập nhật lần cuối:</strong> {{ mind_map.updated_at|date:"d/m/Y H:i" }}</p>
+                    <p><strong>Số nút:</strong> <span id="node-count">-</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mindmap-section">
+            <h5><i class="fas fa-project-diagram"></i> Sơ đồ tư duy</h5>
+            
+            <div class="viewer-tools no-print">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="zoom-controls">
+                            <div class="zoom-btn" @click="zoomLevel = Math.max(50, zoomLevel - 10); updateZoom()">
+                                <i class="fas fa-search-minus"></i>
+                            </div>
+                            <span class="zoom-level" x-text="zoomLevel + '%'"></span>
+                            <div class="zoom-btn" @click="zoomLevel = Math.min(200, zoomLevel + 10); updateZoom()">
+                                <i class="fas fa-search-plus"></i>
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary ms-3" @click="zoomLevel = 100; updateZoom()">
+                                <i class="fas fa-sync-alt"></i> Đặt lại
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-success" id="expand-all-btn">
+                                <i class="fas fa-expand-arrows-alt"></i> Mở rộng tất cả
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" id="collapse-all-btn">
+                                <i class="fas fa-compress-arrows-alt"></i> Thu gọn tất cả
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mindmap-viewer">
+                <div id="jsmind_container"></div>
+            </div>
+        </div>
+
+        <div class="action-buttons no-print">
+            <a href="{% url 'advanced_learning:mind_map_edit' map_id=mind_map.id %}" class="btn btn-success">
+                <i class="fas fa-edit"></i> Chỉnh Sửa
             </a>
-            <button onclick="window.print()" class="btn btn-outline-secondary ms-2">
-                <i class="fas fa-print"></i> In
+            <button type="button" class="btn btn-danger ms-2" 
+                    hx-delete="{% url 'advanced_learning:mind_map_delete' map_id=mind_map.id %}"
+                    hx-confirm="Bạn có chắc chắn muốn xóa sơ đồ tư duy này không?"
+                    hx-target="#mindmap-detail-container"
+                    hx-swap="outerHTML"
+                    hx-push-url="{% url 'advanced_learning:mind_map_list' %}">
+                <i class="fas fa-trash"></i> Xóa
             </button>
-        </div>
-        <div>
-            <div class="btn-group">
-                <a href="#" class="btn btn-outline-primary btn-sm" id="export-image-btn">
-                    <i class="fas fa-image"></i> Xuất Hình Ảnh
-                </a>
-                <a href="{% url 'advanced_learning:mind_map_export_pdf' map_id=mind_map.id %}" class="btn btn-outline-danger btn-sm">
-                    <i class="fas fa-file-pdf"></i> Xuất PDF
-                </a>
-                <a href="{% url 'advanced_learning:mind_map_share' map_id=mind_map.id %}" class="btn btn-outline-success btn-sm">
-                    <i class="fas fa-share-alt"></i> Chia Sẻ
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="mindmap-container">
-    <div class="mindmap-section">
-        <h5><i class="fas fa-project-diagram"></i> {{ mind_map.title }}</h5>
-        <p class="mindmap-meta">
-            <strong>Chủ đề trung tâm:</strong> {{ mind_map.central_topic }}
-            {% if mind_map.subject %} | <strong>Chủ đề:</strong> {{ mind_map.subject.name }}{% endif %}
-        </p>
-
-        <div class="viewer-tools no-print">
-            <div class="btn-group" role="group">
-                <button type="button" class="btn btn-outline-primary" id="zoom-in-btn">
-                    <i class="fas fa-search-plus"></i> Phóng to
-                </button>
-                <button type="button" class="btn btn-outline-primary" id="zoom-out-btn">
-                    <i class="fas fa-search-minus"></i> Thu nhỏ
-                </button>
-                <button type="button" class="btn btn-outline-secondary" id="expand-all-btn">
-                    <i class="fas fa-expand-arrows-alt"></i> Mở rộng tất cả
-                </button>
-                <button type="button" class="btn btn-outline-secondary" id="collapse-all-btn">
-                    <i class="fas fa-compress-arrows-alt"></i> Thu gọn tất cả
-                </button>
-            </div>
-        </div>
-
-        <div class="mindmap-viewer">
-            <div id="jsmind_container"></div>
-        </div>
-    </div>
-
-    <div class="action-buttons no-print">
-        <a href="{% url 'advanced_learning:mind_map_edit' map_id=mind_map.id %}" class="btn btn-success">
-            <i class="fas fa-edit"></i> Chỉnh Sửa
-        </a>
-        <a href="{% url 'advanced_learning:mind_map_delete' map_id=mind_map.id %}" class="btn btn-danger ms-2">
-            <i class="fas fa-trash"></i> Xóa
-        </a>
-    </div>
-
-    <!-- Tích hợp với các tính năng khác -->
-    <div class="mindmap-section no-print">
-        <h5><i class="fas fa-link"></i> Tích Hợp Học Tập</h5>
-        <div class="row">
-            <div class="col-md-4 mb-3">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title"><i class="fas fa-layer-group text-primary"></i> Flashcards</h5>
-                        <p class="card-text">Tạo bộ flashcards từ sơ đồ tư duy này để ôn tập hiệu quả.</p>
-                        <a href="{% url 'advanced_learning:mind_map_create_flashcards' map_id=mind_map.id %}" class="btn btn-outline-primary">
-                            <i class="fas fa-magic"></i> Tạo Flashcards
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-3">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title"><i class="fas fa-question-circle text-primary"></i> Quiz</h5>
-                        <p class="card-text">Tạo bài kiểm tra từ sơ đồ tư duy này để kiểm tra kiến thức.</p>
-                        <a href="{% url 'advanced_learning:mind_map_create_quiz' map_id=mind_map.id %}" class="btn btn-outline-primary">
-                            <i class="fas fa-magic"></i> Tạo Quiz
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-3">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title"><i class="fas fa-edit text-primary"></i> Ghi Chú Cornell</h5>
-                        <p class="card-text">Tạo ghi chú Cornell từ sơ đồ tư duy này để tổ chức thông tin.</p>
-                        <a href="{% url 'advanced_learning:mind_map_create_cornell_note' map_id=mind_map.id %}" class="btn btn-outline-primary">
-                            <i class="fas fa-magic"></i> Tạo Ghi Chú
-                        </a>
-                    </div>
-                </div>
-            </div>
+            <a href="{% url 'advanced_learning:mind_map_create_flashcards' map_id=mind_map.id %}" class="btn btn-warning ms-2">
+                <i class="fas fa-layer-group"></i> Tạo Flashcards
+            </a>
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/jsmind@0.6.4/js/jsmind.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsmind@0.6.4/js/jsmind.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsmind@0.6.4/js/jsmind.screenshot.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Khởi tạo JSMind
+        // Khởi tạo Alpine.js nếu cần
+        if (typeof Alpine !== 'undefined') {
+            Alpine.start();
+        }
+        
+        // Khởi tạo sơ đồ tư duy
         var options = {
             container: 'jsmind_container',
             theme: 'primary',
             editable: false,
-            mode: 'full',
-            support_html: true,
             view: {
+                hmargin: 100,
+                vmargin: 50,
                 line_width: 2,
-                line_color: '#555'
+                line_color: '#28a745'
             }
         };
-
+        
         var jm = new jsMind(options);
-
-        // Lấy dữ liệu từ model
-        var mapData = {{ mind_map.map_data|safe }};
-
-        // Chuyển đổi dữ liệu sang định dạng JSMind
-        var jm_data = {
-            "meta": {
-                "name": "{{ mind_map.title }}",
-                "author": "{{ mind_map.user.username }}",
-                "version": "1.0"
-            },
-            "format": "node_tree",
-            "data": convertToJSMindFormat(mapData)
-        };
-
-        // Hiển thị sơ đồ
-        jm.show(jm_data);
-
-        // Xử lý nút phóng to
-        document.getElementById('zoom-in-btn').addEventListener('click', function() {
-            jm.view.zoomIn();
-        });
-
-        // Xử lý nút thu nhỏ
-        document.getElementById('zoom-out-btn').addEventListener('click', function() {
-            jm.view.zoomOut();
-        });
-
+        
+        // Dữ liệu sơ đồ tư duy
+        var mind_data = {{ mind_map.map_data|safe }};
+        jm.show(mind_data);
+        
+        // Đếm số nút
+        var nodes = jm.get_nodes();
+        document.getElementById('node-count').textContent = Object.keys(nodes).length;
+        
         // Xử lý nút mở rộng tất cả
         document.getElementById('expand-all-btn').addEventListener('click', function() {
             jm.expand_all();
         });
-
+        
         // Xử lý nút thu gọn tất cả
         document.getElementById('collapse-all-btn').addEventListener('click', function() {
             jm.collapse_all();
         });
-
-        // Xử lý xuất hình ảnh
-        document.getElementById('export-image-btn').addEventListener('click', function(e) {
-            e.preventDefault();
-
-            // Tạo form để gửi dữ liệu hình ảnh
-            var form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '{% url "advanced_learning:mind_map_export_image" map_id=mind_map.id %}';
-
-            // Lấy dữ liệu hình ảnh từ jsMind
-            var image_data = jm.screenshot.shootAsDataURL();
-
-            // Tạo input ẩn để chứa dữ liệu hình ảnh
-            var input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'image_data';
-            input.value = image_data;
-
-            // Thêm CSRF token
-            var csrfInput = document.createElement('input');
-            csrfInput.type = 'hidden';
-            csrfInput.name = 'csrfmiddlewaretoken';
-            csrfInput.value = '{{ csrf_token }}';
-
-            // Thêm input vào form và gửi form
-            form.appendChild(input);
-            form.appendChild(csrfInput);
-            document.body.appendChild(form);
-            form.submit();
-        });
-
-        // Hàm chuyển đổi dữ liệu từ định dạng lưu trữ sang định dạng JSMind
-        function convertToJSMindFormat(data) {
-            var result = {
-                "id": data.id || "root",
-                "topic": data.text || data.topic || "{{ mind_map.central_topic }}",
-                "direction": "right",
-                "expanded": true
-            };
-
-            if (data.background) {
-                result.background = data.background;
-            }
-
-            if (data.children && data.children.length > 0) {
-                result.children = [];
-                for (var i = 0; i < data.children.length; i++) {
-                    result.children.push(convertToJSMindFormat(data.children[i]));
-                }
-            }
-
-            return result;
-        }
+        
+        // Hàm cập nhật zoom
+        window.updateZoom = function() {
+            var zoomLevel = Alpine.store('zoomLevel') || 100;
+            var scale = zoomLevel / 100;
+            document.getElementById('jsmind_container').style.transform = 'scale(' + scale + ')';
+            document.getElementById('jsmind_container').style.transformOrigin = 'center center';
+        };
     });
 </script>
 {% endblock %}

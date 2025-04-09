@@ -14,6 +14,9 @@ from .forms import MemoryCategoryForm, MemoryItemForm, MemoryAttachmentForm, Mem
 @login_required
 def memory_home(request):
     """Trang chủ của Memory Bank"""
+    format_type = request.GET.get('format', '')
+    section = request.GET.get('section', '')
+
     # Lấy các danh mục của người dùng
     categories = MemoryCategory.objects.filter(user=request.user)
 
@@ -32,6 +35,7 @@ def memory_home(request):
 
     # Tổng số ghi nhớ
     total_items = MemoryItem.objects.filter(user=request.user).count()
+    total_review_items = MemoryItem.objects.filter(user=request.user, next_review_date__lte=today).count()
 
     context = {
         'categories': categories,
@@ -40,8 +44,23 @@ def memory_home(request):
         'review_items': review_items,
         'total_items': total_items,
         'total_categories': categories.count(),
-        'total_review_items': MemoryItem.objects.filter(user=request.user, next_review_date__lte=today).count()
+        'total_review_items': total_review_items
     }
+
+    # Kiểm tra nếu là request HTMX partial cho một phần cụ thể
+    if request.htmx and section:
+        if section == 'recent':
+            return render(request, 'memory_bank/partials/recent_items.html', context)
+        elif section == 'favorite':
+            return render(request, 'memory_bank/partials/favorite_items.html', context)
+        elif section == 'review':
+            return render(request, 'memory_bank/partials/review_items.html', context)
+        elif section == 'stats':
+            return render(request, 'memory_bank/partials/stats.html', context)
+
+    # Kiểm tra nếu là request HTMX partial cho toàn bộ trang
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'memory_bank/home_partial.html', context)
 
     return render(request, 'memory_bank/home.html', context)
 
@@ -258,6 +277,14 @@ def memory_item_toggle_favorite(request, pk):
         item.is_favorite = not item.is_favorite
         item.save()
 
+        # Kiểm tra nếu là request HTMX
+        if request.htmx:
+            context = {
+                'item': item,
+                'message': 'Đã đánh dấu yêu thích' if item.is_favorite else 'Đã bỏ đánh dấu yêu thích'
+            }
+            return render(request, 'memory_bank/favorite_toggle_response.html', context)
+
         return JsonResponse({
             'success': True,
             'is_favorite': item.is_favorite
@@ -269,6 +296,7 @@ def memory_item_toggle_favorite(request, pk):
 def memory_item_review(request, pk):
     """Xem lại và cập nhật lịch ôn tập của ghi nhớ"""
     item = get_object_or_404(MemoryItem, pk=pk, user=request.user)
+    format_type = request.GET.get('format', '')
 
     if request.method == 'POST':
         recall_level = int(request.POST.get('recall_level', 1))
@@ -287,6 +315,23 @@ def memory_item_review(request, pk):
 
         item.save()
 
+        # Đếm số ghi nhớ còn lại cần ôn tập
+        today = timezone.now()
+        remaining_count = MemoryItem.objects.filter(
+            user=request.user,
+            next_review_date__lte=today
+        ).count()
+
+        # Kiểm tra nếu là request HTMX
+        if request.htmx:
+            context = {
+                'item': item,
+                'recall_level': recall_level,
+                'next_review_date': item.next_review_date,
+                'remaining_count': remaining_count
+            }
+            return render(request, 'memory_bank/review_feedback.html', context)
+
         messages.success(request, 'Ghi nhớ đã được ôn tập thành công!')
         return redirect('memory_item_detail', pk=item.pk)
 
@@ -296,12 +341,18 @@ def memory_item_review(request, pk):
         'attachments': item.attachments.all()
     }
 
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'memory_bank/item_review_partial.html', context)
+
     return render(request, 'memory_bank/item_review.html', context)
 
 @login_required
 def memory_review_list(request):
     """Danh sách các ghi nhớ cần ôn tập"""
     today = timezone.now()
+    format_type = request.GET.get('format', '')
+
     items = MemoryItem.objects.filter(
         user=request.user,
         next_review_date__lte=today
@@ -317,12 +368,17 @@ def memory_review_list(request):
         'total_items': items.count()
     }
 
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'memory_bank/review_list_partial.html', context)
+
     return render(request, 'memory_bank/review_list.html', context)
 
 @login_required
 def memory_search(request):
     """Tìm kiếm ghi nhớ"""
     search_form = MemorySearchForm(request.user, request.GET)
+    format_type = request.GET.get('format', '')
     items = MemoryItem.objects.filter(user=request.user)
 
     if search_form.is_valid():
@@ -352,10 +408,22 @@ def memory_search(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
+    # Đếm số ghi nhớ cần ôn tập hôm nay
+    today = timezone.now()
+    review_count = MemoryItem.objects.filter(
+        user=request.user,
+        next_review_date__lte=today
+    ).count()
+
     context = {
         'search_form': search_form,
         'items': page_obj,
-        'total_items': items.count()
+        'total_items': items.count(),
+        'review_count': review_count
     }
+
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'memory_bank/search_results_partial.html', context)
 
     return render(request, 'memory_bank/search.html', context)

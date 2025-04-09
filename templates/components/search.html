@@ -1,0 +1,90 @@
+{% comment %}
+Component Search - Hiển thị thanh tìm kiếm với HTMX và Alpine.js
+
+Cách sử dụng:
+1. Trong template:
+   {% include 'components/search.html' with 
+      placeholder="Tìm kiếm..." 
+      target="#results" 
+      url="/search" 
+      filters=True 
+   %}
+
+2. Với filters=True, bạn có thể thêm các bộ lọc:
+   {% include 'components/search.html' with filters=True %}
+     <div class="filter-item">
+       <label>Chủ đề</label>
+       <select name="subject" class="form-select">
+         <option value="">Tất cả</option>
+         {% for subject in subjects %}
+           <option value="{{ subject.id }}">{{ subject.name }}</option>
+         {% endfor %}
+       </select>
+     </div>
+   {% endinclude %}
+{% endcomment %}
+
+{% with 
+  id=id|default:"search-form" 
+  placeholder=placeholder|default:"Tìm kiếm..." 
+  target=target|default:"#search-results" 
+  url=url|default:"" 
+  trigger=trigger|default:"keyup changed delay:500ms, search" 
+  indicator=indicator|default:"search-indicator"
+%}
+<div class="search-container mb-4" 
+     x-data="{ showFilters: {% if filters %}false{% else %}null{% endif %} }">
+  <form id="{{ id }}" 
+        hx-get="{{ url }}" 
+        hx-trigger="{{ trigger }}" 
+        hx-target="{{ target }}" 
+        hx-indicator="#{{ indicator }}"
+        hx-push-url="true"
+        class="mb-3">
+    
+    <div class="input-group">
+      <input type="text" 
+             name="q" 
+             class="form-control" 
+             placeholder="{{ placeholder }}" 
+             value="{{ request.GET.q|default:'' }}"
+             aria-label="{{ placeholder }}">
+      
+      <button class="btn btn-primary" type="submit">
+        <i class="fas fa-search"></i>
+      </button>
+      
+      {% if filters %}
+      <button class="btn btn-outline-secondary" 
+              type="button" 
+              @click="showFilters = !showFilters">
+        <i class="fas" :class="showFilters ? 'fa-chevron-up' : 'fa-filter'"></i>
+      </button>
+      {% endif %}
+    </div>
+    
+    {% if filters %}
+    <div x-show="showFilters" 
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 transform -translate-y-4"
+         x-transition:enter-end="opacity-100 transform translate-y-0"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 transform translate-y-0"
+         x-transition:leave-end="opacity-0 transform -translate-y-4"
+         class="card card-body bg-light mt-2 filter-container">
+      <div class="row g-3">
+        {% block filters %}
+          {{ filters_content|safe }}
+        {% endblock %}
+      </div>
+    </div>
+    {% endif %}
+  </form>
+  
+  <div id="{{ indicator }}" class="htmx-indicator text-center">
+    <div class="spinner-border spinner-border-sm text-primary" role="status">
+      <span class="visually-hidden">Đang tìm kiếm...</span>
+    </div>
+  </div>
+</div>
+{% endwith %}

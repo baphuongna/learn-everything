@@ -12,14 +12,14 @@
         border-radius: 0.25rem;
         background-color: #f8f9fa;
     }
-    
+
     .timer {
         font-size: 1.5rem;
         font-weight: bold;
         text-align: center;
         margin-bottom: 1rem;
     }
-    
+
     .explanation {
         margin-top: 1rem;
         padding: 1rem;
@@ -60,34 +60,57 @@
                 <p><strong>Thời gian làm bài:</strong> {{ quiz.time_limit }} phút</p>
                 {% endif %}
                 <p><strong>Điểm đậu:</strong> {{ quiz.pass_score }}%</p>
-                
-                <form method="post" action="{% url 'start_quiz' quiz.id %}">
+
+                <form hx-post="{% url 'start_quiz' quiz.id %}"
+                      hx-swap="none"
+                      hx-indicator="#start-quiz-indicator">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-primary mt-3">Bắt Đầu Làm Bài</button>
+                    <button type="submit" class="btn btn-primary mt-3">
+                        <span id="start-quiz-indicator" class="htmx-indicator spinner-border spinner-border-sm me-1" role="status"></span>
+                        Bắt Đầu Làm Bài
+                    </button>
                 </form>
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-4">
         {% if previous_attempts %}
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
+        <div class="card mb-4" x-data="{ showAllAttempts: false }">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Lần Làm Trước</h5>
+                {% if previous_attempts.count > 3 %}
+                <button @click="showAllAttempts = !showAllAttempts" class="btn btn-sm btn-light">
+                    <span x-text="showAllAttempts ? 'Thu gọn' : 'Xem tất cả'"></span>
+                </button>
+                {% endif %}
             </div>
             <div class="card-body">
                 <ul class="list-group">
-                    {% for attempt in previous_attempts %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        {{ attempt.created_at|date:"d/m/Y H:i" }}
-                        <span class="badge {% if attempt.passed %}bg-success{% else %}bg-danger{% endif %} rounded-pill">{{ attempt.score }}%</span>
-                    </li>
-                    {% endfor %}
+                    <template x-for="(attempt, index) in {{ previous_attempts|safe }}" :key="index">
+                        <li class="list-group-item d-flex justify-content-between align-items-center"
+                            x-show="showAllAttempts || index < 3">
+                            <span x-text="new Date(attempt.created_at).toLocaleString('vi-VN')"></span>
+                            <span class="badge" :class="attempt.passed ? 'bg-success' : 'bg-danger'" x-text="attempt.score + '%'"></span>
+                        </li>
+                    </template>
                 </ul>
+
+                <div class="text-center mt-3">
+                    <a href="#" class="btn btn-sm btn-outline-primary"
+                       hx-get="{% url 'quiz_result' attempt_id=previous_attempts.0.id %}?format=partial"
+                       hx-target="#previous-result-container"
+                       hx-swap="innerHTML"
+                       hx-trigger="click">
+                        Xem kết quả gần nhất
+                    </a>
+                </div>
+
+                <div id="previous-result-container" class="mt-3"></div>
             </div>
         </div>
         {% endif %}
-        
+
         <div class="card">
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0">Mẹo Làm Bài</h5>
@@ -105,21 +128,75 @@
 </div>
 {% else %}
 <div class="row">
-    <div class="col-md-12">
+    <div class="col-md-12" x-data="{
+        currentQuestion: 0,
+        totalQuestions: {{ questions|length }},
+        answers: {},
+        timeRemaining: {{ quiz.time_limit|default:60 }} * 60,
+        isSubmitting: false,
+
+        nextQuestion() {
+            if (this.currentQuestion < this.totalQuestions - 1) {
+                this.currentQuestion++;
+                this.updateProgress();
+            }
+        },
+
+        prevQuestion() {
+            if (this.currentQuestion > 0) {
+                this.currentQuestion--;
+                this.updateProgress();
+            }
+        },
+
+        updateProgress() {
+            const progress = ((this.currentQuestion + 1) / this.totalQuestions) * 100;
+            document.getElementById('quiz-progress-bar').style.width = progress + '%';
+        },
+
+        formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+        },
+
+        submitQuiz() {
+            this.isSubmitting = true;
+            document.getElementById('quiz-form').submit();
+        }
+    }" x-init="
+        setInterval(() => {
+            if (timeRemaining > 0) {
+                timeRemaining--;
+            } else {
+                submitQuiz();
+            }
+        }, 1000);
+        updateProgress();
+    ">
         {% if quiz.time_limit %}
         <div class="timer" id="quiz-timer">
-            <i class="fas fa-clock"></i> <span id="time-remaining">{{ quiz.time_limit }}:00</span>
+            <i class="fas fa-clock"></i> <span id="time-remaining" x-text="formatTime(timeRemaining)"></span>
         </div>
         {% endif %}
-        
-        <form method="post" action="{% url 'submit_quiz' quiz.id %}" id="quiz-form">
+
+        <!-- Tiến độ làm bài -->
+        <div class="progress mb-4">
+            <div id="quiz-progress-bar" class="progress-bar bg-success" role="progressbar" style="width: 0%"
+                 aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+
+        <form hx-post="{% url 'submit_quiz' quiz.id %}"
+              hx-swap="none"
+              hx-indicator="#submit-quiz-indicator"
+              id="quiz-form">
             {% csrf_token %}
             <input type="hidden" name="start_time" value="{{ start_time|date:'c' }}">
-            
+
             {% for question in questions %}
-            <div class="question-container">
-                <h4>Câu {{ forloop.counter }}: {{ question.question_text }}</h4>
-                
+            <div class="question-container" x-show="currentQuestion === {{ forloop.counter0 }}">
+                <h4>Câu {{ forloop.counter }}/{{ questions|length }}: {{ question.question_text }}</h4>
+
                 {% if question.question_type == 'single' %}
                 <div class="mt-3">
                     {% for answer in question.answers.all %}
@@ -147,42 +224,44 @@
                     <textarea class="form-control" name="question_{{ question.id }}_text" rows="3" required></textarea>
                 </div>
                 {% endif %}
+
+                <div class="d-flex justify-content-between mt-4">
+                    <button type="button" class="btn btn-secondary" x-show="currentQuestion > 0" @click="prevQuestion()">
+                        <i class="fas fa-arrow-left"></i> Câu trước
+                    </button>
+                    <div></div> <!-- Spacer -->
+                    <button type="button" class="btn btn-primary" x-show="currentQuestion < totalQuestions - 1" @click="nextQuestion()">
+                        Câu tiếp <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
             </div>
             {% endfor %}
-            
-            <div class="d-grid gap-2">
-                <button type="submit" class="btn btn-primary btn-lg">Nộp Bài</button>
+
+            <div class="d-grid gap-2 mt-4">
+                <button type="submit" class="btn btn-primary btn-lg" :disabled="isSubmitting">
+                    <span id="submit-quiz-indicator" class="htmx-indicator spinner-border spinner-border-sm me-1" role="status"></span>
+                    Nộp Bài
+                </button>
             </div>
         </form>
+
+        <!-- Thanh điều hướng -->
+        <div class="question-navigator mt-4">
+            <div class="d-flex flex-wrap justify-content-center">
+                {% for question in questions %}
+                <button class="btn btn-outline-primary m-1"
+                        :class="{'btn-primary text-white': currentQuestion === {{ forloop.counter0 }}}"
+                        @click="currentQuestion = {{ forloop.counter0 }}; updateProgress()">
+                    {{ forloop.counter }}
+                </button>
+                {% endfor %}
+            </div>
+        </div>
     </div>
 </div>
 {% endif %}
 {% endblock %}
 
 {% block extra_js %}
-{% if quiz_started and quiz.time_limit %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const timerEl = document.getElementById('time-remaining');
-        const quizForm = document.getElementById('quiz-form');
-        
-        let timeLimit = {{ quiz.time_limit }} * 60; // Convert to seconds
-        
-        const timer = setInterval(function() {
-            timeLimit--;
-            
-            const minutes = Math.floor(timeLimit / 60);
-            const seconds = timeLimit % 60;
-            
-            timerEl.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-            
-            if (timeLimit <= 0) {
-                clearInterval(timer);
-                alert('Hết thời gian! Bài làm của bạn sẽ được nộp tự động.');
-                quizForm.submit();
-            }
-        }, 1000);
-    });
-</script>
-{% endif %}
+<!-- Alpine.js đã xử lý timer và các tương tác khác -->
 {% endblock %}

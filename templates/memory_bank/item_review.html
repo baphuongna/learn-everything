@@ -8,18 +8,18 @@
         font-size: 1.1rem;
         line-height: 1.6;
     }
-    
+
     .memory-content img {
         max-width: 100%;
         height: auto;
     }
-    
+
     .review-card {
         perspective: 1000px;
         height: 400px;
         margin-bottom: 2rem;
     }
-    
+
     .review-card-inner {
         position: relative;
         width: 100%;
@@ -29,11 +29,11 @@
         transform-style: preserve-3d;
         cursor: pointer;
     }
-    
+
     .review-card.flipped .review-card-inner {
         transform: rotateY(180deg);
     }
-    
+
     .review-card-front, .review-card-back {
         position: absolute;
         width: 100%;
@@ -47,26 +47,26 @@
         padding: 2rem;
         border-radius: 0.25rem;
     }
-    
+
     .review-card-front {
         background-color: #f8f9fa;
         border: 1px solid #dee2e6;
     }
-    
+
     .review-card-back {
         background-color: #e9ecef;
         border: 1px solid #dee2e6;
         transform: rotateY(180deg);
         overflow-y: auto;
     }
-    
+
     .recall-buttons {
         display: flex;
         justify-content: center;
         gap: 1rem;
         margin-top: 1rem;
     }
-    
+
     .tag-badge {
         margin-right: 0.25rem;
         margin-bottom: 0.25rem;
@@ -79,8 +79,8 @@
     <div class="col-md-8">
         <h1 class="mb-3">Ôn Tập Ghi Nhớ</h1>
         <p class="text-muted">
-            <i class="fas fa-folder" style="color: {{ item.category.color }};"></i> 
-            <a href="{% url 'memory_category_detail' item.category.slug %}">{{ item.category.name }}</a> | 
+            <i class="fas fa-folder" style="color: {{ item.category.color }};"></i>
+            <a href="{% url 'memory_category_detail' item.category.slug %}">{{ item.category.name }}</a> |
             <i class="fas fa-clock"></i> Lần ôn tập thứ: {{ item.review_count|add:1 }}
         </p>
     </div>
@@ -93,62 +93,9 @@
 
 <div class="row">
     <div class="col-md-8">
-        <div class="review-card" id="review-card">
-            <div class="review-card-inner">
-                <div class="review-card-front">
-                    <h2 class="mb-4">{{ item.title }}</h2>
-                    <p class="text-muted mb-4">Nhấp vào thẻ để xem nội dung ghi nhớ</p>
-                    
-                    {% if tags %}
-                    <div class="mt-4">
-                        {% for tag in tags %}
-                        <span class="badge bg-info tag-badge">{{ tag }}</span>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-                <div class="review-card-back">
-                    <div class="memory-content w-100 text-start">
-                        {{ item.content|safe }}
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="fas fa-question-circle"></i> Mức Độ Nhớ Của Bạn</h5>
-            </div>
-            <div class="card-body">
-                <p class="text-center">Sau khi xem lại ghi nhớ, hãy đánh giá mức độ nhớ của bạn:</p>
-                
-                <form method="post" class="recall-buttons">
-                    {% csrf_token %}
-                    <button type="submit" name="recall_level" value="1" class="btn btn-danger btn-lg">
-                        <i class="fas fa-frown"></i> Khó nhớ
-                    </button>
-                    <button type="submit" name="recall_level" value="2" class="btn btn-warning btn-lg">
-                        <i class="fas fa-meh"></i> Nhớ mờ mờ
-                    </button>
-                    <button type="submit" name="recall_level" value="3" class="btn btn-success btn-lg">
-                        <i class="fas fa-smile"></i> Nhớ rõ
-                    </button>
-                </form>
-                
-                <div class="mt-4">
-                    <div class="alert alert-info">
-                        <h6><i class="fas fa-info-circle"></i> Lịch Ôn Tập Spaced Repetition:</h6>
-                        <ul class="mb-0">
-                            <li><strong>Khó nhớ:</strong> Ôn tập lại sau 1 ngày</li>
-                            <li><strong>Nhớ mờ mờ:</strong> Ôn tập lại sau 3 ngày</li>
-                            <li><strong>Nhớ rõ:</strong> Ôn tập lại sau 7 ngày</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
+        {% include 'memory_bank/item_review_partial.html' %}
     </div>
-    
+
     <div class="col-md-4">
         {% if attachments %}
         <div class="card mb-4">
@@ -179,7 +126,7 @@
             </div>
         </div>
         {% endif %}
-        
+
         <div class="card">
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0"><i class="fas fa-lightbulb"></i> Mẹo Ôn Tập Hiệu Quả</h5>
@@ -187,10 +134,10 @@
             <div class="card-body">
                 <h6><i class="fas fa-brain text-primary"></i> Active Recall</h6>
                 <p>Trước khi xem nội dung, hãy cố gắng nhớ lại thông tin từ trí nhớ. Điều này tạo ra các kết nối thần kinh mạnh mẽ hơn.</p>
-                
+
                 <h6><i class="fas fa-calendar-alt text-primary"></i> Spaced Repetition</h6>
                 <p>Ôn tập đúng thời điểm sẽ giúp bạn ghi nhớ thông tin lâu hơn với ít nỗ lực hơn.</p>
-                
+
                 <h6><i class="fas fa-edit text-primary"></i> Elaboration</h6>
                 <p>Sau khi ôn tập, hãy cố gắng giải thích thông tin bằng từ ngữ của riêng bạn hoặc liên kết nó với kiến thức bạn đã biết.</p>
             </div>
@@ -200,15 +147,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Xử lý lật thẻ
-        const reviewCard = document.getElementById('review-card');
-        if (reviewCard) {
-            reviewCard.addEventListener('click', function() {
-                this.classList.toggle('flipped');
-            });
-        }
-    });
-</script>
+<!-- Alpine.js đã xử lý tất cả các tương tác -->
 {% endblock %}

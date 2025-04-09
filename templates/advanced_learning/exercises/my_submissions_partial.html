@@ -1,0 +1,182 @@
+{% if submissions %}
+    {% for submission in submissions %}
+    <div class="card submission-card" x-data="{ showDetails: false }">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <h5 class="submission-title">{{ submission.exercise.title }}</h5>
+                    <p class="submission-meta">
+                        {% if submission.exercise.lesson.topic.subject %}
+                        <span class="badge bg-primary">{{ submission.exercise.lesson.topic.subject.name }}</span>
+                        {% endif %}
+                        <span class="badge bg-secondary">{{ submission.exercise.lesson.title }}</span>
+                        <span class="badge
+                            {% if submission.exercise.exercise_type == 'code' %}type-code
+                            {% elif submission.exercise.exercise_type == 'quiz' %}type-quiz
+                            {% elif submission.exercise.exercise_type == 'simulation' %}type-simulation
+                            {% else %}type-game{% endif %}">
+                            {% if submission.exercise.exercise_type == 'code' %}
+                                Bài tập lập trình
+                            {% elif submission.exercise.exercise_type == 'quiz' %}
+                                Câu đố tương tác
+                            {% elif submission.exercise.exercise_type == 'simulation' %}
+                                Mô phỏng
+                            {% else %}
+                                Trò chơi học tập
+                            {% endif %}
+                        </span>
+                        <span class="badge {% if submission.is_correct %}bg-success{% else %}bg-danger{% endif %}">
+                            {% if submission.is_correct %}Đúng{% else %}Sai{% endif %}
+                        </span>
+                    </p>
+                    <div class="submission-stats">
+                        <div class="submission-stat">
+                            <i class="fas fa-calendar-alt"></i> Nộp: {{ submission.created_at|date:"d/m/Y H:i" }}
+                        </div>
+                        <div class="submission-stat">
+                            <i class="fas fa-star"></i> Điểm: {{ submission.points|default:0 }}/{{ submission.exercise.max_points }}
+                        </div>
+                        {% if submission.execution_time %}
+                        <div class="submission-stat">
+                            <i class="fas fa-clock"></i> Thời gian thực thi: {{ submission.execution_time|floatformat:2 }}s
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mt-3">
+                        <button class="btn btn-sm btn-link p-0" @click="showDetails = !showDetails">
+                            <span x-show="!showDetails"><i class="fas fa-chevron-down"></i> Xem thêm</span>
+                            <span x-show="showDetails"><i class="fas fa-chevron-up"></i> Thu gọn</span>
+                        </button>
+                    </div>
+                    
+                    <div x-show="showDetails" x-transition class="mt-3">
+                        <h6>Nội dung bài nộp</h6>
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <pre>{{ submission.submission_content }}</pre>
+                            </div>
+                        </div>
+                        
+                        {% if submission.feedback %}
+                        <h6 class="mt-3">Phản hồi</h6>
+                        <div class="card {% if submission.is_correct %}bg-success{% else %}bg-danger{% endif %} text-white">
+                            <div class="card-body">
+                                {{ submission.feedback }}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if submission.execution_result %}
+                        <h6 class="mt-3">Kết quả thực thi</h6>
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <pre>{{ submission.execution_result|default:"Không có kết quả thực thi" }}</pre>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4 text-end d-flex align-items-center justify-content-end">
+                    <a href="{% url 'advanced_learning:exercise_submissions' exercise_id=submission.exercise.id %}" class="btn btn-sm btn-outline-purple me-2">
+                        <i class="fas fa-eye"></i> Xem Chi Tiết
+                    </a>
+                    <a href="{% url 'advanced_learning:exercise_detail' exercise_id=submission.exercise.id %}" class="btn btn-sm btn-purple"
+                       hx-get="{% url 'advanced_learning:exercise_detail' exercise_id=submission.exercise.id %}?format=partial"
+                       hx-target="#main-content"
+                       hx-swap="innerHTML"
+                       hx-push-url="true">
+                        <i class="fas fa-play"></i> Làm Lại
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    
+    <!-- Phân trang -->
+    {% if submissions.has_other_pages %}
+    <nav aria-label="Phân trang">
+        <ul class="pagination justify-content-center">
+            {% if submissions.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}"
+                   hx-get="{% url 'advanced_learning:my_exercise_submissions' %}?format=partial&page=1{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}"
+                   hx-target="#submissions-container">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ submissions.previous_page_number }}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}"
+                   hx-get="{% url 'advanced_learning:my_exercise_submissions' %}?format=partial&page={{ submissions.previous_page_number }}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}"
+                   hx-target="#submissions-container">
+                    <i class="fas fa-angle-left"></i>
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link"><i class="fas fa-angle-double-left"></i></span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link"><i class="fas fa-angle-left"></i></span>
+            </li>
+            {% endif %}
+            
+            {% for i in submissions.paginator.page_range %}
+                {% if submissions.number == i %}
+                <li class="page-item active">
+                    <span class="page-link">{{ i }}</span>
+                </li>
+                {% elif i > submissions.number|add:'-3' and i < submissions.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ i }}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}"
+                       hx-get="{% url 'advanced_learning:my_exercise_submissions' %}?format=partial&page={{ i }}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}"
+                       hx-target="#submissions-container">
+                        {{ i }}
+                    </a>
+                </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if submissions.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ submissions.next_page_number }}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}"
+                   hx-get="{% url 'advanced_learning:my_exercise_submissions' %}?format=partial&page={{ submissions.next_page_number }}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}"
+                   hx-target="#submissions-container">
+                    <i class="fas fa-angle-right"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ submissions.paginator.num_pages }}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}"
+                   hx-get="{% url 'advanced_learning:my_exercise_submissions' %}?format=partial&page={{ submissions.paginator.num_pages }}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}"
+                   hx-target="#submissions-container">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link"><i class="fas fa-angle-right"></i></span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link"><i class="fas fa-angle-double-right"></i></span>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+{% else %}
+    <div class="card">
+        <div class="card-body empty-state">
+            <i class="fas fa-laptop-code"></i>
+            <h4>Bạn chưa nộp bài tập nào</h4>
+            <p class="text-muted">Hãy thực hành các bài tập để cải thiện kỹ năng và kiến thức của bạn.</p>
+            <a href="{% url 'advanced_learning:exercise_list' %}" class="btn btn-purple mt-3"
+               hx-get="{% url 'advanced_learning:exercise_list' %}?format=partial"
+               hx-target="#main-content"
+               hx-swap="innerHTML"
+               hx-push-url="true">
+                <i class="fas fa-list"></i> Xem danh sách bài tập
+            </a>
+        </div>
+    </div>
+{% endif %}

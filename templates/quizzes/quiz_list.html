@@ -10,35 +10,72 @@
     </div>
 </div>
 
-<div class="row">
-    {% for quiz in quizzes %}
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">{{ quiz.title }}</h5>
-            </div>
-            <div class="card-body">
-                <p><strong>Bài học:</strong> {{ quiz.lesson.title }}</p>
-                <p><strong>Chủ đề:</strong> {{ quiz.lesson.topic.subject.name }}</p>
-                <p><strong>Số câu hỏi:</strong> {{ quiz.questions.count }}</p>
-                {% if quiz.time_limit %}
-                <p><strong>Thời gian làm bài:</strong> {{ quiz.time_limit }} phút</p>
-                {% endif %}
-                <p><strong>Điểm đậu:</strong> {{ quiz.pass_score }}%</p>
-                <p>{{ quiz.description|truncatewords:20 }}</p>
-            </div>
-            <div class="card-footer bg-white border-top-0">
-                <a href="{% url 'quiz_detail' quiz.id %}" class="btn btn-primary">Làm Bài</a>
-            </div>
-        </div>
-    </div>
-    {% empty %}
+<!-- Tìm kiếm và lọc -->
+<div class="row mb-4">
     <div class="col-md-12">
-        <div class="alert alert-info">
-            Hiện tại chưa có bài kiểm tra nào. Vui lòng quay lại sau.
+        <div class="card">
+            <div class="card-body" x-data="{ showFilters: false }">
+                <form id="search-form"
+                      hx-get="{% url 'quiz_list' %}"
+                      hx-target="#quiz-list-container"
+                      hx-trigger="submit, input[name='search'].keyup changed delay:500ms"
+                      hx-indicator="#search-indicator">
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-8">
+                            <div class="input-group">
+                                <input type="text" name="search" class="form-control" placeholder="Tìm kiếm bài kiểm tra..." value="{{ search_query }}">
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="fas fa-search"></i> Tìm kiếm
+                                </button>
+                                <button class="btn btn-outline-secondary" type="button" @click="showFilters = !showFilters">
+                                    <i class="fas" :class="showFilters ? 'fa-chevron-up' : 'fa-filter'"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div x-show="showFilters" x-transition>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="subject" class="form-label">Chủ đề</label>
+                                <select name="subject" id="subject" class="form-select" hx-trigger="change">
+                                    <option value="">Tất cả chủ đề</option>
+                                    {% for subject in subjects %}
+                                        <option value="{{ subject.id }}" {% if selected_subject == subject.id|stringformat:"i" %}selected{% endif %}>
+                                            {{ subject.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="difficulty" class="form-label">Độ khó</label>
+                                <select name="difficulty" id="difficulty" class="form-select" hx-trigger="change">
+                                    <option value="">Tất cả độ khó</option>
+                                    {% for level_code, level_name in difficulty_levels %}
+                                        <option value="{{ level_code }}" {% if selected_difficulty == level_code %}selected{% endif %}>
+                                            {{ level_name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <div id="search-indicator" class="htmx-indicator text-center mt-3">
+                    <div class="spinner-border spinner-border-sm text-primary" role="status">
+                        <span class="visually-hidden">Đang tải...</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    {% endfor %}
+</div>
+
+<!-- Danh sách bài kiểm tra -->
+<div id="quiz-list-container">
+    {% include 'quizzes/quiz_list_partial.html' %}
 </div>
 
 <div class="row mt-5">

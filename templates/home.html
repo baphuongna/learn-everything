@@ -22,12 +22,20 @@
 {% endblock %}
 
 {% block content %}
+{% include 'components/alert.html' %}
+
 <div class="jumbotron bg-light p-5 rounded">
-    <h1 class="display-4">Chào mừng đến với Nền Tảng Học Tập!</h1>
+    <h1 class="display-4" x-data="{ text: 'Chào mừng đến với Nền Tảng Học Tập!' }" x-text="text"></h1>
     <p class="lead">Học tập hiệu quả với các phương pháp Active Recall, Spaced Repetition, Kumon, Kaizen, và Zanshin.</p>
     <hr class="my-4">
     <p>Khám phá các chủ đề học tập đa dạng từ ngôn ngữ đến lập trình và toán học.</p>
-    <a class="btn btn-primary btn-lg" href="{% url 'subject_list' %}" role="button">Bắt đầu học ngay</a>
+    <a class="btn btn-primary btn-lg"
+       href="{% url 'subject_list' %}"
+       role="button"
+       hx-boost="true"
+       @click="$store.alerts.add('Chuyển đến trang chủ đề học tập', 'info')">
+        Bắt đầu học ngay
+    </a>
 </div>
 
 <div class="row mt-5">
@@ -36,34 +44,35 @@
     </div>
 </div>
 
-<div class="row">
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
-            <div class="card-body text-center">
-                <i class="fas fa-brain fa-3x text-primary mb-3"></i>
-                <h5 class="card-title">Active Recall</h5>
-                <p class="card-text">Chủ động truy xuất thông tin từ trí nhớ thay vì đọc lại nhiều lần. Phương pháp này giúp tăng cường khả năng ghi nhớ dài hạn.</p>
-            </div>
+<div class="row" x-data="{ methods: []}" x-init="methods = [
+    {
+        icon: 'brain',
+        title: 'Active Recall',
+        description: 'Chủ động truy xuất thông tin từ trí nhớ thay vì đọc lại nhiều lần. Phương pháp này giúp tăng cường khả năng ghi nhớ dài hạn.',
+        color: 'primary'
+    },
+    {
+        icon: 'calendar-alt',
+        title: 'Spaced Repetition',
+        description: 'Ôn tập theo các khoảng thời gian tối ưu để tăng cường trí nhớ dài hạn. Hệ thống sẽ lên lịch ôn tập tự động cho bạn.',
+        color: 'primary'
+    },
+    {
+        icon: 'chart-line',
+        title: 'Kaizen',
+        description: 'Cải thiện liên tục mỗi ngày với mục tiêu nhỏ. Dành 6 phút mỗi ngày để ôn tập và cải thiện kỹ năng của bạn.',
+        color: 'primary'
+    }
+]">
+    <template x-for="(method, index) in methods" :key="index">
+        <div class="col-md-4 mb-4">
+            {% include 'components/card.html' with class="h-100" body_class="text-center" %}
+                <i class="fas" :class="'fa-' + method.icon + ' fa-3x text-' + method.color + ' mb-3'"></i>
+                <h5 class="card-title" x-text="method.title"></h5>
+                <p class="card-text" x-text="method.description"></p>
+            {% endinclude %}
         </div>
-    </div>
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
-            <div class="card-body text-center">
-                <i class="fas fa-calendar-alt fa-3x text-primary mb-3"></i>
-                <h5 class="card-title">Spaced Repetition</h5>
-                <p class="card-text">Ôn tập theo các khoảng thời gian tối ưu để tăng cường trí nhớ dài hạn. Hệ thống sẽ lên lịch ôn tập tự động cho bạn.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
-            <div class="card-body text-center">
-                <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
-                <h5 class="card-title">Kaizen</h5>
-                <p class="card-text">Cải thiện liên tục mỗi ngày với mục tiêu nhỏ. Dành 6 phút mỗi ngày để ôn tập và cải thiện kỹ năng của bạn.</p>
-            </div>
-        </div>
-    </div>
+    </template>
 </div>
 
 <div class="row mt-5">
@@ -79,83 +88,181 @@
 </div>
 
 <div class="row">
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
-            <div class="card-body text-center">
-                <i class="fas fa-clock fa-3x text-danger mb-3"></i>
-                <h5 class="card-title">Pomodoro Timer</h5>
-                <p class="card-text">Tăng hiệu quả học tập với phương pháp Pomodoro - tập trung làm việc trong thời gian ngắn, xen kẽ với các khoảng nghỉ.</p>
-                <a href="{% url 'advanced_learning:pomodoro_timer' %}" class="btn btn-danger">Bắt đầu ngay</a>
-            </div>
-        </div>
-    </div>
+    <div class="col-md-12">
+        {% include 'components/tabs.html' with id="advanced-features" %}
+            {% tab title="Phương pháp học tập" active=True %}
+                <div class="row py-4">
+                    <div class="col-md-6 mb-4">
+                        {% include 'components/card.html' with
+                            title="Pomodoro Timer"
+                            text="Tăng hiệu quả học tập với phương pháp Pomodoro - tập trung làm việc trong thời gian ngắn, xen kẽ với các khoảng nghỉ."
+                            class="h-100"
+                            body_class="text-center"
+                            url="{% url 'advanced_learning:pomodoro_timer' %}"
+                            hx_get="{% url 'advanced_learning:pomodoro_timer' %}?format=partial"
+                            hx_target="#feature-preview"
+                        %}
+                            <i class="fas fa-clock fa-3x text-danger mb-3"></i>
+                            <div class="mt-3">
+                                <a href="{% url 'advanced_learning:pomodoro_timer' %}"
+                                   class="btn btn-danger"
+                                   hx-boost="true">
+                                    Bắt đầu ngay
+                                </a>
+                            </div>
+                        {% endinclude %}
+                    </div>
 
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
-            <div class="card-body text-center">
-                <i class="fas fa-project-diagram fa-3x text-success mb-3"></i>
-                <h5 class="card-title">Mind Mapping</h5>
-                <p class="card-text">Tạo sơ đồ tư duy trực quan để tổ chức và kết nối các ý tưởng, khái niệm một cách hiệu quả.</p>
-                <a href="{% url 'advanced_learning:mind_map_list' %}" class="btn btn-success">Bắt đầu ngay</a>
-            </div>
-        </div>
-    </div>
+                    <div class="col-md-6 mb-4">
+                        {% include 'components/card.html' with
+                            title="Ghi Chú Cornell"
+                            text="Áp dụng phương pháp ghi chú Cornell có cấu trúc để tổ chức thông tin và cải thiện khả năng ghi nhớ."
+                            class="h-100"
+                            body_class="text-center"
+                            url="{% url 'advanced_learning:cornell_note_list' %}"
+                            hx_get="{% url 'advanced_learning:cornell_note_list' %}?format=partial"
+                            hx_target="#feature-preview"
+                        %}
+                            <i class="fas fa-edit fa-3x text-primary mb-3"></i>
+                            <div class="mt-3">
+                                <a href="{% url 'advanced_learning:cornell_note_list' %}"
+                                   class="btn btn-primary"
+                                   hx-boost="true">
+                                    Bắt đầu ngay
+                                </a>
+                            </div>
+                        {% endinclude %}
+                    </div>
+                </div>
+            {% endtab %}
 
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
-            <div class="card-body text-center">
-                <i class="fas fa-edit fa-3x text-primary mb-3"></i>
-                <h5 class="card-title">Ghi Chú Cornell</h5>
-                <p class="card-text">Áp dụng phương pháp ghi chú Cornell có cấu trúc để tổ chức thông tin và cải thiện khả năng ghi nhớ.</p>
-                <a href="{% url 'advanced_learning:cornell_note_list' %}" class="btn btn-primary">Bắt đầu ngay</a>
-            </div>
-        </div>
+            {% tab title="Công cụ tư duy" %}
+                <div class="row py-4">
+                    <div class="col-md-6 mb-4">
+                        {% include 'components/card.html' with
+                            title="Mind Mapping"
+                            text="Tạo sơ đồ tư duy trực quan để tổ chức và kết nối các ý tưởng, khái niệm một cách hiệu quả."
+                            class="h-100"
+                            body_class="text-center"
+                            url="{% url 'advanced_learning:mind_map_list' %}"
+                            hx_get="{% url 'advanced_learning:mind_map_list' %}?format=partial"
+                            hx_target="#feature-preview"
+                        %}
+                            <i class="fas fa-project-diagram fa-3x text-success mb-3"></i>
+                            <div class="mt-3">
+                                <a href="{% url 'advanced_learning:mind_map_list' %}"
+                                   class="btn btn-success"
+                                   hx-boost="true">
+                                    Bắt đầu ngay
+                                </a>
+                            </div>
+                        {% endinclude %}
+                    </div>
+
+                    <div class="col-md-6 mb-4">
+                        {% include 'components/card.html' with
+                            title="Phương Pháp Feynman"
+                            text="Hiểu sâu sắc các khái niệm phức tạp bằng cách giải thích chúng bằng ngôn ngữ đơn giản."
+                            class="h-100"
+                            body_class="text-center"
+                            url="{% url 'advanced_learning:feynman_note_list' %}"
+                            hx_get="{% url 'advanced_learning:feynman_note_list' %}?format=partial"
+                            hx_target="#feature-preview"
+                        %}
+                            <i class="fas fa-lightbulb fa-3x text-warning mb-3"></i>
+                            <div class="mt-3">
+                                <a href="{% url 'advanced_learning:feynman_note_list' %}"
+                                   class="btn btn-warning"
+                                   hx-boost="true">
+                                    Bắt đầu ngay
+                                </a>
+                            </div>
+                        {% endinclude %}
+                    </div>
+                </div>
+            {% endtab %}
+
+            {% tab title="Học tập nâng cao" %}
+                <div class="row py-4">
+                    <div class="col-md-6 mb-4">
+                        {% include 'components/card.html' with
+                            title="Học Tập Dựa Trên Dự Án"
+                            text="Học tập thông qua các dự án thực tế, giúp bạn áp dụng kiến thức vào thực tiễn."
+                            class="h-100"
+                            body_class="text-center"
+                            url="{% url 'advanced_learning:project_list' %}"
+                            hx_get="{% url 'advanced_learning:project_list' %}?format=partial"
+                            hx_target="#feature-preview"
+                        %}
+                            <i class="fas fa-tasks fa-3x text-info mb-3"></i>
+                            <div class="mt-3">
+                                <a href="{% url 'advanced_learning:project_list' %}"
+                                   class="btn btn-info"
+                                   hx-boost="true">
+                                    Bắt đầu ngay
+                                </a>
+                            </div>
+                        {% endinclude %}
+                    </div>
+
+                    <div class="col-md-6 mb-4">
+                        {% include 'components/card.html' with
+                            title="Bài Tập Thực Hành Tương Tác"
+                            text="Thực hành kiến thức thông qua các bài tập tương tác như lập trình, câu đố, mô phỏng và trò chơi học tập."
+                            class="h-100"
+                            body_class="text-center"
+                            url="{% url 'advanced_learning:exercise_list' %}"
+                            hx_get="{% url 'advanced_learning:exercise_list' %}?format=partial"
+                            hx_target="#feature-preview"
+                        %}
+                            <i class="fas fa-laptop-code fa-3x text-purple mb-3"></i>
+                            <div class="mt-3">
+                                <a href="{% url 'advanced_learning:exercise_list' %}"
+                                   class="btn btn-purple"
+                                   hx-boost="true">
+                                    Bắt đầu ngay
+                                </a>
+                            </div>
+                        {% endinclude %}
+                    </div>
+                </div>
+            {% endtab %}
+
+            {% tab title="Thi đấu" %}
+                <div class="row py-4">
+                    <div class="col-md-6 mb-4 mx-auto">
+                        {% include 'components/card.html' with
+                            title="Chế Độ Thi Đấu"
+                            text="Tham gia các cuộc thi đấu với người học khác, tăng cường động lực và cải thiện kết quả học tập."
+                            class="h-100"
+                            body_class="text-center"
+                            url="{% url 'advanced_learning:competition_list' %}"
+                            hx_get="{% url 'advanced_learning:competition_list' %}?format=partial"
+                            hx_target="#feature-preview"
+                        %}
+                            <i class="fas fa-trophy fa-3x text-warning mb-3"></i>
+                            <div class="mt-3">
+                                <a href="{% url 'advanced_learning:competition_list' %}"
+                                   class="btn btn-warning"
+                                   hx-boost="true">
+                                    Bắt đầu ngay
+                                </a>
+                            </div>
+                        {% endinclude %}
+                    </div>
+                </div>
+            {% endtab %}
+        {% endinclude %}
     </div>
 </div>
 
+<!-- Khu vực xem trước tính năng -->
 <div class="row mt-4">
-    <div class="col-md-4 mb-4 offset-md-2">
-        <div class="card h-100">
-            <div class="card-body text-center">
-                <i class="fas fa-lightbulb fa-3x text-warning mb-3"></i>
-                <h5 class="card-title">Phương Pháp Feynman</h5>
-                <p class="card-text">Hiểu sâu sắc các khái niệm phức tạp bằng cách giải thích chúng bằng ngôn ngữ đơn giản.</p>
-                <a href="{% url 'advanced_learning:feynman_note_list' %}" class="btn btn-warning">Bắt đầu ngay</a>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
-            <div class="card-body text-center">
-                <i class="fas fa-tasks fa-3x text-info mb-3"></i>
-                <h5 class="card-title">Học Tập Dựa Trên Dự Án</h5>
-                <p class="card-text">Học tập thông qua các dự án thực tế, giúp bạn áp dụng kiến thức vào thực tiễn.</p>
-                <a href="{% url 'advanced_learning:project_list' %}" class="btn btn-info">Bắt đầu ngay</a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row mt-4">
-    <div class="col-md-4 mb-4 offset-md-2">
-        <div class="card h-100">
-            <div class="card-body text-center">
-                <i class="fas fa-laptop-code fa-3x text-purple mb-3"></i>
-                <h5 class="card-title">Bài Tập Thực Hành Tương Tác</h5>
-                <p class="card-text">Thực hành kiến thức thông qua các bài tập tương tác như lập trình, câu đố, mô phỏng và trò chơi học tập.</p>
-                <a href="{% url 'advanced_learning:exercise_list' %}" class="btn btn-purple">Bắt đầu ngay</a>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
-            <div class="card-body text-center">
-                <i class="fas fa-trophy fa-3x text-warning mb-3"></i>
-                <h5 class="card-title">Chế Độ Thi Đấu</h5>
-                <p class="card-text">Tham gia các cuộc thi đấu với người học khác, tăng cường động lực và cải thiện kết quả học tập.</p>
-                <a href="{% url 'advanced_learning:competition_list' %}" class="btn btn-warning">Bắt đầu ngay</a>
+    <div class="col-md-12">
+        <div id="feature-preview" class="border rounded p-3 bg-light" style="min-height: 200px;">
+            <div class="text-center py-5">
+                <h5 class="text-muted">Chọn một tính năng ở trên để xem trước</h5>
+                <p class="text-muted">Nhấp vào các tính năng để xem thêm chi tiết</p>
             </div>
         </div>
     </div>

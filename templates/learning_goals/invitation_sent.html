@@ -1,0 +1,25 @@
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="fas fa-check-circle me-2"></i> Lời mời đã được gửi đến {{ invitation.recipient.username }}!
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+
+<script>
+    // Xóa nội dung form
+    document.getElementById('username').value = '';
+    document.getElementById('message').value = '';
+    
+    // Đóng modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('inviteModal'));
+    if (modal) {
+        modal.hide();
+    }
+    
+    // Tự động đóng thông báo sau 3 giây
+    setTimeout(() => {
+        const alert = document.querySelector('.alert');
+        if (alert) {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        }
+    }, 3000);
+</script>

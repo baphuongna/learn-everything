@@ -2,24 +2,71 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.utils import timezone
-from django.db import models
+from django.db.models import Q
 from datetime import timedelta
 import json
 from .models import FlashcardSet, Flashcard, SpacedRepetitionSchedule
 
 def flashcard_list(request):
     """Hiển thị danh sách các bộ flashcard"""
+    # Tìm kiếm và lọc
+    search_query = request.GET.get('search', '')
+    subject_id = request.GET.get('subject', '')
+    format_type = request.GET.get('format', '')
+
+    # Lấy danh sách bộ flashcard
     flashcard_sets = FlashcardSet.objects.all().select_related('lesson__topic__subject')
-    return render(request, 'flashcards/flashcard_list.html', {'flashcard_sets': flashcard_sets})
+
+    # Áp dụng bộ lọc
+    if search_query:
+        flashcard_sets = flashcard_sets.filter(
+            Q(title__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(lesson__title__icontains=search_query) |
+            Q(lesson__topic__name__icontains=search_query) |
+            Q(lesson__topic__subject__name__icontains=search_query)
+        )
+
+    if subject_id:
+        flashcard_sets = flashcard_sets.filter(lesson__topic__subject_id=subject_id)
+
+    # Lấy danh sách các chủ đề cho bộ lọc
+    from content.models import Subject
+    subjects = Subject.objects.all()
+
+    # Đếm số flashcard cần ôn tập hôm nay nếu đã đăng nhập
+    due_count = 0
+    if request.user.is_authenticated:
+        today = timezone.now()
+        due_count = SpacedRepetitionSchedule.objects.filter(
+            user=request.user,
+            next_review_date__lte=today
+        ).count()
+
+    context = {
+        'flashcard_sets': flashcard_sets,
+        'subjects': subjects,
+        'search_query': search_query,
+        'selected_subject': subject_id,
+        'due_count': due_count
+    }
+
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'flashcards/flashcard_list_partial.html', context)
+
+    return render(request, 'flashcards/flashcard_list.html', context)
 
 def flashcard_set_detail(request, flashcard_set_id):
     """Hiển thị chi tiết bộ flashcard và các flashcard trong bộ"""
     flashcard_set = get_object_or_404(FlashcardSet, id=flashcard_set_id)
     flashcards = flashcard_set.flashcards.all()
+    format_type = request.GET.get('format', '')
 
     # Tính toán tiến độ ôn tập nếu người dùng đã đăng nhập
     mastered_count = 0
     mastered_percentage = 0
+    due_count = 0
 
     if request.user.is_authenticated and flashcards.exists():
         # Đếm số flashcard đã thuộc (recall_level = 3)
@@ -32,12 +79,25 @@ def flashcard_set_detail(request, flashcard_set_id):
         # Tính phần trăm đã thuộc
         mastered_percentage = int((mastered_count / flashcards.count()) * 100)
 
+        # Đếm số flashcard cần ôn tập hôm nay
+        today = timezone.now()
+        due_count = SpacedRepetitionSchedule.objects.filter(
+            user=request.user,
+            flashcard__in=flashcards,
+            next_review_date__lte=today
+        ).count()
+
     context = {
         'flashcard_set': flashcard_set,
         'flashcards': flashcards,
         'mastered_count': mastered_count,
-        'mastered_percentage': mastered_percentage
+        'mastered_percentage': mastered_percentage,
+        'due_count': due_count
     }
+
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'flashcards/flashcard_set_detail_partial.html', context)
 
     return render(request, 'flashcards/flashcard_set_detail.html', context)
 
@@ -46,14 +106,29 @@ def update_recall_level(request):
     """Cập nhật mức độ nhớ của flashcard và lên lịch ôn tập tiếp theo"""
     if request.method == 'POST':
         try:
-            data = json.loads(request.body)
+            # Xử lý cả request AJAX và HTMX
+            if request.content_type == 'application/json':
+                data = json.loads(request.body)
+            else:
+                data = request.POST
+
             flashcard_id = data.get('flashcard_id')
             recall_level = int(data.get('recall_level'))
 
             if not flashcard_id or recall_level not in [1, 2, 3]:
+                if request.htmx:
+                    return render(request, 'flashcards/error_message.html', {
+                        'error': 'Dữ liệu không hợp lệ'
+                    })
                 return JsonResponse({'success': False, 'error': 'Dữ liệu không hợp lệ'})
 
             flashcard = get_object_or_404(Flashcard, id=flashcard_id)
+
+            # Tìm lịch ôn tập hiện tại nếu có
+            existing_schedule = SpacedRepetitionSchedule.objects.filter(
+                user=request.user,
+                flashcard=flashcard
+            ).first()
 
             # Tính ngày ôn tập tiếp theo dựa trên mức độ nhớ
             now = timezone.now()
@@ -62,7 +137,12 @@ def update_recall_level(request):
             elif recall_level == 2:  # Nhớ mờ mờ
                 next_review_date = now + timedelta(days=3)
             else:  # Nhớ rõ
-                next_review_date = now + timedelta(days=7)
+                # Tăng khoảng cách ôn tập dựa trên số lần đã ôn tập
+                if existing_schedule:
+                    days = min(30, 7 * (existing_schedule.review_count + 1))
+                else:
+                    days = 7
+                next_review_date = now + timedelta(days=days)
 
             # Cập nhật hoặc tạo lịch ôn tập
             schedule, created = SpacedRepetitionSchedule.objects.get_or_create(
@@ -82,16 +162,45 @@ def update_recall_level(request):
                 schedule.review_count += 1
                 schedule.save()
 
-            return JsonResponse({'success': True})
+            # Trả về kết quả phù hợp với loại request
+            if request.htmx:
+                # Tính toán số flashcard còn lại cần ôn tập
+                remaining_count = SpacedRepetitionSchedule.objects.filter(
+                    user=request.user,
+                    next_review_date__lte=timezone.now()
+                ).count()
+
+                return render(request, 'flashcards/recall_feedback.html', {
+                    'recall_level': recall_level,
+                    'next_review_date': next_review_date,
+                    'remaining_count': remaining_count
+                })
+
+            return JsonResponse({
+                'success': True,
+                'next_review_date': next_review_date.strftime('%d/%m/%Y'),
+                'recall_level': recall_level
+            })
+
         except Exception as e:
+            if request.htmx:
+                return render(request, 'flashcards/error_message.html', {
+                    'error': str(e)
+                })
             return JsonResponse({'success': False, 'error': str(e)})
 
+    if request.htmx:
+        return render(request, 'flashcards/error_message.html', {
+            'error': 'Phương thức không được hỗ trợ'
+        })
     return JsonResponse({'success': False, 'error': 'Phương thức không được hỗ trợ'})
 
 @login_required
 def due_flashcards(request):
     """Hiển thị các flashcard cần ôn tập hôm nay"""
     today = timezone.now()
+    format_type = request.GET.get('format', '')
+
     due_schedules = SpacedRepetitionSchedule.objects.filter(
         user=request.user,
         next_review_date__lte=today
@@ -115,5 +224,9 @@ def due_flashcards(request):
         'flashcard_sets': flashcard_sets.values(),
         'total_due': due_schedules.count()
     }
+
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'flashcards/due_flashcards_partial.html', context)
 
     return render(request, 'flashcards/due_flashcards.html', context)

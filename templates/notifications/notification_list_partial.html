@@ -1,0 +1,157 @@
+{% if page_obj %}
+    <div class="row">
+        <div class="col-12">
+
+            <div class="list-group notification-list">
+                {% for notification in page_obj %}
+                    <div class="list-group-item list-group-item-action {% if not notification.is_read %}unread{% endif %}"
+                         id="notification-{{ notification.id }}"
+                         x-data="{ isRead: {% if notification.is_read %}true{% else %}false{% endif %} }">
+                        <div class="d-flex w-100 justify-content-between align-items-center">
+                            <div class="notification-content">
+                                <div class="d-flex align-items-center">
+                                    <div class="notification-icon me-3">
+                                        {% if notification.notification_type == 'info' %}
+                                            <i class="fas fa-info-circle text-info fa-2x"></i>
+                                        {% elif notification.notification_type == 'success' %}
+                                            <i class="fas fa-check-circle text-success fa-2x"></i>
+                                        {% elif notification.notification_type == 'warning' %}
+                                            <i class="fas fa-exclamation-triangle text-warning fa-2x"></i>
+                                        {% elif notification.notification_type == 'danger' %}
+                                            <i class="fas fa-exclamation-circle text-danger fa-2x"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-1">{{ notification.title }}</h5>
+                                        <p class="mb-1">{{ notification.message }}</p>
+                                        <small class="text-muted">
+                                            {{ notification.created_at|date:"d/m/Y H:i" }}
+                                            {% if notification.related_feature != 'system' %}
+                                                •
+                                                {% if notification.related_feature == 'pomodoro' %}
+                                                    <span class="badge bg-primary">Pomodoro Timer</span>
+                                                {% elif notification.related_feature == 'cornell' %}
+                                                    <span class="badge bg-success">Cornell Notes</span>
+                                                {% elif notification.related_feature == 'mindmap' %}
+                                                    <span class="badge bg-info">Mind Mapping</span>
+                                                {% elif notification.related_feature == 'feynman' %}
+                                                    <span class="badge bg-warning">Feynman Technique</span>
+                                                {% elif notification.related_feature == 'project' %}
+                                                    <span class="badge bg-secondary">Project-Based Learning</span>
+                                                {% elif notification.related_feature == 'exercise' %}
+                                                    <span class="badge bg-dark">Interactive Exercises</span>
+                                                {% elif notification.related_feature == 'competition' %}
+                                                    <span class="badge bg-danger">Competition Mode</span>
+                                                {% endif %}
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="notification-actions">
+                                <div class="btn-group">
+                                    {% if notification.url %}
+                                        <a href="{{ notification.url }}" class="btn btn-sm btn-outline-primary"
+                                           hx-boost="true">
+                                            <i class="fas fa-external-link-alt"></i>
+                                        </a>
+                                    {% endif %}
+
+                                    <button x-show="!isRead"
+                                            class="btn btn-sm btn-outline-success"
+                                            hx-post="{% url 'notifications:mark_read' notification_id=notification.id %}"
+                                            hx-target="#notification-{{ notification.id }}"
+                                            hx-swap="outerHTML"
+                                            hx-indicator="#mark-read-indicator-{{ notification.id }}">
+                                        <span id="mark-read-indicator-{{ notification.id }}" class="htmx-indicator spinner-border spinner-border-sm" style="width: 0.5rem; height: 0.5rem;"></span>
+                                        <i class="fas fa-check"></i>
+                                    </button>
+
+                                    <button class="btn btn-sm btn-outline-danger"
+                                            hx-post="{% url 'notifications:delete' notification_id=notification.id %}"
+                                            hx-target="#notification-{{ notification.id }}"
+                                            hx-swap="outerHTML"
+                                            hx-confirm="Bạn có chắc chắn muốn xóa thông báo này?"
+                                            hx-indicator="#delete-indicator-{{ notification.id }}">
+                                        <span id="delete-indicator-{{ notification.id }}" class="htmx-indicator spinner-border spinner-border-sm" style="width: 0.5rem; height: 0.5rem;"></span>
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+        <!-- Phân trang -->
+        {% if page_obj.has_other_pages %}
+            <nav aria-label="Phân trang" class="mt-3">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link"
+                               href="?page=1{% if filter_type != 'all' %}&filter={{ filter_type }}{% endif %}"
+                               hx-get="?page=1{% if filter_type != 'all' %}&filter={{ filter_type }}{% endif %}&format=partial"
+                               hx-target="#notification-list-container"
+                               hx-swap="innerHTML">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link"
+                               href="?page={{ page_obj.previous_page_number }}{% if filter_type != 'all' %}&filter={{ filter_type }}{% endif %}"
+                               hx-get="?page={{ page_obj.previous_page_number }}{% if filter_type != 'all' %}&filter={{ filter_type }}{% endif %}&format=partial"
+                               hx-target="#notification-list-container"
+                               hx-swap="innerHTML">
+                                <i class="fas fa-angle-left"></i>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link"><i class="fas fa-angle-double-left"></i></span>
+                        </li>
+                        <li class="page-item disabled">
+                            <span class="page-link"><i class="fas fa-angle-left"></i></span>
+                        </li>
+                    {% endif %}
+
+                    <li class="page-item disabled">
+                        <span class="page-link">Trang {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link"
+                               href="?page={{ page_obj.next_page_number }}{% if filter_type != 'all' %}&filter={{ filter_type }}{% endif %}"
+                               hx-get="?page={{ page_obj.next_page_number }}{% if filter_type != 'all' %}&filter={{ filter_type }}{% endif %}&format=partial"
+                               hx-target="#notification-list-container"
+                               hx-swap="innerHTML">
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link"
+                               href="?page={{ page_obj.paginator.num_pages }}{% if filter_type != 'all' %}&filter={{ filter_type }}{% endif %}"
+                               hx-get="?page={{ page_obj.paginator.num_pages }}{% if filter_type != 'all' %}&filter={{ filter_type }}{% endif %}&format=partial"
+                               hx-target="#notification-list-container"
+                               hx-swap="innerHTML">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link"><i class="fas fa-angle-right"></i></span>
+                        </li>
+                        <li class="page-item disabled">
+                            <span class="page-link"><i class="fas fa-angle-double-right"></i></span>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i> Bạn chưa có thông báo nào.
+    </div>
+{% endif %}

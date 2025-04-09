@@ -1,0 +1,42 @@
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1050;">
+    <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header {% if item.is_favorite %}bg-warning{% else %}bg-secondary{% endif %} text-white">
+            <strong class="me-auto">
+                {% if item.is_favorite %}
+                <i class="fas fa-star"></i> Đã đánh dấu yêu thích
+                {% else %}
+                <i class="far fa-star"></i> Đã bỏ đánh dấu yêu thích
+                {% endif %}
+            </strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+            {{ message }}
+        </div>
+    </div>
+</div>
+
+<script>
+    // Tự động ẩn toast sau 3 giây
+    setTimeout(function() {
+        const toastElement = document.querySelector('.toast');
+        const toast = bootstrap.Toast.getInstance(toastElement);
+        if (toast) {
+            toast.hide();
+        }
+    }, 3000);
+    
+    // Cập nhật giao diện
+    const favoriteButtons = document.querySelectorAll('[data-item-id="{{ item.id }}"]');
+    favoriteButtons.forEach(button => {
+        if (button.classList.contains('favorite-toggle')) {
+            if ({{ item.is_favorite|lower }}) {
+                button.innerHTML = '<i class="fas fa-star"></i>';
+                button.classList.add('text-warning');
+            } else {
+                button.innerHTML = '<i class="far fa-star"></i>';
+                button.classList.remove('text-warning');
+            }
+        }
+    });
+</script>

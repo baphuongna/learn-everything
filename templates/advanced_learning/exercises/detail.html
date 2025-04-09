@@ -5,275 +5,149 @@
 
 {% block extra_css %}
 <style>
-    .exercise-container {
-        max-width: 1000px;
-        margin: 0 auto;
-    }
-
     .exercise-header {
         background-color: #f8f9fa;
-        border-radius: 10px;
         padding: 20px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        border-radius: 10px;
         margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
-
+    
     .exercise-title {
         color: #6f42c1;
         margin-bottom: 10px;
     }
-
+    
     .exercise-meta {
-        font-size: 0.9rem;
-        color: #6c757d;
         margin-bottom: 15px;
     }
-
+    
     .exercise-description {
-        line-height: 1.6;
         margin-bottom: 20px;
+        color: #6c757d;
     }
-
+    
     .exercise-content {
-        background-color: #f8f9fa;
-        border-radius: 10px;
+        background-color: #fff;
         padding: 20px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        border-radius: 10px;
         margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
-
+    
     .exercise-type-badge {
-        font-size: 0.8rem;
-        padding: 0.25rem 0.5rem;
+        padding: 5px 10px;
+        border-radius: 5px;
+        color: white;
     }
-
+    
     .type-code {
         background-color: #007bff;
     }
-
+    
     .type-quiz {
         background-color: #28a745;
     }
-
+    
     .type-simulation {
         background-color: #fd7e14;
     }
-
+    
     .type-game {
         background-color: #6f42c1;
     }
-
-    .code-editor {
-        border: 1px solid #dee2e6;
-        border-radius: 5px;
-        min-height: 300px;
-        margin-bottom: 20px;
-    }
-
-    .quiz-form {
-        background-color: #fff;
-        border-radius: 5px;
-        padding: 20px;
-        border: 1px solid #dee2e6;
-        margin-bottom: 20px;
-    }
-
-    .simulation-container {
-        background-color: #fff;
-        border-radius: 5px;
-        padding: 20px;
-        border: 1px solid #dee2e6;
-        margin-bottom: 20px;
-        min-height: 400px;
-    }
-
-    .game-container {
-        background-color: #fff;
-        border-radius: 5px;
-        padding: 20px;
-        border: 1px solid #dee2e6;
-        margin-bottom: 20px;
-        min-height: 400px;
-    }
-
+    
     .feedback-container {
-        display: none;
         padding: 15px;
         border-radius: 5px;
-        margin-bottom: 20px;
+        margin-top: 20px;
+        display: none;
     }
-
+    
     .feedback-success {
         background-color: #d4edda;
-        border: 1px solid #c3e6cb;
         color: #155724;
+        border: 1px solid #c3e6cb;
     }
-
+    
     .feedback-error {
         background-color: #f8d7da;
+        color: #721c24;
         border: 1px solid #f5c6cb;
-        color: #721c24;
     }
-
+    
     .solution-container {
+        padding: 15px;
+        border-radius: 5px;
+        margin-top: 20px;
+        background-color: #e2e3e5;
+        border: 1px solid #d6d8db;
         display: none;
-        background-color: #e2f0fd;
-        border: 1px solid #b8daff;
-        color: #004085;
-        padding: 15px;
-        border-radius: 5px;
-        margin-bottom: 20px;
     }
-
-    /* Các style mới cho trình soạn thảo mã */
-    .code-editor-container {
-        border: 1px solid #dee2e6;
-        border-radius: 5px;
-        overflow: hidden;
-        margin-bottom: 20px;
-    }
-
-    .code-editor-header {
-        background-color: #f8f9fa;
-        border-bottom: 1px solid #dee2e6;
-        padding: 10px 15px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .code-editor-language {
-        font-weight: 600;
-        color: #6f42c1;
-    }
-
-    .code-editor-actions {
-        display: flex;
-        gap: 10px;
-    }
-
-    .code-editor-body {
-        min-height: 300px;
-    }
-
-    .code-editor-footer {
-        background-color: #f8f9fa;
-        border-top: 1px solid #dee2e6;
-        padding: 10px 15px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    /* Style cho kết quả thực thi */
-    .execution-result {
-        background-color: #212529;
-        color: #f8f9fa;
-        font-family: monospace;
+    
+    .hint-container {
         padding: 15px;
         border-radius: 5px;
         margin-top: 20px;
-        max-height: 200px;
-        overflow-y: auto;
-    }
-
-    .test-case {
-        background-color: #f8f9fa;
-        border: 1px solid #dee2e6;
-        border-radius: 5px;
-        padding: 15px;
-        margin-bottom: 10px;
-    }
-
-    .test-case-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
-    }
-
-    .test-case-title {
-        font-weight: 600;
-    }
-
-    .test-case-status {
-        font-size: 0.9rem;
-        padding: 3px 8px;
-        border-radius: 10px;
-    }
-
-    .test-case-passed {
-        background-color: #d4edda;
-        color: #155724;
-    }
-
-    .test-case-failed {
-        background-color: #f8d7da;
-        color: #721c24;
-    }
-
-    .test-case-details {
-        font-family: monospace;
-        font-size: 0.9rem;
-    }
-
-    .test-case-input, .test-case-expected, .test-case-actual {
-        margin-bottom: 5px;
-    }
-
-    /* Style cho gợi ý */
-    .hints-container {
-        margin-top: 20px;
-    }
-
-    .hint-button {
-        margin-right: 10px;
-        margin-bottom: 10px;
-    }
-
-    .hint-content {
         background-color: #fff3cd;
         border: 1px solid #ffeeba;
-        color: #856404;
+    }
+    
+    .code-editor {
+        border: 1px solid #ced4da;
+        border-radius: 5px;
+        overflow: hidden;
+    }
+    
+    .execution-result {
         padding: 15px;
         border-radius: 5px;
-        margin-top: 10px;
+        margin-top: 20px;
+        background-color: #f8f9fa;
+        border: 1px solid #e9ecef;
         display: none;
     }
-
-    /* Style cho thành tích */
-    .achievements-container {
-        margin-top: 30px;
+    
+    .test-case {
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 10px;
     }
-
-    .achievement-item {
-        background-color: #f8f9fa;
-        border-radius: 10px;
-        padding: 15px;
-        margin-bottom: 15px;
-        border-left: 4px solid #6f42c1;
-        display: flex;
-        align-items: center;
+    
+    .test-case-success {
+        background-color: #d4edda;
+        border: 1px solid #c3e6cb;
     }
-
-    .achievement-icon {
-        font-size: 2rem;
+    
+    .test-case-error {
+        background-color: #f8d7da;
+        border: 1px solid #f5c6cb;
+    }
+    
+    .btn-purple {
+        background-color: #6f42c1;
+        border-color: #6f42c1;
+        color: white;
+    }
+    
+    .btn-purple:hover {
+        background-color: #5e35b1;
+        border-color: #5e35b1;
+        color: white;
+    }
+    
+    .btn-outline-purple {
         color: #6f42c1;
-        margin-right: 15px;
+        border-color: #6f42c1;
     }
-
-    .achievement-info {
-        flex: 1;
+    
+    .btn-outline-purple:hover {
+        background-color: #6f42c1;
+        color: white;
     }
-
-    .achievement-title {
-        font-weight: 600;
-        margin-bottom: 5px;
-    }
-
-    .achievement-description {
-        font-size: 0.9rem;
-        color: #6c757d;
+    
+    .text-purple {
+        color: #6f42c1;
     }
 </style>
 {% endblock %}
@@ -286,472 +160,27 @@
         </h1>
     </div>
     <div class="col-md-4 text-end">
-        <div class="mb-2">
-            <a href="{% url 'advanced_learning:exercise_list' %}" class="btn btn-outline-purple">
-                <i class="fas fa-arrow-left"></i> Quay Lại Danh Sách
-            </a>
-        </div>
-        <div class="btn-group">
-            <a href="{% url 'advanced_learning:create_cornell_from_exercise' exercise_id=exercise.id %}" class="btn btn-sm btn-outline-primary">
-                <i class="fas fa-edit"></i> Tạo Ghi Chú Cornell
-            </a>
-            <a href="{% url 'advanced_learning:exercise_submissions' exercise_id=exercise.id %}" class="btn btn-sm btn-outline-info">
-                <i class="fas fa-history"></i> Lịch Sử Nộp Bài
-            </a>
-            {% if user.is_staff %}
-            <a href="{% url 'advanced_learning:link_exercise_achievement' exercise_id=exercise.id %}" class="btn btn-sm btn-outline-warning">
-                <i class="fas fa-trophy"></i> Liên Kết Thành Tích
-            </a>
-            {% endif %}
-        </div>
+        <a href="{% url 'advanced_learning:exercise_list' %}" class="btn btn-outline-purple"
+           hx-get="{% url 'advanced_learning:exercise_list' %}?format=partial"
+           hx-target="#main-content"
+           hx-swap="innerHTML"
+           hx-push-url="true">
+            <i class="fas fa-list"></i> Danh Sách Bài Tập
+        </a>
     </div>
 </div>
 
-<div class="exercise-container">
-    <div class="exercise-header">
-        <h2 class="exercise-title">{{ exercise.title }}</h2>
-        <div class="exercise-meta">
-            {% if exercise.lesson.topic.subject %}
-            <span class="badge bg-primary">{{ exercise.lesson.topic.subject.name }}</span>
-            {% endif %}
-            <span class="badge
-                {% if exercise.exercise_type == 'code' %}type-code
-                {% elif exercise.exercise_type == 'quiz' %}type-quiz
-                {% elif exercise.exercise_type == 'simulation' %}type-simulation
-                {% else %}type-game{% endif %}
-                exercise-type-badge">
-                {% if exercise.exercise_type == 'code' %}
-                    Bài tập lập trình
-                {% elif exercise.exercise_type == 'quiz' %}
-                    Câu đố tương tác
-                {% elif exercise.exercise_type == 'simulation' %}
-                    Mô phỏng
-                {% else %}
-                    Trò chơi học tập
-                {% endif %}
-            </span>
-        </div>
-
-        <div class="exercise-description">
-            {{ exercise.description|linebreaks }}
-        </div>
-    </div>
-
-    <div class="exercise-content">
-        <h4><i class="fas fa-tasks text-purple"></i> Nội Dung Bài Tập</h4>
-
-        {% if exercise.exercise_type == 'code' %}
-            <!-- Bài tập lập trình -->
-            <div id="code-exercise">
-                <div class="mb-3">
-                    {{ exercise.content|safe }}
-                </div>
-
-                <!-- Trình soạn thảo mã mới -->
-                <div class="code-editor-container">
-                    <div class="code-editor-header">
-                        <div class="code-editor-language">
-                            {% if exercise.programming_language == 'python' %}
-                                <i class="fab fa-python"></i> Python
-                            {% elif exercise.programming_language == 'javascript' %}
-                                <i class="fab fa-js"></i> JavaScript
-                            {% elif exercise.programming_language == 'java' %}
-                                <i class="fab fa-java"></i> Java
-                            {% elif exercise.programming_language == 'cpp' %}
-                                <i class="fas fa-code"></i> C++
-                            {% elif exercise.programming_language == 'csharp' %}
-                                <i class="fab fa-microsoft"></i> C#
-                            {% elif exercise.programming_language == 'php' %}
-                                <i class="fab fa-php"></i> PHP
-                            {% elif exercise.programming_language == 'ruby' %}
-                                <i class="fas fa-gem"></i> Ruby
-                            {% elif exercise.programming_language == 'html_css' %}
-                                <i class="fab fa-html5"></i> HTML/CSS
-                            {% else %}
-                                <i class="fas fa-code"></i> Code
-                            {% endif %}
-                        </div>
-                        <div class="code-editor-actions">
-                            <button class="btn btn-sm btn-outline-secondary" id="reset-code">
-                                <i class="fas fa-undo"></i> Khôi phục mã gốc
-                            </button>
-                            <button class="btn btn-sm btn-outline-info" id="format-code">
-                                <i class="fas fa-indent"></i> Định dạng mã
-                            </button>
-                        </div>
-                    </div>
-                    <div class="code-editor-body">
-                        <div id="code-editor"></div>
-                        <textarea id="code-textarea" class="form-control d-none" rows="10">{{ exercise.starter_code }}</textarea>
-                    </div>
-                    <div class="code-editor-footer">
-                        <div>
-                            {% if exercise.time_limit %}
-                            <span class="badge bg-info">
-                                <i class="fas fa-clock"></i> Giới hạn thời gian: {{ exercise.time_limit }} giây
-                            </span>
-                            {% endif %}
-                            <span class="badge bg-secondary">
-                                <i class="fas fa-star"></i> Điểm: {{ exercise.points }}
-                            </span>
-                        </div>
-                        <div>
-                            <button class="btn btn-sm btn-outline-warning hint-toggle">
-                                <i class="fas fa-lightbulb"></i> Gợi ý
-                            </button>
-                            <button id="submit-code" class="btn btn-purple">
-                                <i class="fas fa-play"></i> Chạy Mã
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Gợi ý -->
-                {% if exercise.hints %}
-                <div class="hints-container" style="display: none;">
-                    <h5><i class="fas fa-lightbulb text-warning"></i> Gợi ý</h5>
-                    <div class="mb-3">
-                        {% for hint in exercise.get_hints_display %}
-                        <button class="btn btn-sm btn-outline-warning hint-button" data-hint-id="{{ hint.id }}">
-                            Gợi ý {{ hint.id }} {% if hint.cost > 0 %}(-{{ hint.cost }} điểm){% endif %}
-                        </button>
-                        <div class="hint-content" id="hint-{{ hint.id }}">
-                            {{ hint.content }}
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
-
-                <!-- Kết quả thực thi -->
-                <div class="execution-result" id="execution-result" style="display: none;"></div>
-
-                <!-- Kết quả kiểm tra -->
-                <div id="test-results" style="display: none;">
-                    <h5 class="mt-4"><i class="fas fa-vial text-info"></i> Kết quả kiểm tra</h5>
-                    <div id="test-cases-container"></div>
-                </div>
-            </div>
-
-        {% elif exercise.exercise_type == 'quiz' %}
-            <!-- Câu đố tương tác -->
-            <div id="quiz-exercise">
-                <div class="mb-3">
-                    {{ exercise.content|safe }}
-                </div>
-
-                <div class="quiz-form">
-                    <div class="mb-3">
-                        <label for="quiz-answer" class="form-label">Đáp án của bạn:</label>
-                        <input type="text" class="form-control" id="quiz-answer" placeholder="Nhập đáp án của bạn...">
-                    </div>
-
-                    <button id="submit-quiz" class="btn btn-purple">
-                        <i class="fas fa-check"></i> Kiểm Tra Đáp Án
-                    </button>
-                </div>
-            </div>
-
-        {% elif exercise.exercise_type == 'simulation' %}
-            <!-- Mô phỏng -->
-            <div id="simulation-exercise">
-                <div class="mb-3">
-                    {{ exercise.content|safe }}
-                </div>
-
-                <div class="simulation-container" id="simulation-container">
-                    <!-- Nội dung mô phỏng sẽ được tải ở đây -->
-                    <div class="text-center">
-                        <p>Đang tải mô phỏng...</p>
-                        <div class="spinner-border text-purple" role="status">
-                            <span class="visually-hidden">Đang tải...</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        {% else %}
-            <!-- Trò chơi học tập -->
-            <div id="game-exercise">
-                <div class="mb-3">
-                    {{ exercise.content|safe }}
-                </div>
-
-                <div class="game-container" id="game-container">
-                    <!-- Nội dung trò chơi sẽ được tải ở đây -->
-                    <div class="text-center">
-                        <p>Đang tải trò chơi...</p>
-                        <div class="spinner-border text-purple" role="status">
-                            <span class="visually-hidden">Đang tải...</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        {% endif %}
-
-        <!-- Phản hồi -->
-        <div id="feedback-container" class="feedback-container">
-            <p id="feedback-message"></p>
-        </div>
-
-        <!-- Giải pháp -->
-        <div id="solution-container" class="solution-container">
-            <h5>Giải pháp:</h5>
-            <div id="solution-content">
-                {% if show_solution %}
-                    {{ exercise.solution|linebreaks }}
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Thành tích liên quan -->
-        {% if exercise.achievements.all %}
-        <div class="achievements-container">
-            <h4><i class="fas fa-trophy text-warning"></i> Thành Tích Liên Quan</h4>
-
-            {% for achievement in exercise.achievements.all %}
-            <div class="achievement-item">
-                <div class="achievement-icon">
-                    <i class="{{ achievement.icon }}"></i>
-                </div>
-                <div class="achievement-info">
-                    <div class="achievement-title">{{ achievement.title }}</div>
-                    <div class="achievement-description">{{ achievement.description }}</div>
-                    <div class="achievement-points"><i class="fas fa-star text-warning"></i> {{ achievement.points }} điểm</div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-    </div>
+<div id="exercise-detail-container">
+    {% include 'advanced_learning/exercises/detail_partial.html' %}
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // Thêm màu tím cho nút và các phần tử khác
     document.addEventListener('DOMContentLoaded', function() {
-        // Thêm CSS cho màu tím
-        const style = document.createElement('style');
-        style.textContent = `
-            .btn-purple {
-                background-color: #6f42c1;
-                border-color: #6f42c1;
-                color: white;
-            }
-            .btn-purple:hover {
-                background-color: #5e35b1;
-                border-color: #5e35b1;
-                color: white;
-            }
-            .btn-outline-purple {
-                color: #6f42c1;
-                border-color: #6f42c1;
-            }
-            .btn-outline-purple:hover {
-                background-color: #6f42c1;
-                color: white;
-            }
-            .bg-purple {
-                background-color: #6f42c1 !important;
-            }
-            .text-purple {
-                color: #6f42c1 !important;
-            }
-        `;
-        document.head.appendChild(style);
-
-        // Xử lý nộp bài tập
-        const exerciseType = '{{ exercise.exercise_type }}';
-        const exerciseId = '{{ exercise.id }}';
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-        // Xử lý phản hồi
-        function showFeedback(message, isSuccess) {
-            const feedbackContainer = document.getElementById('feedback-container');
-            const feedbackMessage = document.getElementById('feedback-message');
-
-            feedbackContainer.style.display = 'block';
-            feedbackMessage.textContent = message;
-
-            if (isSuccess) {
-                feedbackContainer.className = 'feedback-container feedback-success';
-            } else {
-                feedbackContainer.className = 'feedback-container feedback-error';
-            }
-        }
-
-        // Xử lý hiển thị giải pháp
-        function showSolution(solution) {
-            const solutionContainer = document.getElementById('solution-container');
-            const solutionContent = document.getElementById('solution-content');
-
-            solutionContainer.style.display = 'block';
-            solutionContent.textContent = solution;
-        }
-
-        // Xử lý nộp bài tập
-        function submitExercise(submission) {
-            // Hiển thị trạng thái đang xử lý
-            showFeedback('Đang xử lý bài nộp của bạn...', true);
-
-            // Ẩn kết quả trước đó
-            document.getElementById('execution-result').style.display = 'none';
-            document.getElementById('test-results').style.display = 'none';
-
-            // Gọi API chạy mã hoặc nộp bài tập
-            let apiUrl = '';
-            let requestBody = '';
-
-            if (exerciseType === 'code') {
-                apiUrl = `/advanced_learning/exercises/${exerciseId}/run-code/`;
-                requestBody = `code=${encodeURIComponent(submission)}`;
-            } else {
-                apiUrl = `/advanced_learning/exercises/${exerciseId}/submit/`;
-                requestBody = `answer=${encodeURIComponent(submission)}`;
-            }
-
-            fetch(apiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFToken': csrfToken
-                },
-                body: requestBody
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Hiển thị phản hồi
-                    showFeedback(data.feedback, data.is_correct);
-
-                    // Hiển thị kết quả thực thi nếu có
-                    if (exerciseType === 'code' && data.execution_result) {
-                        const executionResult = document.getElementById('execution-result');
-                        executionResult.style.display = 'block';
-
-                        // Hiển thị output hoặc lỗi
-                        if (data.execution_result.error) {
-                            executionResult.innerHTML = `<span style="color: #ff6b6b;">Lỗi: ${data.execution_result.error}</span>`;
-                        } else {
-                            executionResult.innerHTML = `<pre>${data.execution_result.output || ''}</pre>`;
-                        }
-
-                        // Hiển thị kết quả test case
-                        if (data.execution_result.test_results && data.execution_result.test_results.length > 0) {
-                            const testResults = document.getElementById('test-results');
-                            const testCasesContainer = document.getElementById('test-cases-container');
-                            testResults.style.display = 'block';
-
-                            // Xóa kết quả cũ
-                            testCasesContainer.innerHTML = '';
-
-                            // Thêm kết quả mới
-                            data.execution_result.test_results.forEach((test, index) => {
-                                const testCase = document.createElement('div');
-                                testCase.className = 'test-case';
-
-                                const isPassed = test.passed;
-                                const statusClass = isPassed ? 'test-case-passed' : 'test-case-failed';
-                                const statusText = isPassed ? 'Đã vượt qua' : 'Không vượt qua';
-
-                                testCase.innerHTML = `
-                                    <div class="test-case-header">
-                                        <div class="test-case-title">Test case #${index + 1}</div>
-                                        <div class="test-case-status ${statusClass}">${statusText}</div>
-                                    </div>
-                                    <div class="test-case-details">
-                                        <div class="test-case-input"><strong>Input:</strong> ${test.input}</div>
-                                        <div class="test-case-expected"><strong>Kết quả mong đợi:</strong> ${test.expected}</div>
-                                        <div class="test-case-actual"><strong>Kết quả thực tế:</strong> ${test.actual || ''}</div>
-                                        ${test.error ? `<div class="test-case-error"><strong>Lỗi:</strong> ${test.error}</div>` : ''}
-                                    </div>
-                                `;
-
-                                testCasesContainer.appendChild(testCase);
-                            });
-                        }
-                    }
-
-                    // Hiển thị điểm nếu đúng
-                    if (data.is_correct) {
-                        if (data.points_earned > 0) {
-                            showFeedback(`Chúc mừng! Bạn đã nhận được ${data.points_earned} điểm.`, true);
-                        }
-
-                        // Hiển thị giải pháp nếu có
-                        if (data.solution) {
-                            showSolution(data.solution);
-                        }
-                    }
-                } else {
-                    showFeedback(data.error || 'Đã xảy ra lỗi khi nộp bài tập. Vui lòng thử lại.', false);
-                }
-            })
-            .catch(error => {
-                console.error('Lỗi:', error);
-                showFeedback('Đã xảy ra lỗi khi nộp bài tập. Vui lòng thử lại.', false);
-            });
-        }
-
-        // Xử lý nút nộp bài tập
-        if (exerciseType === 'code') {
-            const submitCodeBtn = document.getElementById('submit-code');
-            const codeTextarea = document.getElementById('code-textarea');
-
-            if (submitCodeBtn && codeTextarea) {
-                submitCodeBtn.addEventListener('click', function() {
-                    const code = codeTextarea.value;
-                    submitExercise(code);
-                });
-            }
-        } else if (exerciseType === 'quiz') {
-            const submitQuizBtn = document.getElementById('submit-quiz');
-            const quizAnswer = document.getElementById('quiz-answer');
-
-            if (submitQuizBtn && quizAnswer) {
-                submitQuizBtn.addEventListener('click', function() {
-                    const answer = quizAnswer.value;
-                    submitExercise(answer);
-                });
-            }
-        }
-
-        // Tải mô phỏng hoặc trò chơi
-        if (exerciseType === 'simulation') {
-            const simulationContainer = document.getElementById('simulation-container');
-
-            if (simulationContainer) {
-                // Mã để tải mô phỏng
-                setTimeout(function() {
-                    simulationContainer.innerHTML = `
-                        <div class="text-center">
-                            <p>Mô phỏng đã được tải thành công!</p>
-                            <p>Nội dung mô phỏng sẽ xuất hiện ở đây.</p>
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle"></i> Đây là một mô phỏng mẫu. Trong ứng dụng thực tế, nội dung mô phỏng sẽ được tải từ dữ liệu bài tập.
-                            </div>
-                        </div>
-                    `;
-                }, 1500);
-            }
-        } else if (exerciseType === 'game') {
-            const gameContainer = document.getElementById('game-container');
-
-            if (gameContainer) {
-                // Mã để tải trò chơi
-                setTimeout(function() {
-                    gameContainer.innerHTML = `
-                        <div class="text-center">
-                            <p>Trò chơi đã được tải thành công!</p>
-                            <p>Nội dung trò chơi sẽ xuất hiện ở đây.</p>
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle"></i> Đây là một trò chơi mẫu. Trong ứng dụng thực tế, nội dung trò chơi sẽ được tải từ dữ liệu bài tập.
-                            </div>
-                        </div>
-                    `;
-                }, 1500);
-            }
+        // Khởi tạo Alpine.js nếu cần
+        if (typeof Alpine !== 'undefined') {
+            Alpine.start();
         }
     });
 </script>

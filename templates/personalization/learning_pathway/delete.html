@@ -1,0 +1,42 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Xóa Lộ Trình{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'personalization_dashboard' %}">Bảng Điều Khiển</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'learning_pathway_list' %}">Lộ Trình Học Tập</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Xóa Lộ Trình</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6 mx-auto">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">Xóa Lộ Trình</h4>
+                </div>
+                <div class="card-body">
+                    <p class="lead">Bạn có chắc chắn muốn xóa lộ trình <strong>"{{ pathway.title }}"</strong>?</p>
+                    <p>Hành động này không thể hoàn tác. Tất cả các bước trong lộ trình này cũng sẽ bị xóa.</p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="{% url 'learning_pathway_detail' pathway_id=pathway.id %}" class="btn btn-secondary me-md-2">Hủy</a>
+                            <button type="submit" class="btn btn-danger">Xác Nhận Xóa</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

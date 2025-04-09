@@ -49,47 +49,129 @@
     }
     
     .empty-state i {
-        font-size: 4rem;
+        font-size: 3rem;
         color: #dee2e6;
         margin-bottom: 20px;
     }
     
-    .status-badge {
-        font-size: 0.8rem;
-        padding: 0.25rem 0.5rem;
-    }
-    
-    .status-upcoming {
-        background-color: #6c757d;
-    }
-    
-    .status-active {
-        background-color: #28a745;
-    }
-    
-    .status-past {
-        background-color: #dc3545;
-    }
-    
     .competition-stats {
         display: flex;
+        flex-wrap: wrap;
         gap: 15px;
         margin-top: 10px;
     }
     
     .competition-stat {
-        display: flex;
-        align-items: center;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
+        color: #6c757d;
     }
     
     .competition-stat i {
+        color: #fd7e14;
         margin-right: 5px;
+    }
+    
+    .featured-competition-card {
+        background-color: #fff8f0;
+        border-left: 4px solid #fd7e14;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+    
+    .featured-competition-card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .nav-tabs .nav-link.active {
+        color: #fd7e14;
+        border-color: #fd7e14;
+        border-bottom-color: transparent;
+    }
+    
+    .nav-tabs .nav-link:hover {
+        border-color: #e9ecef #e9ecef #dee2e6;
+    }
+    
+    .btn-orange {
+        background-color: #fd7e14;
+        border-color: #fd7e14;
+        color: white;
+    }
+    
+    .btn-orange:hover {
+        background-color: #e96b02;
+        border-color: #e96b02;
+        color: white;
+    }
+    
+    .btn-outline-orange {
+        color: #fd7e14;
+        border-color: #fd7e14;
+    }
+    
+    .btn-outline-orange:hover {
+        background-color: #fd7e14;
+        color: white;
+    }
+    
+    .text-orange {
         color: #fd7e14;
     }
     
-    .tab-content {
-        padding-top: 20px;
+    .competition-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+    
+    .competition-grid-card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        border-top: 4px solid #fd7e14;
+    }
+    
+    .competition-grid-card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .competition-grid-card .card-body {
+        flex: 1;
+    }
+    
+    .competition-grid-card .card-footer {
+        padding: 0.5rem 1rem;
+        background-color: transparent;
+    }
+    
+    .view-toggle-btn.active {
+        background-color: #fd7e14;
+        color: white;
+    }
+    
+    .action-overlay {
+        display: none;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+        width: 80%;
+    }
+    
+    .competition-grid-card:hover .action-overlay {
+        display: block;
     }
 </style>
 {% endblock %}
@@ -103,326 +185,175 @@
         <p class="lead">Tham gia các cuộc thi đấu với người học khác, tăng cường động lực và cải thiện kết quả học tập.</p>
     </div>
     <div class="col-md-4 text-end">
-        <a href="{% url 'advanced_learning:my_competitions' %}" class="btn btn-outline-orange me-2">
+        <a href="{% url 'advanced_learning:my_competitions' %}" class="btn btn-outline-orange me-2"
+           hx-get="{% url 'advanced_learning:my_competitions' %}?format=partial"
+           hx-target="#main-content"
+           hx-swap="innerHTML"
+           hx-push-url="true">
             <i class="fas fa-user"></i> Cuộc Thi Của Tôi
         </a>
-        <a href="{% url 'advanced_learning:create_competition' %}" class="btn btn-orange">
+        <a href="{% url 'advanced_learning:create_competition' %}" class="btn btn-orange"
+           hx-get="{% url 'advanced_learning:create_competition' %}?format=partial"
+           hx-target="#main-content"
+           hx-swap="innerHTML"
+           hx-push-url="true">
             <i class="fas fa-plus"></i> Tạo Cuộc Thi
         </a>
     </div>
 </div>
 
-<!-- Tabs -->
-<ul class="nav nav-tabs mb-4" id="competitionTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="all-competitions-tab" data-bs-toggle="tab" data-bs-target="#all-competitions" type="button" role="tab" aria-controls="all-competitions" aria-selected="true">
-            <i class="fas fa-list"></i> Tất Cả Cuộc Thi
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="active-competitions-tab" data-bs-toggle="tab" data-bs-target="#active-competitions" type="button" role="tab" aria-controls="active-competitions" aria-selected="false">
-            <i class="fas fa-play-circle"></i> Đang Diễn Ra
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="upcoming-competitions-tab" data-bs-toggle="tab" data-bs-target="#upcoming-competitions" type="button" role="tab" aria-controls="upcoming-competitions" aria-selected="false">
-            <i class="fas fa-calendar-alt"></i> Sắp Diễn Ra
-        </button>
-    </li>
-</ul>
-
-<div class="tab-content" id="competitionTabsContent">
-    <!-- Tất cả cuộc thi -->
-    <div class="tab-pane fade show active" id="all-competitions" role="tabpanel" aria-labelledby="all-competitions-tab">
-        <!-- Tìm kiếm và lọc -->
-        <div class="card search-card mb-4">
-            <div class="card-body">
-                <form method="get" class="row g-3">
-                    <div class="col-md-4">
-                        <div class="input-group">
-                            <input type="text" class="form-control" name="search" placeholder="Tìm kiếm cuộc thi..." value="{{ search_query }}">
-                            <button class="btn btn-orange" type="submit">
-                                <i class="fas fa-search"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <select class="form-select" name="subject" onchange="this.form.submit()">
-                            <option value="">Tất cả chủ đề</option>
-                            {% for subject in subjects %}
-                            <option value="{{ subject.id }}" {% if selected_subject == subject.id|stringformat:"i" %}selected{% endif %}>
-                                {{ subject.name }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <select class="form-select" name="status" onchange="this.form.submit()">
-                            <option value="">Tất cả trạng thái</option>
-                            <option value="upcoming" {% if selected_status == 'upcoming' %}selected{% endif %}>Sắp diễn ra</option>
-                            <option value="active" {% if selected_status == 'active' %}selected{% endif %}>Đang diễn ra</option>
-                            <option value="past" {% if selected_status == 'past' %}selected{% endif %}>Đã kết thúc</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        {% if search_query or selected_subject or selected_status %}
-                        <a href="{% url 'advanced_learning:competition_list' %}" class="btn btn-outline-secondary w-100">
-                            <i class="fas fa-times"></i> Xóa bộ lọc
-                        </a>
-                        {% endif %}
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Danh sách cuộc thi -->
-        <div class="row">
-            <div class="col-md-12">
-                {% if competitions %}
-                    {% for competition in competitions %}
-                    <div class="card competition-card">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <h5 class="competition-title">{{ competition.title }}</h5>
-                                    <p class="competition-meta">
-                                        {% if competition.subject %}
-                                        <span class="badge bg-primary">{{ competition.subject.name }}</span>
-                                        {% endif %}
-                                        
-                                        {% now "Y-m-d H:i:s" as current_time %}
-                                        {% if competition.start_time|date:"Y-m-d H:i:s" > current_time %}
-                                            <span class="badge status-upcoming status-badge">Sắp diễn ra</span>
-                                        {% elif competition.end_time|date:"Y-m-d H:i:s" < current_time %}
-                                            <span class="badge status-past status-badge">Đã kết thúc</span>
-                                        {% elif competition.is_active %}
-                                            <span class="badge status-active status-badge">Đang diễn ra</span>
-                                        {% else %}
-                                            <span class="badge status-upcoming status-badge">Chưa kích hoạt</span>
-                                        {% endif %}
-                                    </p>
-                                    <div class="competition-description">
-                                        {{ competition.description|truncatechars:200 }}
-                                    </div>
-                                    <div class="competition-stats">
-                                        <div class="competition-stat">
-                                            <i class="fas fa-clock"></i> {{ competition.time_limit }} phút
-                                        </div>
-                                        <div class="competition-stat">
-                                            <i class="fas fa-calendar-alt"></i> Bắt đầu: {{ competition.start_time|date:"d/m/Y H:i" }}
-                                        </div>
-                                        <div class="competition-stat">
-                                            <i class="fas fa-users"></i> {{ competition.competitionparticipant_set.count }} người tham gia
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 text-end d-flex align-items-center justify-content-end">
-                                    <a href="{% url 'advanced_learning:competition_detail' competition_id=competition.id %}" class="btn btn-outline-orange me-2">
-                                        <i class="fas fa-eye"></i> Xem
-                                    </a>
-                                    {% if competition.id in user_competitions %}
-                                        <button class="btn btn-outline-secondary" disabled>
-                                            <i class="fas fa-check"></i> Đã tham gia
-                                        </button>
-                                    {% else %}
-                                        {% now "Y-m-d H:i:s" as current_time %}
-                                        {% if competition.start_time|date:"Y-m-d H:i:s" <= current_time and competition.end_time|date:"Y-m-d H:i:s" >= current_time and competition.is_active %}
-                                            <a href="{% url 'advanced_learning:join_competition' competition_id=competition.id %}" class="btn btn-orange">
-                                                <i class="fas fa-play"></i> Tham gia
-                                            </a>
-                                        {% else %}
-                                            <button class="btn btn-outline-secondary" disabled>
-                                                <i class="fas fa-lock"></i> Chưa mở
-                                            </button>
-                                        {% endif %}
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="card">
-                        <div class="card-body empty-state">
-                            <i class="fas fa-trophy"></i>
-                            <h4>Không có cuộc thi nào</h4>
-                            <p class="text-muted">Không tìm thấy cuộc thi nào phù hợp với tiêu chí tìm kiếm của bạn.</p>
-                        </div>
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
+<div class="competitions-container" x-data="{ activeTab: 'all', viewType: 'list' }">
+    <!-- Tab Navigation -->
+    <ul class="nav nav-tabs mb-4" id="competitionTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" :class="{ 'active': activeTab === 'all' }" id="all-competitions-tab" 
+                    @click="activeTab = 'all'"
+                    hx-get="{% url 'advanced_learning:competition_list' %}?format=partial&tab=all"
+                    hx-target="#competitions-container"
+                    hx-swap="innerHTML">
+                <i class="fas fa-list"></i> Tất Cả
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" :class="{ 'active': activeTab === 'active' }" id="active-competitions-tab" 
+                    @click="activeTab = 'active'"
+                    hx-get="{% url 'advanced_learning:competition_list' %}?format=partial&tab=active"
+                    hx-target="#competitions-container"
+                    hx-swap="innerHTML">
+                <i class="fas fa-play-circle"></i> Đang Diễn Ra
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" :class="{ 'active': activeTab === 'upcoming' }" id="upcoming-competitions-tab" 
+                    @click="activeTab = 'upcoming'"
+                    hx-get="{% url 'advanced_learning:competition_list' %}?format=partial&tab=upcoming"
+                    hx-target="#competitions-container"
+                    hx-swap="innerHTML">
+                <i class="fas fa-calendar-alt"></i> Sắp Diễn Ra
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" :class="{ 'active': activeTab === 'featured' }" id="featured-competitions-tab" 
+                    @click="activeTab = 'featured'"
+                    hx-get="{% url 'advanced_learning:competition_list' %}?format=partial&tab=featured"
+                    hx-target="#competitions-container"
+                    hx-swap="innerHTML">
+                <i class="fas fa-star"></i> Nổi Bật
+            </button>
+        </li>
+    </ul>
     
-    <!-- Cuộc thi đang diễn ra -->
-    <div class="tab-pane fade" id="active-competitions" role="tabpanel" aria-labelledby="active-competitions-tab">
-        <div class="row">
-            <div class="col-md-12">
-                {% now "Y-m-d H:i:s" as current_time %}
-                {% with active_competitions=competitions|dictsort:"start_time" %}
-                    {% if active_competitions %}
-                        {% for competition in active_competitions %}
-                            {% if competition.start_time|date:"Y-m-d H:i:s" <= current_time and competition.end_time|date:"Y-m-d H:i:s" >= current_time and competition.is_active %}
-                                <div class="card competition-card">
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-8">
-                                                <h5 class="competition-title">{{ competition.title }}</h5>
-                                                <p class="competition-meta">
-                                                    {% if competition.subject %}
-                                                    <span class="badge bg-primary">{{ competition.subject.name }}</span>
-                                                    {% endif %}
-                                                    <span class="badge status-active status-badge">Đang diễn ra</span>
-                                                </p>
-                                                <div class="competition-description">
-                                                    {{ competition.description|truncatechars:200 }}
-                                                </div>
-                                                <div class="competition-stats">
-                                                    <div class="competition-stat">
-                                                        <i class="fas fa-clock"></i> {{ competition.time_limit }} phút
-                                                    </div>
-                                                    <div class="competition-stat">
-                                                        <i class="fas fa-calendar-alt"></i> Kết thúc: {{ competition.end_time|date:"d/m/Y H:i" }}
-                                                    </div>
-                                                    <div class="competition-stat">
-                                                        <i class="fas fa-users"></i> {{ competition.competitionparticipant_set.count }} người tham gia
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4 text-end d-flex align-items-center justify-content-end">
-                                                <a href="{% url 'advanced_learning:competition_detail' competition_id=competition.id %}" class="btn btn-outline-orange me-2">
-                                                    <i class="fas fa-eye"></i> Xem
-                                                </a>
-                                                {% if competition.id in user_competitions %}
-                                                    <button class="btn btn-outline-secondary" disabled>
-                                                        <i class="fas fa-check"></i> Đã tham gia
-                                                    </button>
-                                                {% else %}
-                                                    <a href="{% url 'advanced_learning:join_competition' competition_id=competition.id %}" class="btn btn-orange">
-                                                        <i class="fas fa-play"></i> Tham gia
-                                                    </a>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endif %}
-                        {% endfor %}
-                    {% else %}
-                        <div class="card">
-                            <div class="card-body empty-state">
-                                <i class="fas fa-play-circle"></i>
-                                <h4>Không có cuộc thi nào đang diễn ra</h4>
-                                <p class="text-muted">Hiện tại không có cuộc thi nào đang diễn ra. Hãy quay lại sau!</p>
-                            </div>
-                        </div>
-                    {% endif %}
-                {% endwith %}
-            </div>
-        </div>
-    </div>
-    
-    <!-- Cuộc thi sắp diễn ra -->
-    <div class="tab-pane fade" id="upcoming-competitions" role="tabpanel" aria-labelledby="upcoming-competitions-tab">
-        <div class="row">
-            <div class="col-md-12">
-                {% now "Y-m-d H:i:s" as current_time %}
-                {% with upcoming_competitions=competitions|dictsort:"start_time" %}
-                    {% if upcoming_competitions %}
-                        {% for competition in upcoming_competitions %}
-                            {% if competition.start_time|date:"Y-m-d H:i:s" > current_time %}
-                                <div class="card competition-card">
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-8">
-                                                <h5 class="competition-title">{{ competition.title }}</h5>
-                                                <p class="competition-meta">
-                                                    {% if competition.subject %}
-                                                    <span class="badge bg-primary">{{ competition.subject.name }}</span>
-                                                    {% endif %}
-                                                    <span class="badge status-upcoming status-badge">Sắp diễn ra</span>
-                                                </p>
-                                                <div class="competition-description">
-                                                    {{ competition.description|truncatechars:200 }}
-                                                </div>
-                                                <div class="competition-stats">
-                                                    <div class="competition-stat">
-                                                        <i class="fas fa-clock"></i> {{ competition.time_limit }} phút
-                                                    </div>
-                                                    <div class="competition-stat">
-                                                        <i class="fas fa-calendar-alt"></i> Bắt đầu: {{ competition.start_time|date:"d/m/Y H:i" }}
-                                                    </div>
-                                                    <div class="competition-stat">
-                                                        <i class="fas fa-users"></i> {{ competition.max_participants }} chỗ
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4 text-end d-flex align-items-center justify-content-end">
-                                                <a href="{% url 'advanced_learning:competition_detail' competition_id=competition.id %}" class="btn btn-outline-orange me-2">
-                                                    <i class="fas fa-eye"></i> Xem
-                                                </a>
-                                                <button class="btn btn-outline-secondary" disabled>
-                                                    <i class="fas fa-clock"></i> Chưa mở
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endif %}
-                        {% endfor %}
-                    {% else %}
-                        <div class="card">
-                            <div class="card-body empty-state">
-                                <i class="fas fa-calendar-alt"></i>
-                                <h4>Không có cuộc thi nào sắp diễn ra</h4>
-                                <p class="text-muted">Hiện tại không có cuộc thi nào sắp diễn ra. Hãy quay lại sau!</p>
-                            </div>
-                        </div>
-                    {% endif %}
-                {% endwith %}
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Thông tin về chế độ thi đấu -->
-<div class="row mt-5">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header bg-orange text-white">
-                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Về Chế Độ Thi Đấu</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h5>Chế độ thi đấu là gì?</h5>
-                        <p>Chế độ thi đấu là một tính năng cho phép người học tham gia các cuộc thi với người học khác, tạo ra một môi trường học tập cạnh tranh lành mạnh. Thông qua việc thi đấu, người học có thể đánh giá kiến thức của mình, so sánh với người khác và tăng cường động lực học tập.</p>
-                    </div>
-                    <div class="col-md-6">
-                        <h5>Lợi ích của chế độ thi đấu:</h5>
-                        <ul>
-                            <li><strong>Tăng động lực học tập:</strong> Tạo ra một môi trường cạnh tranh lành mạnh, thúc đẩy người học nỗ lực hơn.</li>
-                            <li><strong>Đánh giá kiến thức:</strong> Giúp người học đánh giá mức độ hiểu biết của mình về một chủ đề cụ thể.</li>
-                            <li><strong>Học hỏi từ người khác:</strong> Thông qua việc so sánh kết quả, người học có thể học hỏi từ những người khác.</li>
-                            <li><strong>Tạo cảm giác thành tựu:</strong> Khi đạt được thứ hạng cao, người học sẽ có cảm giác thành tựu và tự hào.</li>
-                            <li><strong>Tăng tính cộng đồng:</strong> Tạo ra một cộng đồng học tập, nơi người học có thể kết nối và giao lưu.</li>
-                        </ul>
+    <!-- Tìm kiếm và lọc -->
+    <div class="card search-card mb-4" x-data="{ searchQuery: '{{ search_query }}', selectedSubject: '{{ selected_subject }}', selectedDifficulty: '{{ selected_difficulty }}', selectedType: '{{ selected_type }}', selectedLesson: '{{ selected_lesson }}' }">
+        <div class="card-body">
+            <form class="row g-3" id="search-form"
+                  hx-get="{% url 'advanced_learning:competition_list' %}?format=partial"
+                  hx-target="#competitions-container"
+                  hx-trigger="submit"
+                  hx-indicator="#search-indicator">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="search" placeholder="Tìm kiếm cuộc thi..." 
+                               x-model="searchQuery">
+                        <button class="btn btn-orange" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                        <span id="search-indicator" class="htmx-indicator spinner-border spinner-border-sm text-orange ms-2" role="status"></span>
                     </div>
                 </div>
-                <div class="row mt-3">
-                    <div class="col-md-12">
-                        <h5>Cách tham gia một cuộc thi:</h5>
-                        <ol>
-                            <li><strong>Tìm cuộc thi phù hợp:</strong> Duyệt qua danh sách các cuộc thi và chọn một cuộc thi phù hợp với sở thích và trình độ của bạn.</li>
-                            <li><strong>Đăng ký tham gia:</strong> Nhấn nút "Tham gia" để đăng ký tham gia cuộc thi.</li>
-                            <li><strong>Làm bài thi:</strong> Trả lời các câu hỏi trong thời gian quy định.</li>
-                            <li><strong>Xem kết quả:</strong> Sau khi hoàn thành bài thi, bạn có thể xem kết quả và thứ hạng của mình.</li>
-                            <li><strong>Chia sẻ và học hỏi:</strong> Chia sẻ kết quả với bạn bè và học hỏi từ những người khác.</li>
-                        </ol>
+                <div class="col-md-3">
+                    <select class="form-select" name="subject" x-model="selectedSubject"
+                            hx-get="{% url 'advanced_learning:competition_list' %}?format=partial"
+                            hx-target="#competitions-container"
+                            hx-trigger="change"
+                            hx-include="[name='search'], [name='difficulty'], [name='type'], [name='lesson']"
+                            hx-indicator="#search-indicator">
+                        <option value="">Tất cả chủ đề</option>
+                        {% for subject in subjects %}
+                        <option value="{{ subject.id }}">{{ subject.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" name="difficulty" x-model="selectedDifficulty"
+                            hx-get="{% url 'advanced_learning:competition_list' %}?format=partial"
+                            hx-target="#competitions-container"
+                            hx-trigger="change"
+                            hx-include="[name='search'], [name='subject'], [name='type'], [name='lesson']"
+                            hx-indicator="#search-indicator">
+                        <option value="">Tất cả độ khó</option>
+                        {% for level, name in difficulty_levels %}
+                        <option value="{{ level }}">{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-outline-secondary w-100"
+                            @click="searchQuery = ''; selectedSubject = ''; selectedDifficulty = ''; selectedType = ''; selectedLesson = '';"
+                            hx-get="{% url 'advanced_learning:competition_list' %}?format=partial"
+                            hx-target="#competitions-container"
+                            hx-trigger="click"
+                            hx-indicator="#search-indicator">
+                        <i class="fas fa-times"></i> Xóa bộ lọc
+                    </button>
+                </div>
+                
+                <div class="col-md-6">
+                    <select class="form-select" name="type" x-model="selectedType"
+                            hx-get="{% url 'advanced_learning:competition_list' %}?format=partial"
+                            hx-target="#competitions-container"
+                            hx-trigger="change"
+                            hx-include="[name='search'], [name='subject'], [name='difficulty'], [name='lesson']"
+                            hx-indicator="#search-indicator">
+                        <option value="">Tất cả loại cuộc thi</option>
+                        {% for type_code, type_name in competition_types %}
+                        <option value="{{ type_code }}">{{ type_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <select class="form-select" name="lesson" x-model="selectedLesson"
+                            hx-get="{% url 'advanced_learning:competition_list' %}?format=partial"
+                            hx-target="#competitions-container"
+                            hx-trigger="change"
+                            hx-include="[name='search'], [name='subject'], [name='difficulty'], [name='type']"
+                            hx-indicator="#search-indicator">
+                        <option value="">Tất cả bài học</option>
+                        {% for lesson in lessons %}
+                        <option value="{{ lesson.id }}">{{ lesson.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </form>
+            
+            <div class="row mt-3">
+                <div class="col-md-12 d-flex justify-content-end">
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-orange view-toggle-btn" 
+                                :class="{ 'active': viewType === 'grid' }"
+                                @click="viewType = 'grid'"
+                                hx-get="{% url 'advanced_learning:competition_list' %}?format=partial&view=grid"
+                                hx-target="#competitions-container"
+                                hx-include="[name='search'], [name='subject'], [name='difficulty'], [name='type'], [name='lesson']">
+                            <i class="fas fa-th-large"></i> Lưới
+                        </button>
+                        <button type="button" class="btn btn-outline-orange view-toggle-btn"
+                                :class="{ 'active': viewType === 'list' }"
+                                @click="viewType = 'list'"
+                                hx-get="{% url 'advanced_learning:competition_list' %}?format=partial&view=list"
+                                hx-target="#competitions-container"
+                                hx-include="[name='search'], [name='subject'], [name='difficulty'], [name='type'], [name='lesson']">
+                            <i class="fas fa-list"></i> Danh sách
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
+    
+    <!-- Danh sách cuộc thi -->
+    <div id="competitions-container">
+        {% include 'advanced_learning/competitions/list_partial.html' %}
     </div>
 </div>
 {% endblock %}
@@ -430,47 +361,10 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Xử lý chuyển tab
-        const urlParams = new URLSearchParams(window.location.search);
-        const tab = urlParams.get('tab');
-        
-        if (tab === 'active') {
-            const activeTab = document.getElementById('active-competitions-tab');
-            activeTab.click();
-        } else if (tab === 'upcoming') {
-            const upcomingTab = document.getElementById('upcoming-competitions-tab');
-            upcomingTab.click();
+        // Khởi tạo Alpine.js nếu cần
+        if (typeof Alpine !== 'undefined') {
+            Alpine.start();
         }
-        
-        // Thêm CSS cho màu cam
-        const style = document.createElement('style');
-        style.textContent = `
-            .btn-orange {
-                background-color: #fd7e14;
-                border-color: #fd7e14;
-                color: white;
-            }
-            .btn-orange:hover {
-                background-color: #e76b00;
-                border-color: #e76b00;
-                color: white;
-            }
-            .btn-outline-orange {
-                color: #fd7e14;
-                border-color: #fd7e14;
-            }
-            .btn-outline-orange:hover {
-                background-color: #fd7e14;
-                color: white;
-            }
-            .bg-orange {
-                background-color: #fd7e14 !important;
-            }
-            .text-orange {
-                color: #fd7e14 !important;
-            }
-        `;
-        document.head.appendChild(style);
     });
 </script>
 {% endblock %}

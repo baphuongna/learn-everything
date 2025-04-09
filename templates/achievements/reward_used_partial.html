@@ -1,0 +1,37 @@
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Phần Thưởng</th>
+                <th>Mã</th>
+                <th>Ngày Đổi</th>
+                <th>Ngày Sử Dụng</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user_reward in used_rewards %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="reward-icon me-2">
+                                <i class="{{ user_reward.reward.icon }} text-secondary"></i>
+                            </div>
+                            <div>
+                                <strong>{{ user_reward.reward.name }}</strong>
+                                <div class="small text-muted">{{ user_reward.reward.points_required }} điểm</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ user_reward.code }}</td>
+                    <td>{{ user_reward.redeemed_at|date:"d/m/Y" }}</td>
+                    <td>{{ user_reward.used_at|date:"d/m/Y" }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% if not used_rewards %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i> Bạn chưa sử dụng phần thưởng nào.
+    </div>
+{% endif %}

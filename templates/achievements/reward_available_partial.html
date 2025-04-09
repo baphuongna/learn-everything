@@ -1,0 +1,53 @@
+{% load custom_filters %}
+
+<div class="row">
+    {% for reward in available_rewards %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100" x-data="{ showDetails: false }">
+                <div class="card-body text-center">
+                    <div class="reward-icon mb-3">
+                        <i class="{{ reward.icon }} fa-4x text-warning"></i>
+                    </div>
+                    <h5 class="card-title">{{ reward.name }}</h5>
+                    <div class="reward-points mb-3">
+                        <span class="badge bg-primary">{{ reward.points_required }} điểm</span>
+                    </div>
+                    <div class="reward-status mb-3">
+                        {% if reward_point.points >= reward.points_required %}
+                            <span class="badge bg-success">Đủ điểm để đổi</span>
+                        {% else %}
+                            <span class="badge bg-danger">Thiếu {{ reward.points_required|sub:reward_point.points }} điểm</span>
+                        {% endif %}
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-sm btn-outline-primary" @click="showDetails = !showDetails">
+                            <span x-show="!showDetails">Xem chi tiết</span>
+                            <span x-show="showDetails">Ẩn chi tiết</span>
+                        </button>
+                        <form hx-post="{% url 'achievements:redeem_reward' reward.id %}"
+                              hx-target="#redeem-response-{{ reward.id }}"
+                              hx-swap="outerHTML"
+                              hx-indicator="#redeem-indicator-{{ reward.id }}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary w-100" {% if reward_point.points < reward.points_required %}disabled{% endif %}>
+                                <span id="redeem-indicator-{{ reward.id }}" class="htmx-indicator spinner-border spinner-border-sm me-1"></span>
+                                <i class="fas fa-exchange-alt"></i> Đổi Ngay
+                            </button>
+                        </form>
+                    </div>
+                    <div id="redeem-response-{{ reward.id }}"></div>
+                </div>
+                <div class="card-footer bg-transparent" x-show="showDetails" x-transition>
+                    <p class="card-text">{{ reward.description }}</p>
+                    <p class="card-text"><strong>Hướng dẫn sử dụng:</strong> {{ reward.usage_instructions }}</p>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i> Hiện không có phần thưởng nào có thể đổi.
+            </div>
+        </div>
+    {% endfor %}
+</div>

@@ -21,6 +21,7 @@ urlpatterns = [
     path('pomodoro/start/', views.pomodoro_start, name='pomodoro_start'),
     path('pomodoro/end/', views.pomodoro_end, name='pomodoro_end'),
     path('pomodoro/history/', views.pomodoro_history, name='pomodoro_history'),
+    path('pomodoro/get-topics/', views.get_topics, name='get_topics'),
 
     # Hệ thống ghi chú Cornell
     path('cornell-notes/', views.cornell_note_list, name='cornell_note_list'),
@@ -103,6 +104,8 @@ urlpatterns = [
     # Chế độ thi đấu
     path('competitions/', views.competition_list, name='competition_list'),
     path('competitions/<int:competition_id>/', views.competition_detail, name='competition_detail'),
+    path('competitions/<int:competition_id>/leaderboard/', views.competition_leaderboard, name='competition_leaderboard'),
+    path('competitions/<int:competition_id>/participants/', views.competition_participants, name='competition_participants'),
     path('competitions/<int:competition_id>/join/', views.join_competition, name='join_competition'),
     path('competitions/<int:competition_id>/take/', views.take_competition, name='take_competition'),
     path('competitions/<int:competition_id>/result/', views.competition_result, name='competition_result'),
@@ -153,6 +156,7 @@ urlpatterns = [
     path('learning-goals/<int:goal_id>/delete/', views_learning_goals.delete_learning_goal, name='delete_learning_goal'),
     path('learning-goals/<int:goal_id>/complete/', views_learning_goals.complete_learning_goal, name='complete_learning_goal'),
     path('learning-goals/<int:goal_id>/reactivate/', views_learning_goals.reactivate_learning_goal, name='reactivate_learning_goal'),
+    path('learning-goals/<int:goal_id>/update-progress/', views_learning_goals.update_learning_goal_progress, name='update_learning_goal_progress'),
     path('daily-study-log/', views_learning_goals.daily_study_log, name='daily_study_log'),
     path('add-study-time/', views_learning_goals.add_study_time, name='add_study_time'),
 

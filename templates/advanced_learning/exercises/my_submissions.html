@@ -1,29 +1,16 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}Bài Nộp Của Tôi{% endblock %}
+{% block title %}Bài Nộp Của Tôi - Bài Tập Thực Hành Tương Tác{% endblock %}
 
 {% block extra_css %}
 <style>
-    .submissions-container {
-        max-width: 1000px;
-        margin: 0 auto;
-    }
-    
-    .filter-card {
-        border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        margin-bottom: 20px;
-        border: 1px solid #dee2e6;
-    }
-    
     .submission-card {
         border-radius: 10px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        margin-bottom: 20px;
         transition: all 0.3s ease;
-        border: 1px solid #dee2e6;
-        overflow: hidden;
+        margin-bottom: 15px;
+        border-left: 4px solid #6f42c1;
     }
     
     .submission-card:hover {
@@ -31,95 +18,25 @@
         transform: translateY(-2px);
     }
     
-    .submission-header {
-        padding: 15px 20px;
-        border-bottom: 1px solid #dee2e6;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .submission-header-correct {
-        background-color: #d4edda;
-    }
-    
-    .submission-header-incorrect {
-        background-color: #f8d7da;
-    }
-    
     .submission-title {
         font-weight: 600;
-        margin-bottom: 0;
+        color: #6f42c1;
     }
     
-    .submission-exercise {
-        font-size: 1.1rem;
-        margin-bottom: 5px;
-    }
-    
-    .submission-date {
-        font-size: 0.9rem;
+    .submission-meta {
+        font-size: 0.85rem;
         color: #6c757d;
     }
     
-    .submission-body {
-        padding: 20px;
-    }
-    
-    .submission-content {
-        background-color: #f8f9fa;
-        border-radius: 5px;
-        padding: 15px;
-        font-family: monospace;
-        white-space: pre-wrap;
+    .search-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         margin-bottom: 20px;
-        max-height: 200px;
-        overflow-y: auto;
-    }
-    
-    .submission-feedback {
-        margin-top: 15px;
-        padding: 10px 15px;
-        border-radius: 5px;
-    }
-    
-    .submission-feedback-correct {
-        background-color: #d4edda;
-        color: #155724;
-    }
-    
-    .submission-feedback-incorrect {
-        background-color: #f8d7da;
-        color: #721c24;
-    }
-    
-    .submission-stats {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 15px;
-        margin-top: 15px;
-    }
-    
-    .submission-stat {
-        display: flex;
-        align-items: center;
-        font-size: 0.9rem;
-        background-color: #f8f9fa;
-        padding: 5px 10px;
-        border-radius: 5px;
-    }
-    
-    .submission-stat i {
-        margin-right: 5px;
-        color: #6f42c1;
     }
     
     .empty-state {
         text-align: center;
-        padding: 50px 20px;
-        background-color: #f8f9fa;
-        border-radius: 10px;
-        margin-top: 30px;
+        padding: 40px 20px;
     }
     
     .empty-state i {
@@ -128,10 +45,92 @@
         margin-bottom: 20px;
     }
     
-    .pagination-container {
+    .submission-stats {
         display: flex;
-        justify-content: center;
-        margin-top: 30px;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-top: 10px;
+    }
+    
+    .submission-stat {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    
+    .submission-stat i {
+        color: #6f42c1;
+        margin-right: 5px;
+    }
+    
+    .btn-purple {
+        background-color: #6f42c1;
+        border-color: #6f42c1;
+        color: white;
+    }
+    
+    .btn-purple:hover {
+        background-color: #5e35b1;
+        border-color: #5e35b1;
+        color: white;
+    }
+    
+    .btn-outline-purple {
+        color: #6f42c1;
+        border-color: #6f42c1;
+    }
+    
+    .btn-outline-purple:hover {
+        background-color: #6f42c1;
+        color: white;
+    }
+    
+    .text-purple {
+        color: #6f42c1;
+    }
+    
+    .stats-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+    
+    .stats-card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .stats-icon {
+        font-size: 2rem;
+        color: #6f42c1;
+        margin-bottom: 10px;
+    }
+    
+    .stats-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #343a40;
+    }
+    
+    .stats-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .type-code {
+        background-color: #007bff;
+    }
+    
+    .type-quiz {
+        background-color: #28a745;
+    }
+    
+    .type-simulation {
+        background-color: #fd7e14;
+    }
+    
+    .type-game {
+        background-color: #6f42c1;
     }
 </style>
 {% endblock %}
@@ -142,152 +141,130 @@
         <h1 class="mb-3">
             <i class="fas fa-history text-purple"></i> Bài Nộp Của Tôi
         </h1>
-        <p class="lead">Danh sách tất cả các bài nộp của bạn cho các bài tập thực hành tương tác.</p>
+        <p class="lead">Quản lý và theo dõi các bài tập bạn đã nộp.</p>
     </div>
     <div class="col-md-4 text-end">
-        <a href="{% url 'advanced_learning:exercise_list' %}" class="btn btn-outline-purple">
+        <a href="{% url 'advanced_learning:exercise_list' %}" class="btn btn-purple"
+           hx-get="{% url 'advanced_learning:exercise_list' %}?format=partial"
+           hx-target="#main-content"
+           hx-swap="innerHTML"
+           hx-push-url="true">
             <i class="fas fa-list"></i> Danh Sách Bài Tập
         </a>
     </div>
 </div>
 
-<div class="submissions-container">
-    <!-- Bộ lọc -->
-    <div class="card filter-card">
+<div class="my-submissions-container" x-data="{ selectedType: '{{ selected_type }}', selectedStatus: '{{ selected_status }}' }">
+    <!-- Thống kê -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stats-card text-center">
+                <div class="card-body">
+                    <div class="stats-icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="stats-value">{{ total_submissions }}</div>
+                    <div class="stats-label">Tổng số bài nộp</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card text-center">
+                <div class="card-body">
+                    <div class="stats-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stats-value">{{ correct_submissions }}</div>
+                    <div class="stats-label">Bài nộp đúng</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card text-center">
+                <div class="card-body">
+                    <div class="stats-icon">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="stats-value">{{ total_points }}</div>
+                    <div class="stats-label">Tổng điểm</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card text-center">
+                <div class="card-body">
+                    <div class="stats-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="stats-value">{{ completion_rate }}%</div>
+                    <div class="stats-label">Tỷ lệ hoàn thành</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tìm kiếm và lọc -->
+    <div class="card search-card mb-4">
         <div class="card-body">
-            <form method="get" class="row g-3">
+            <form class="row g-3" id="search-form"
+                  hx-get="{% url 'advanced_learning:my_exercise_submissions' %}?format=partial"
+                  hx-target="#submissions-container"
+                  hx-trigger="submit"
+                  hx-indicator="#search-indicator">
                 <div class="col-md-5">
-                    <label for="type" class="form-label">Loại bài tập</label>
-                    <select class="form-select" id="type" name="type" onchange="this.form.submit()">
-                        <option value="">Tất cả loại</option>
+                    <select class="form-select" name="type" x-model="selectedType"
+                            hx-get="{% url 'advanced_learning:my_exercise_submissions' %}?format=partial"
+                            hx-target="#submissions-container"
+                            hx-trigger="change"
+                            hx-include="[name='status']"
+                            hx-indicator="#search-indicator">
+                        <option value="">Tất cả loại bài tập</option>
                         {% for type_code, type_name in exercise_types %}
-                        <option value="{{ type_code }}" {% if selected_type == type_code %}selected{% endif %}>{{ type_name }}</option>
+                        <option value="{{ type_code }}">{{ type_name }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="col-md-5">
-                    <label for="status" class="form-label">Trạng thái</label>
-                    <select class="form-select" id="status" name="status" onchange="this.form.submit()">
+                    <select class="form-select" name="status" x-model="selectedStatus"
+                            hx-get="{% url 'advanced_learning:my_exercise_submissions' %}?format=partial"
+                            hx-target="#submissions-container"
+                            hx-trigger="change"
+                            hx-include="[name='type']"
+                            hx-indicator="#search-indicator">
                         <option value="">Tất cả trạng thái</option>
-                        <option value="correct" {% if selected_status == 'correct' %}selected{% endif %}>Đúng</option>
-                        <option value="incorrect" {% if selected_status == 'incorrect' %}selected{% endif %}>Sai</option>
+                        <option value="correct">Đúng</option>
+                        <option value="incorrect">Sai</option>
                     </select>
                 </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    {% if selected_type or selected_status %}
-                    <a href="{% url 'advanced_learning:my_exercise_submissions' %}" class="btn btn-outline-secondary w-100">
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-outline-secondary w-100"
+                            @click="selectedType = ''; selectedStatus = '';"
+                            hx-get="{% url 'advanced_learning:my_exercise_submissions' %}?format=partial"
+                            hx-target="#submissions-container"
+                            hx-trigger="click"
+                            hx-indicator="#search-indicator">
                         <i class="fas fa-times"></i> Xóa bộ lọc
-                    </a>
-                    {% endif %}
+                    </button>
+                    <span id="search-indicator" class="htmx-indicator spinner-border spinner-border-sm text-purple ms-2" role="status"></span>
                 </div>
             </form>
         </div>
     </div>
     
-    {% if submissions %}
-        {% for submission in submissions %}
-        <div class="submission-card">
-            <div class="submission-header {% if submission.is_correct %}submission-header-correct{% else %}submission-header-incorrect{% endif %}">
-                <div>
-                    <div class="submission-exercise">
-                        <a href="{% url 'advanced_learning:exercise_detail' exercise_id=submission.exercise.id %}">
-                            {{ submission.exercise.title }}
-                        </a>
-                    </div>
-                    <div class="submission-title">
-                        {% if submission.is_correct %}
-                        <span class="badge bg-success">Đúng</span>
-                        {% else %}
-                        <span class="badge bg-danger">Sai</span>
-                        {% endif %}
-                        
-                        <span class="badge bg-secondary">
-                            {{ submission.exercise.get_exercise_type_display }}
-                        </span>
-                        
-                        {% if submission.points_earned > 0 %}
-                        <span class="badge bg-warning">
-                            <i class="fas fa-star"></i> {{ submission.points_earned }} điểm
-                        </span>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="submission-date">
-                    {{ submission.created_at|date:"d/m/Y H:i:s" }}
-                </div>
-            </div>
-            <div class="submission-body">
-                <div class="submission-content">{{ submission.submission_content|truncatechars:200 }}</div>
-                
-                {% if submission.feedback %}
-                <div class="submission-feedback {% if submission.is_correct %}submission-feedback-correct{% else %}submission-feedback-incorrect{% endif %}">
-                    <strong>Phản hồi:</strong> {{ submission.feedback }}
-                </div>
-                {% endif %}
-                
-                <div class="text-end mt-3">
-                    <a href="{% url 'advanced_learning:exercise_submissions' exercise_id=submission.exercise.id %}" class="btn btn-sm btn-outline-purple">
-                        <i class="fas fa-eye"></i> Xem Chi Tiết
-                    </a>
-                    <a href="{% url 'advanced_learning:exercise_detail' exercise_id=submission.exercise.id %}" class="btn btn-sm btn-purple">
-                        <i class="fas fa-play"></i> Làm Lại
-                    </a>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-        
-        <!-- Phân trang -->
-        {% if submissions.has_other_pages %}
-        <div class="pagination-container">
-            <ul class="pagination">
-                {% if submissions.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page=1{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}" aria-label="First">
-                        <span aria-hidden="true">&laquo;&laquo;</span>
-                    </a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ submissions.previous_page_number }}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}" aria-label="Previous">
-                        <span aria-hidden="true">&laquo;</span>
-                    </a>
-                </li>
-                {% endif %}
-                
-                {% for i in submissions.paginator.page_range %}
-                    {% if submissions.number == i %}
-                    <li class="page-item active"><span class="page-link">{{ i }}</span></li>
-                    {% elif i > submissions.number|add:'-3' and i < submissions.number|add:'3' %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ i }}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">{{ i }}</a>
-                    </li>
-                    {% endif %}
-                {% endfor %}
-                
-                {% if submissions.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ submissions.next_page_number }}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}" aria-label="Next">
-                        <span aria-hidden="true">&raquo;</span>
-                    </a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ submissions.paginator.num_pages }}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}" aria-label="Last">
-                        <span aria-hidden="true">&raquo;&raquo;</span>
-                    </a>
-                </li>
-                {% endif %}
-            </ul>
-        </div>
-        {% endif %}
-    {% else %}
-        <div class="empty-state">
-            <i class="fas fa-history"></i>
-            <h3>Chưa có bài nộp nào</h3>
-            <p>Bạn chưa nộp bài tập nào. Hãy thử làm một số bài tập thực hành tương tác.</p>
-            <a href="{% url 'advanced_learning:exercise_list' %}" class="btn btn-purple mt-3">
-                <i class="fas fa-list"></i> Xem Danh Sách Bài Tập
-            </a>
-        </div>
-    {% endif %}
+    <!-- Danh sách bài nộp -->
+    <div id="submissions-container">
+        {% include 'advanced_learning/exercises/my_submissions_partial.html' %}
+    </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Khởi tạo Alpine.js nếu cần
+        if (typeof Alpine !== 'undefined') {
+            Alpine.start();
+        }
+    });
+</script>
 {% endblock %}

@@ -180,6 +180,8 @@ learning_platform/
 ### 4.2. Frontend
 
 - **Bootstrap 5**: Framework CSS
+- **HTMX**: Thư viện JavaScript cho tương tác không cần tải lại trang
+- **Alpine.js**: Framework JavaScript nhẹ cho tương tác phía client
 - **jQuery**: Thư viện JavaScript
 - **Font Awesome**: Thư viện icon
 - **Chart.js**: Thư viện vẽ biểu đồ
@@ -376,11 +378,12 @@ learning_platform/
 #### 8.1.1. Tính năng học tập nâng cao
 - **Hệ thống học tập dựa trên dự án**: Tạo các dự án thực tế cho người học áp dụng kiến thức
 - **Bài tập thực hành tương tác**: Môi trường thực hành code trực tiếp cho lập trình
-- **Hệ thống ghi chú Cornell**: Tích hợp phương pháp ghi chú có cấu trúc
-- **Phương pháp Feynman Technique**: Công cụ giải thích khái niệm phức tạp bằng ngôn ngữ đơn giản
-- **Hệ thống Mind Mapping**: Công cụ tạo sơ đồ tư duy trực quan
-- **Pomodoro Timer tích hợp**: Hẹn giờ học tập theo phương pháp Pomodoro
-- **Chế độ thi đấu**: Học tập dưới áp lực thời gian để tăng khả năng tập trung
+- **Hệ thống ghi chú Cornell**: Tích hợp phương pháp ghi chú có cấu trúc ✓
+- **Phương pháp Feynman Technique**: Công cụ giải thích khái niệm phức tạp bằng ngôn ngữ đơn giản ✓
+- **Hệ thống Mind Mapping**: Công cụ tạo sơ đồ tư duy trực quan ✓
+- **Pomodoro Timer tích hợp**: Hẹn giờ học tập theo phương pháp Pomodoro ✓
+  - **Đã phát triển**: Theo dõi phiên học tập, thống kê thời gian, tùy chỉnh thời gian làm việc/nghỉ ngơi
+- **Chế độ thi đấu**: Học tập dưới áp lực thời gian để tăng khả năng tập trung ✓
   - **Đã phát triển**: Thi đấu trực tiếp, thi đấu theo nhóm, đăng ký nhận thông báo, chia sẻ kết quả, bảng xếp hạng, thành tích
 
 #### 8.1.2. Tính năng xã hội và cộng đồng
@@ -390,19 +393,30 @@ learning_platform/
 - **Hệ thống mentor/mentee**: Kết nối người học với người hướng dẫn
 - **Học tập cộng tác**: Làm việc cùng nhau trên một dự án hoặc bài tập
 - **Thách thức học tập**: Tạo và tham gia các thách thức học tập
-- **Bảng xếp hạng và huy hiệu**: Tạo động lực học tập thông qua gamification
-- **Chia sẻ mục tiêu học tập**: Cho phép chia sẻ mục tiêu với bạn bè hoặc nhóm học tập
-- **Cộng tác mục tiêu**: Cho phép nhiều người cùng cập nhật tiến độ một mục tiêu
-- **Bình luận và thảo luận mục tiêu**: Trao đổi về mục tiêu học tập
+- **Bảng xếp hạng và huy hiệu**: Tạo động lực học tập thông qua gamification ✓
+  - **Đã phát triển**: Hệ thống huy hiệu, điểm thưởng, phần thưởng, bảng xếp hạng
+- **Chia sẻ mục tiêu học tập**: Cho phép chia sẻ mục tiêu với bạn bè hoặc nhóm học tập ✓
+  - **Đã phát triển**: Mời người dùng tham gia, phân quyền người cộng tác
+- **Cộng tác mục tiêu**: Cho phép nhiều người cùng cập nhật tiến độ một mục tiêu ✓
+  - **Đã phát triển**: Cập nhật tiến độ theo vai trò, theo dõi tiến độ của nhóm
+- **Bình luận và thảo luận mục tiêu**: Trao đổi về mục tiêu học tập ✓
+  - **Đã phát triển**: Hệ thống bình luận, thông báo khi có bình luận mới
 
 #### 8.1.3. Tính năng cá nhân hóa
-- **Lộ trình học tập cá nhân hóa**: Tạo lộ trình dựa trên mục tiêu và trình độ
-- **Hệ thống đề xuất nội dung**: Đề xuất bài học dựa trên sở thích và tiến độ
-- **Điều chỉnh độ khó tự động**: Tự động điều chỉnh độ khó dựa trên khả năng người dùng
-- **Tùy chỉnh giao diện**: Chọn chủ đề và màu sắc theo sở thích
-- **Nhắc nhở học tập cá nhân hóa**: Nhắc nhở dựa trên thời gian học tập tối ưu
-- **Mục tiêu học tập chi tiết**: Thiết lập và theo dõi mục tiêu ngắn, trung và dài hạn
-- **Phân tích điểm mạnh, điểm yếu**: Xác định chủ đề mạnh và yếu dựa trên kết quả
+- **Lộ trình học tập cá nhân hóa**: Tạo lộ trình dựa trên mục tiêu và trình độ ✓
+  - **Đã phát triển**: Tạo và quản lý lộ trình, thêm các bước học tập, theo dõi tiến độ
+- **Hệ thống đề xuất nội dung**: Đề xuất bài học dựa trên sở thích và tiến độ ✓
+  - **Đã phát triển**: Đề xuất nội dung dựa trên sở thích và tương tác của người dùng
+- **Điều chỉnh độ khó tự động**: Tự động điều chỉnh độ khó dựa trên khả năng người dùng ✓
+  - **Đã phát triển**: Phân tích điểm mạnh/yếu và điều chỉnh độ khó phù hợp
+- **Tùy chỉnh giao diện**: Chọn chủ đề và màu sắc theo sở thích ✓
+  - **Đã phát triển**: Tùy chỉnh chủ đề màu sắc, cỡ chữ, hiệu ứng chuyển động
+- **Nhắc nhở học tập cá nhân hóa**: Nhắc nhở dựa trên thời gian học tập tối ưu ✓
+  - **Đã phát triển**: Nhắc nhở hàng ngày, hàng tuần, tùy chỉnh thời gian và phương thức
+- **Mục tiêu học tập chi tiết**: Thiết lập và theo dõi mục tiêu ngắn, trung và dài hạn ✓
+  - **Đã phát triển**: Đã triển khai trong ứng dụng learning_goals
+- **Phân tích điểm mạnh, điểm yếu**: Xác định chủ đề mạnh và yếu dựa trên kết quả ✓
+  - **Đã phát triển**: Đánh giá và theo dõi điểm mạnh/yếu theo chủ đề và chủ đề con
 
 #### 8.1.4. Tích hợp công nghệ mới
 - **Trợ lý học tập AI**: Trợ lý AI cá nhân hóa giúp trả lời câu hỏi
@@ -414,7 +428,8 @@ learning_platform/
 - **Công nghệ OCR**: Nhập nội dung từ hình ảnh và tài liệu quét
 
 #### 8.1.5. Tính năng phân tích và báo cáo
-- **Biểu đồ tiến độ học tập**: Biểu đồ trực quan về tiến độ học tập theo thời gian
+- **Biểu đồ tiến độ học tập**: Biểu đồ trực quan về tiến độ học tập theo thời gian ✓
+  - **Đã phát triển**: Biểu đồ tiến độ thực tế và dự kiến, so sánh tiến độ theo thời gian
 - **Phân tích thời gian học tập**: Thống kê thời gian học tập theo ngày, tuần, tháng
   - **Đã phát triển**: Biểu đồ so sánh việc sử dụng các tính năng học tập nâng cao, biểu đồ tiến độ dự án theo thời gian, biểu đồ điểm thi đấu theo thời gian
 - **Báo cáo định kỳ**: Báo cáo hàng tuần/hàng tháng về tiến độ
@@ -422,18 +437,23 @@ learning_platform/
 - **Phân tích mẫu quên**: Theo dõi các khái niệm thường bị quên
 - **Thống kê chi tiết**: Tỷ lệ đúng/sai trong các bài kiểm tra
 - **Xuất báo cáo**: Xuất báo cáo dưới dạng PDF, Excel
-- **Biểu đồ thống kê mục tiêu**: Thống kê mục tiêu theo danh mục và trạng thái
-  - **Đã phát triển**: Mục tiêu học tập, theo dõi thời gian học tập hàng ngày, thống kê theo môn học
-- **Biểu đồ hoàn thành mục tiêu**: Theo dõi tỷ lệ hoàn thành mục tiêu theo thời gian
-- **Chuỗi ngày liên tiếp**: Theo dõi chuỗi ngày liên tiếp hoàn thành mục tiêu
+- **Biểu đồ thống kê mục tiêu**: Thống kê mục tiêu theo danh mục và trạng thái ✓
+  - **Đã phát triển**: Thống kê mục tiêu theo danh mục, trạng thái và tiến độ
+- **Biểu đồ hoàn thành mục tiêu**: Theo dõi tỷ lệ hoàn thành mục tiêu theo thời gian ✓
+  - **Đã phát triển**: Biểu đồ hoàn thành mục tiêu theo ngày, tuần, tháng
+- **Chuỗi ngày liên tiếp**: Theo dõi chuỗi ngày liên tiếp hoàn thành mục tiêu ✓
+  - **Đã phát triển**: Tính toán chuỗi ngày hiện tại và chuỗi dài nhất
 
 #### 8.1.6. Tính năng tiện ích và trải nghiệm người dùng
 - **Ứng dụng di động**: Phiên bản iOS và Android
 - **Chế độ ngoại tuyến**: Tải xuống nội dung để học khi không có kết nối
 - **Đồng bộ hóa đa thiết bị**: Học liền mạch trên nhiều thiết bị
-- **Tích hợp lịch**: Đồng bộ hóa với Google Calendar/Outlook
-- **Xuất mục tiêu sang iCalendar**: Xuất mục tiêu học tập sang định dạng .ics
-- **Tích hợp Google Calendar**: Thêm mục tiêu vào Google Calendar
+- **Tích hợp lịch**: Đồng bộ hóa với Google Calendar/Outlook ✓
+  - **Đã phát triển**: Tích hợp với Google Calendar, thêm mục tiêu vào lịch
+- **Xuất mục tiêu sang iCalendar**: Xuất mục tiêu học tập sang định dạng .ics ✓
+  - **Đã phát triển**: Xuất mục tiêu với thông tin chi tiết, nhắc nhở
+- **Tích hợp Google Calendar**: Thêm mục tiêu vào Google Calendar ✓
+  - **Đã phát triển**: Tạo sự kiện Google Calendar từ mục tiêu
 - **Chế độ ban đêm**: Giao diện tối giảm mỏi mắt
 - **Tùy chỉnh thông báo**: Chọn loại thông báo nhận được
   - **Đã phát triển**: Thông báo khi có cuộc thi mới hoặc dự án mới
@@ -454,6 +474,8 @@ learning_platform/
 
 - **Tối ưu hóa hiệu suất**: Cải thiện tốc độ tải trang
 - **Cải thiện giao diện người dùng**: Làm cho giao diện trực quan và dễ sử dụng hơn
+  - **Đã phát triển**: Áp dụng HTMX và Alpine.js cho tương tác mượt mà hơn
+  - **Đã hoàn thành**: Tích hợp cho Cornell Notes, Mind Maps, Feynman Notes, Learning Goals, Notifications, Accounts (đăng nhập, đăng ký, hồ sơ), Content (danh sách chủ đề, chi tiết chủ đề)
 - **Mở rộng nội dung học tập**: Thêm nhiều chủ đề và bài học
 - **Tích hợp với các nền tảng học tập khác**: Cho phép nhập/xuất dữ liệu
 
@@ -461,6 +483,8 @@ learning_platform/
 
 - [Django Documentation](https://docs.djangoproject.com/)
 - [Bootstrap Documentation](https://getbootstrap.com/docs/)
+- [HTMX Documentation](https://htmx.org/docs/)
+- [Alpine.js Documentation](https://alpinejs.dev/start-here)
 - [Spaced Repetition Learning Method](https://en.wikipedia.org/wiki/Spaced_repetition)
 - [Active Recall Learning Method](https://en.wikipedia.org/wiki/Active_recall)
 - [Kaizen Philosophy](https://en.wikipedia.org/wiki/Kaizen)
@@ -469,4 +493,4 @@ learning_platform/
 
 ---
 
-*Memory Bank được tạo bởi [Tên của bạn] - Cập nhật lần cuối: 08/04/2025*
+*Memory Bank được tạo bởi [Tên của bạn] - Cập nhật lần cuối: 15/05/2024*

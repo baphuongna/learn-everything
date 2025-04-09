@@ -1,0 +1,75 @@
+{% load static %}
+
+<div class="quiz-preview">
+    <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">{{ quiz.title }}</h5>
+            <span class="badge bg-light text-dark">{{ quiz.get_difficulty_level_display }}</span>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-8">
+                    <p><strong>Mô tả:</strong> {{ quiz.description }}</p>
+                    <p><strong>Bài học:</strong> {{ quiz.lesson.title }}</p>
+                    <p><strong>Chủ đề:</strong> {{ quiz.lesson.topic.subject.name }}</p>
+                    <p><strong>Số câu hỏi:</strong> {{ quiz.questions.count }}</p>
+                    <p><strong>Thời gian làm bài:</strong> {{ quiz.time_limit }} phút</p>
+                    <p><strong>Điểm tối đa:</strong> {{ quiz.max_score }}</p>
+                </div>
+                <div class="col-md-4 text-center">
+                    {% if previous_attempts %}
+                        <div class="best-score-container mb-3">
+                            <h6>Điểm cao nhất của bạn</h6>
+                            {% with best_attempt=previous_attempts.0 %}
+                                <div class="display-4 text-primary">{{ best_attempt.score }}/{{ quiz.max_score }}</div>
+                                <p class="text-muted">{{ best_attempt.created_at|date:"d/m/Y H:i" }}</p>
+                            {% endwith %}
+                        </div>
+                    {% endif %}
+                    
+                    <a href="{% url 'start_quiz' quiz_id=quiz.id %}" class="btn btn-primary">
+                        <i class="fas fa-play"></i> Bắt đầu làm bài
+                    </a>
+                </div>
+            </div>
+            
+            {% if previous_attempts %}
+                <div class="previous-attempts mt-4">
+                    <h6 class="mb-3"><i class="fas fa-history"></i> Lịch sử làm bài ({{ previous_attempts.count }})</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Ngày</th>
+                                    <th>Điểm</th>
+                                    <th>Thời gian làm bài</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for attempt in previous_attempts %}
+                                    <tr>
+                                        <td>{{ attempt.created_at|date:"d/m/Y H:i" }}</td>
+                                        <td>{{ attempt.score }}/{{ quiz.max_score }}</td>
+                                        <td>{{ attempt.duration_minutes }} phút</td>
+                                        <td>
+                                            <a href="{% url 'quiz_result' attempt_id=attempt.id %}" class="btn btn-sm btn-info">
+                                                <i class="fas fa-eye"></i> Xem kết quả
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            {% endif %}
+            
+            <div class="mt-4 text-center">
+                <a href="{% url 'quiz_detail' quiz_id=quiz.id %}" class="btn btn-outline-primary">
+                    <i class="fas fa-external-link-alt"></i> Xem đầy đủ
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

@@ -2,7 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
-from django.db.models import Sum, Count, Avg
+from django.db.models import Sum, Avg
+from django.views.decorators.http import require_POST
 from datetime import timedelta
 
 from .models_learning_goals import LearningGoal, DailyStudyLog
@@ -10,10 +11,52 @@ from .forms import LearningGoalForm
 from content.models import Subject
 
 @login_required
+@require_POST
+def update_learning_goal_progress(request, goal_id):
+    """Cập nhật tiến độ mục tiêu học tập"""
+    goal = get_object_or_404(LearningGoal, id=goal_id, user=request.user)
+    
+    # Lấy giá trị hiện tại từ form
+    try:
+        current_value = int(request.POST.get('current_value', 0))
+        if current_value < 0:
+            current_value = 0
+        elif current_value > goal.target_value:
+            current_value = goal.target_value
+    except ValueError:
+        current_value = 0
+    
+    # Cập nhật giá trị hiện tại
+    goal.current_value = current_value
+    
+    # Tự động đánh dấu hoàn thành nếu đạt mục tiêu
+    if current_value >= goal.target_value:
+        goal.is_completed = True
+    
+    goal.save(update_fields=['current_value', 'is_completed', 'updated_at'])
+    
+    # Thông báo thành công
+    if goal.is_completed:
+        messages.success(request, 'Chúc mừng! Mục tiêu học tập đã được hoàn thành!')
+    else:
+        messages.success(request, 'Tiến độ mục tiêu học tập đã được cập nhật thành công!')
+    
+    # Kiểm tra nếu là request HTMX
+    if request.htmx:
+        # Trả về danh sách mục tiêu mới
+        return redirect('advanced_learning:learning_goals')
+    
+    return redirect('advanced_learning:learning_goals')
+
+@login_required
 def learning_goals(request):
     """Danh sách mục tiêu học tập"""
-    # Lọc theo trạng thái
+    # Lấy tham số từ request
     status = request.GET.get('status', 'active')
+    search_query = request.GET.get('search', '')
+    goal_type = request.GET.get('type', '')
+    view = request.GET.get('view', 'list')
+    format_type = request.GET.get('format', '')
     
     # Lấy danh sách mục tiêu
     if status == 'completed':
@@ -22,6 +65,14 @@ def learning_goals(request):
         goals = LearningGoal.objects.filter(user=request.user)
     else:  # active
         goals = LearningGoal.objects.filter(user=request.user, is_active=True, is_completed=False)
+    
+    # Áp dụng bộ lọc tìm kiếm
+    if search_query:
+        goals = goals.filter(title__icontains=search_query)
+    
+    # Lọc theo loại mục tiêu
+    if goal_type:
+        goals = goals.filter(goal_type=goal_type)
     
     # Sắp xếp
     goals = goals.order_by('-created_at')
@@ -36,6 +87,9 @@ def learning_goals(request):
     if total_goals > 0:
         completion_rate = int((completed_goals / total_goals) * 100)
     
+    # Lấy ngày hiện tại để so sánh với end_date
+    today = timezone.now().date()
+    
     context = {
         'goals': goals,
         'status': status,
@@ -43,7 +97,15 @@ def learning_goals(request):
         'completed_goals': completed_goals,
         'active_goals': active_goals,
         'completion_rate': completion_rate,
+        'today': today,
+        'view': view,
+        'search_query': search_query,
+        'goal_type': goal_type,
     }
+    
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'advanced_learning/learning_goals/list_partial.html', context)
     
     return render(request, 'advanced_learning/learning_goals/list.html', context)
 
@@ -58,9 +120,23 @@ def create_learning_goal(request):
             goal.save()
             
             messages.success(request, 'Mục tiêu học tập đã được tạo thành công!')
+            
+            # Kiểm tra nếu là request HTMX
+            if request.htmx:
+                return redirect('advanced_learning:learning_goals')
             return redirect('advanced_learning:learning_goals')
     else:
-        form = LearningGoalForm()
+        # Đặt giá trị mặc định cho ngày bắt đầu và kết thúc
+        today = timezone.now().date()
+        end_date = today + timedelta(days=6)  # Mặc định là mục tiêu hàng tuần
+        
+        form = LearningGoalForm(initial={
+            'start_date': today,
+            'end_date': end_date,
+            'goal_type': 'weekly',
+            'goal_metric': 'study_time',
+            'target_value': 300,  # 5 giờ mỗi tuần
+        })
     
     # Lấy danh sách môn học
     subjects = Subject.objects.all()
@@ -83,6 +159,10 @@ def edit_learning_goal(request, goal_id):
         if form.is_valid():
             form.save()
             messages.success(request, 'Mục tiêu học tập đã được cập nhật thành công!')
+            
+            # Kiểm tra nếu là request HTMX
+            if request.htmx:
+                return redirect('advanced_learning:learning_goals')
             return redirect('advanced_learning:learning_goals')
     else:
         form = LearningGoalForm(instance=goal)
@@ -107,6 +187,11 @@ def delete_learning_goal(request, goal_id):
     if request.method == 'POST':
         goal.delete()
         messages.success(request, 'Mục tiêu học tập đã được xóa thành công!')
+        
+        # Kiểm tra nếu là request HTMX
+        if request.htmx:
+            # Trả về danh sách mục tiêu mới
+            return redirect('advanced_learning:learning_goals')
         return redirect('advanced_learning:learning_goals')
     
     context = {
@@ -124,6 +209,11 @@ def complete_learning_goal(request, goal_id):
         goal.is_completed = True
         goal.save(update_fields=['is_completed', 'updated_at'])
         messages.success(request, 'Mục tiêu học tập đã được đánh dấu là hoàn thành!')
+        
+        # Kiểm tra nếu là request HTMX
+        if request.htmx:
+            # Trả về danh sách mục tiêu mới
+            return redirect('advanced_learning:learning_goals')
         return redirect('advanced_learning:learning_goals')
     
     context = {
@@ -142,6 +232,11 @@ def reactivate_learning_goal(request, goal_id):
         goal.is_active = True
         goal.save(update_fields=['is_completed', 'is_active', 'updated_at'])
         messages.success(request, 'Mục tiêu học tập đã được kích hoạt lại!')
+        
+        # Kiểm tra nếu là request HTMX
+        if request.htmx:
+            # Trả về danh sách mục tiêu mới
+            return redirect('advanced_learning:learning_goals')
         return redirect('advanced_learning:learning_goals')
     
     context = {
@@ -229,7 +324,7 @@ def add_study_time(request):
                 pass
         
         # Lấy hoặc tạo nhật ký học tập
-        log, created = DailyStudyLog.objects.get_or_create(user=request.user, date=date)
+        log = DailyStudyLog.objects.get_or_create(user=request.user, date=date)[0]
         
         # Thêm thời gian học tập
         log.add_study_time(minutes, subject)

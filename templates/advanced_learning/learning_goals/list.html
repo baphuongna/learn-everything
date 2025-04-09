@@ -1,58 +1,58 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}Mục Tiêu Học Tập{% endblock %}
+{% block title %}Mục Tiêu Học Tập - Nền Tảng Học Tập{% endblock %}
 
 {% block extra_css %}
 <style>
     .goals-container {
-        max-width: 1000px;
+        max-width: 1200px;
         margin: 0 auto;
     }
     
     .stats-container {
         display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
+        justify-content: space-between;
         margin-bottom: 20px;
+        flex-wrap: wrap;
     }
     
     .stat-card {
-        flex: 1;
-        min-width: 200px;
         background-color: #fff;
         border-radius: 10px;
         padding: 20px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         text-align: center;
+        flex: 1;
+        min-width: 200px;
+        margin: 0 10px 10px 0;
     }
     
     .stat-value {
         font-size: 2rem;
-        font-weight: 700;
+        font-weight: bold;
         color: #6f42c1;
         margin-bottom: 5px;
     }
     
     .stat-label {
-        font-size: 0.9rem;
         color: #6c757d;
+        font-size: 0.9rem;
     }
     
     .filter-card {
+        margin-bottom: 20px;
         border-radius: 10px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        margin-bottom: 20px;
-        border: 1px solid #dee2e6;
     }
     
     .goal-card {
+        background-color: #fff;
         border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         transition: all 0.3s ease;
-        border: 1px solid #dee2e6;
-        overflow: hidden;
+        border-left: 4px solid #6f42c1;
     }
     
     .goal-card:hover {
@@ -60,9 +60,14 @@
         transform: translateY(-2px);
     }
     
+    .goal-completed {
+        border-left: 4px solid #28a745;
+        background-color: #f8f9fa;
+    }
+    
     .goal-header {
         padding: 15px 20px;
-        border-bottom: 1px solid #dee2e6;
+        border-bottom: 1px solid #f1f1f1;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -70,58 +75,25 @@
     
     .goal-title {
         font-weight: 600;
-        margin-bottom: 0;
+        font-size: 1.1rem;
         color: #6f42c1;
     }
     
     .goal-body {
-        padding: 20px;
+        padding: 15px 20px;
     }
     
     .goal-info {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 15px;
         margin-bottom: 15px;
     }
     
     .goal-info-item {
-        display: flex;
-        align-items: center;
-        font-size: 0.9rem;
-    }
-    
-    .goal-info-item i {
-        margin-right: 5px;
-        color: #6f42c1;
-    }
-    
-    .goal-description {
-        margin-bottom: 15px;
+        margin-bottom: 5px;
+        color: #6c757d;
     }
     
     .goal-progress {
         margin-bottom: 15px;
-    }
-    
-    .goal-progress-bar {
-        height: 10px;
-        border-radius: 5px;
-        background-color: #e9ecef;
-        overflow: hidden;
-    }
-    
-    .goal-progress-value {
-        height: 100%;
-        background-color: #6f42c1;
-    }
-    
-    .goal-progress-text {
-        display: flex;
-        justify-content: space-between;
-        font-size: 0.9rem;
-        color: #6c757d;
-        margin-top: 5px;
     }
     
     .goal-actions {
@@ -130,20 +102,30 @@
         gap: 10px;
     }
     
-    .goal-completed {
-        background-color: #f8f9fa;
+    .btn-purple {
+        background-color: #6f42c1;
+        border-color: #6f42c1;
+        color: white;
     }
     
-    .goal-completed .goal-progress-value {
-        background-color: #28a745;
+    .btn-purple:hover {
+        background-color: #5a32a3;
+        border-color: #5a32a3;
+        color: white;
     }
     
-    .goal-expired {
-        background-color: #f8f9fa;
+    .btn-outline-purple {
+        color: #6f42c1;
+        border-color: #6f42c1;
     }
     
-    .goal-expired .goal-progress-value {
-        background-color: #dc3545;
+    .btn-outline-purple:hover {
+        background-color: #6f42c1;
+        color: white;
+    }
+    
+    .text-purple {
+        color: #6f42c1;
     }
     
     .empty-state {
@@ -151,11 +133,71 @@
         padding: 50px 20px;
         background-color: #f8f9fa;
         border-radius: 10px;
+        margin-top: 20px;
     }
     
     .empty-state i {
         font-size: 3rem;
         color: #dee2e6;
+        margin-bottom: 20px;
+    }
+    
+    .goal-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+    
+    .goal-grid-card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        border-top: 4px solid #6f42c1;
+    }
+    
+    .goal-grid-card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .goal-grid-card .card-body {
+        flex: 1;
+    }
+    
+    .goal-grid-card .card-footer {
+        padding: 0.5rem 1rem;
+        background-color: transparent;
+    }
+    
+    .view-toggle-btn.active {
+        background-color: #6f42c1;
+        color: white;
+    }
+    
+    .action-overlay {
+        display: none;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+        width: 80%;
+    }
+    
+    .goal-grid-card:hover .action-overlay {
+        display: block;
+    }
+    
+    .search-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         margin-bottom: 20px;
     }
 </style>
@@ -176,7 +218,7 @@
     </div>
 </div>
 
-<div class="goals-container">
+<div class="goals-container" x-data="{ activeStatus: '{{ status }}', viewType: 'list' }">
     <!-- Thống kê -->
     <div class="stats-container">
         <div class="stat-card">
@@ -200,134 +242,113 @@
         </div>
     </div>
     
-    <!-- Bộ lọc -->
-    <div class="card filter-card">
+    <!-- Tìm kiếm và lọc -->
+    <div class="card search-card mb-4" x-data="{ searchQuery: '', selectedType: '' }">
         <div class="card-body">
-            <div class="d-flex justify-content-center">
-                <div class="btn-group" role="group">
-                    <a href="{% url 'advanced_learning:learning_goals' %}?status=active" class="btn {% if status == 'active' %}btn-purple{% else %}btn-outline-purple{% endif %}">
-                        <i class="fas fa-play-circle"></i> Đang Hoạt Động
-                    </a>
-                    <a href="{% url 'advanced_learning:learning_goals' %}?status=completed" class="btn {% if status == 'completed' %}btn-purple{% else %}btn-outline-purple{% endif %}">
-                        <i class="fas fa-check-circle"></i> Đã Hoàn Thành
-                    </a>
-                    <a href="{% url 'advanced_learning:learning_goals' %}?status=all" class="btn {% if status == 'all' %}btn-purple{% else %}btn-outline-purple{% endif %}">
-                        <i class="fas fa-list"></i> Tất Cả
-                    </a>
+            <form class="row g-3" id="search-form"
+                  hx-get="{% url 'advanced_learning:learning_goals' %}?format=partial"
+                  hx-target="#goals-container"
+                  hx-trigger="submit"
+                  hx-indicator="#search-indicator">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="search" placeholder="Tìm kiếm mục tiêu..." 
+                               x-model="searchQuery">
+                        <button class="btn btn-purple" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                        <span id="search-indicator" class="htmx-indicator spinner-border spinner-border-sm text-purple ms-2" role="status"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select" name="type" x-model="selectedType"
+                            hx-get="{% url 'advanced_learning:learning_goals' %}?format=partial"
+                            hx-target="#goals-container"
+                            hx-trigger="change"
+                            hx-include="[name='search']"
+                            hx-indicator="#search-indicator">
+                        <option value="">Tất cả loại mục tiêu</option>
+                        <option value="daily">Hàng ngày</option>
+                        <option value="weekly">Hàng tuần</option>
+                        <option value="monthly">Hàng tháng</option>
+                        <option value="custom">Tùy chỉnh</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-outline-secondary w-100"
+                            @click="searchQuery = ''; selectedType = '';"
+                            hx-get="{% url 'advanced_learning:learning_goals' %}?format=partial"
+                            hx-target="#goals-container"
+                            hx-trigger="click"
+                            hx-indicator="#search-indicator">
+                        <i class="fas fa-times"></i> Xóa bộ lọc
+                    </button>
+                </div>
+            </form>
+            
+            <div class="row mt-3">
+                <div class="col-md-12 d-flex justify-content-between align-items-center">
+                    <div class="btn-group" role="group">
+                        <button class="btn" :class="activeStatus === 'active' ? 'btn-purple' : 'btn-outline-purple'"
+                                @click="activeStatus = 'active'"
+                                hx-get="{% url 'advanced_learning:learning_goals' %}?status=active&format=partial"
+                                hx-target="#goals-container"
+                                hx-swap="innerHTML">
+                            <i class="fas fa-play-circle"></i> Đang Hoạt Động
+                        </button>
+                        <button class="btn" :class="activeStatus === 'completed' ? 'btn-purple' : 'btn-outline-purple'"
+                                @click="activeStatus = 'completed'"
+                                hx-get="{% url 'advanced_learning:learning_goals' %}?status=completed&format=partial"
+                                hx-target="#goals-container"
+                                hx-swap="innerHTML">
+                            <i class="fas fa-check-circle"></i> Đã Hoàn Thành
+                        </button>
+                        <button class="btn" :class="activeStatus === 'all' ? 'btn-purple' : 'btn-outline-purple'"
+                                @click="activeStatus = 'all'"
+                                hx-get="{% url 'advanced_learning:learning_goals' %}?status=all&format=partial"
+                                hx-target="#goals-container"
+                                hx-swap="innerHTML">
+                            <i class="fas fa-list"></i> Tất Cả
+                        </button>
+                    </div>
+                    
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-purple view-toggle-btn" 
+                                :class="{ 'active': viewType === 'grid' }"
+                                @click="viewType = 'grid'"
+                                hx-get="{% url 'advanced_learning:learning_goals' %}?status={{ status }}&format=partial&view=grid"
+                                hx-target="#goals-container"
+                                hx-include="[name='search'], [name='type']">
+                            <i class="fas fa-th-large"></i> Lưới
+                        </button>
+                        <button type="button" class="btn btn-outline-purple view-toggle-btn"
+                                :class="{ 'active': viewType === 'list' }"
+                                @click="viewType = 'list'"
+                                hx-get="{% url 'advanced_learning:learning_goals' %}?status={{ status }}&format=partial&view=list"
+                                hx-target="#goals-container"
+                                hx-include="[name='search'], [name='type']">
+                            <i class="fas fa-list"></i> Danh sách
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     
     <!-- Danh sách mục tiêu -->
-    {% if goals %}
-        {% for goal in goals %}
-        <div class="goal-card {% if goal.is_completed %}goal-completed{% endif %}">
-            <div class="goal-header">
-                <div class="goal-title">{{ goal.title }}</div>
-                <div>
-                    {% if goal.is_completed %}
-                    <span class="badge bg-success">Đã hoàn thành</span>
-                    {% elif not goal.is_active %}
-                    <span class="badge bg-secondary">Không hoạt động</span>
-                    {% elif goal.end_date and goal.end_date < today %}
-                    <span class="badge bg-danger">Đã hết hạn</span>
-                    {% else %}
-                    <span class="badge bg-primary">Đang hoạt động</span>
-                    {% endif %}
-                </div>
-            </div>
-            <div class="goal-body">
-                <div class="goal-info">
-                    <div class="goal-info-item">
-                        <i class="fas fa-calendar-alt"></i> Loại: 
-                        {% if goal.goal_type == 'daily' %}Hàng ngày
-                        {% elif goal.goal_type == 'weekly' %}Hàng tuần
-                        {% elif goal.goal_type == 'monthly' %}Hàng tháng
-                        {% else %}Tùy chỉnh{% endif %}
-                    </div>
-                    <div class="goal-info-item">
-                        <i class="fas fa-chart-line"></i> Chỉ số: 
-                        {% if goal.goal_metric == 'study_time' %}Thời gian học tập
-                        {% elif goal.goal_metric == 'notes_count' %}Số ghi chú
-                        {% elif goal.goal_metric == 'mindmaps_count' %}Số mind map
-                        {% elif goal.goal_metric == 'projects_progress' %}Tiến độ dự án
-                        {% elif goal.goal_metric == 'exercises_completed' %}Số bài tập
-                        {% elif goal.goal_metric == 'competition_points' %}Điểm thi đấu
-                        {% else %}Tùy chỉnh{% endif %}
-                    </div>
-                    <div class="goal-info-item">
-                        <i class="fas fa-flag"></i> Mục tiêu: {{ goal.target_value }}
-                    </div>
-                    <div class="goal-info-item">
-                        <i class="fas fa-calendar-check"></i> Bắt đầu: {{ goal.start_date|date:"d/m/Y" }}
-                    </div>
-                    {% if goal.end_date %}
-                    <div class="goal-info-item">
-                        <i class="fas fa-calendar-times"></i> Kết thúc: {{ goal.end_date|date:"d/m/Y" }}
-                    </div>
-                    {% endif %}
-                    {% if goal.subject %}
-                    <div class="goal-info-item">
-                        <i class="fas fa-book"></i> Môn học: {{ goal.subject.name }}
-                    </div>
-                    {% endif %}
-                </div>
-                
-                {% if goal.description %}
-                <div class="goal-description">
-                    {{ goal.description }}
-                </div>
-                {% endif %}
-                
-                <div class="goal-progress">
-                    <div class="goal-progress-bar">
-                        <div class="goal-progress-value" style="width: {{ goal.get_progress_percentage }}%;"></div>
-                    </div>
-                    <div class="goal-progress-text">
-                        <div>Hiện tại: {{ goal.current_value }}</div>
-                        <div>{{ goal.get_progress_percentage }}%</div>
-                    </div>
-                </div>
-                
-                <div class="goal-actions">
-                    {% if not goal.is_completed %}
-                    <a href="{% url 'advanced_learning:edit_learning_goal' goal_id=goal.id %}" class="btn btn-outline-primary">
-                        <i class="fas fa-edit"></i> Chỉnh Sửa
-                    </a>
-                    <form method="post" action="{% url 'advanced_learning:complete_learning_goal' goal_id=goal.id %}" class="d-inline">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-check"></i> Đánh Dấu Hoàn Thành
-                        </button>
-                    </form>
-                    {% else %}
-                    <form method="post" action="{% url 'advanced_learning:reactivate_learning_goal' goal_id=goal.id %}" class="d-inline">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-outline-primary">
-                            <i class="fas fa-redo"></i> Kích Hoạt Lại
-                        </button>
-                    </form>
-                    {% endif %}
-                    <form method="post" action="{% url 'advanced_learning:delete_learning_goal' goal_id=goal.id %}" class="d-inline">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Bạn có chắc chắn muốn xóa mục tiêu này?')">
-                            <i class="fas fa-trash-alt"></i> Xóa
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    {% else %}
-        <div class="empty-state">
-            <i class="fas fa-bullseye"></i>
-            <h3>Không có mục tiêu nào</h3>
-            <p>Hãy tạo mục tiêu học tập đầu tiên của bạn!</p>
-            <a href="{% url 'advanced_learning:create_learning_goal' %}" class="btn btn-purple mt-3">
-                <i class="fas fa-plus"></i> Tạo Mục Tiêu Mới
-            </a>
-        </div>
-    {% endif %}
+    <div id="goals-container">
+        {% include 'advanced_learning/learning_goals/list_partial.html' %}
+    </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Khởi tạo Alpine.js nếu cần
+        if (typeof Alpine !== 'undefined') {
+            Alpine.start();
+        }
+    });
+</script>
 {% endblock %}

@@ -1,0 +1,25 @@
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="fas fa-check-circle me-2"></i> {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+
+<script>
+    // Cập nhật số lượng thông báo chưa đọc
+    document.dispatchEvent(new CustomEvent('update-unread-count', { 
+        detail: { count: {{ unread_count }} } 
+    }));
+    
+    // Cập nhật giao diện
+    document.querySelectorAll('.notification-list .list-group-item.unread').forEach(item => {
+        item.classList.remove('unread');
+    });
+    
+    // Tự động đóng thông báo sau 3 giây
+    setTimeout(() => {
+        const alert = document.querySelector('.alert');
+        if (alert) {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        }
+    }, 3000);
+</script>

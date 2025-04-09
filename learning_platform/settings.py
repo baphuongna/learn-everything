@@ -81,6 +81,7 @@ INSTALLED_APPS = [
     "crispy_bootstrap4",
     "csp",  # Content Security Policy
     "channels",  # Django Channels for WebSocket
+    "django_htmx",  # HTMX integration
 
     # Custom apps
     "accounts",
@@ -93,6 +94,7 @@ INSTALLED_APPS = [
     "notifications",  # Ứng dụng thông báo mới
     "learning_goals",  # Ứng dụng mục tiêu học tập
     "achievements",  # Ứng dụng thành tích và phần thưởng
+    "personalization",  # Ứng dụng cá nhân hóa
 ]
 
 MIDDLEWARE = [
@@ -104,6 +106,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django_htmx.middleware.HtmxMiddleware",  # HTMX middleware
     "learning_platform.middleware.SecurityHeadersMiddleware",  # Middleware bảo mật tùy chỉnh
 ]
 

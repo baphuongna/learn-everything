@@ -19,107 +19,65 @@
         </div>
     </div>
 
-    <!-- Thông tin điểm thưởng -->
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="card bg-light">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-md-4">
-                            <h3 class="mb-0">
-                                <i class="fas fa-coins text-warning"></i> Điểm Hiện Tại: <span class="text-primary">{{ reward_point.points }}</span>
-                            </h3>
-                        </div>
-                        <div class="col-md-4 text-center">
-                            <h5 class="mb-0 text-success">
-                                <i class="fas fa-plus-circle"></i> Đã Nhận: {{ total_earned }}
-                            </h5>
-                        </div>
-                        <div class="col-md-4 text-end">
-                            <h5 class="mb-0 text-danger">
-                                <i class="fas fa-minus-circle"></i> Đã Sử Dụng: {{ total_used }}
-                            </h5>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bộ lọc -->
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-body">
-                    <form method="get" class="row g-3">
-                        <div class="col-md-10">
-                            <label for="type" class="form-label">Loại giao dịch</label>
-                            <select name="type" id="type" class="form-select" onchange="this.form.submit()">
-                                <option value="">Tất cả</option>
-                                <option value="earn" {% if selected_type == 'earn' %}selected{% endif %}>Nhận điểm</option>
-                                <option value="use" {% if selected_type == 'use' %}selected{% endif %}>Sử dụng điểm</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <a href="{% url 'achievements:point_history' %}" class="btn btn-outline-secondary w-100">Đặt lại</a>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Lịch sử điểm thưởng -->
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="fas fa-list"></i> Lịch Sử Giao Dịch</h5>
-                </div>
-                <div class="card-body p-0">
-                    {% if history %}
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Thời gian</th>
-                                        <th>Loại</th>
-                                        <th>Điểm</th>
-                                        <th>Lý do</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for entry in history %}
-                                        <tr>
-                                            <td>{{ entry.timestamp|date:"d/m/Y H:i" }}</td>
-                                            <td>
-                                                {% if entry.action_type == 'earn' %}
-                                                    <span class="badge bg-success">Nhận điểm</span>
-                                                {% else %}
-                                                    <span class="badge bg-danger">Sử dụng điểm</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                {% if entry.action_type == 'earn' %}
-                                                    <span class="text-success">+{{ entry.points }}</span>
-                                                {% else %}
-                                                    <span class="text-danger">-{{ entry.points }}</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>{{ entry.reason }}</td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <div class="alert alert-info m-3">
-                            <i class="fas fa-info-circle me-2"></i> Không có lịch sử giao dịch nào.
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
+    <div id="point-history-container">
+        {% include 'achievements/point_history_partial.html' %}
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Xử lý sự kiện cập nhật từng phần
+        document.body.addEventListener('htmx:afterSwap', function(event) {
+            if (event.detail.target.id === 'point-history-container') {
+                // Khởi tạo lại Alpine.js cho các phần tử mới
+                if (window.Alpine) {
+                    window.Alpine.initTree(document.body);
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .point-history-container {
+        margin-bottom: 30px;
+    }
+    
+    .card {
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    
+    .card-header {
+        padding: 15px;
+        font-weight: 600;
+    }
+    
+    .table th {
+        font-weight: 600;
+    }
+    
+    .table td {
+        vertical-align: middle;
+    }
+    
+    /* Spinner */
+    .htmx-indicator {
+        display: none;
+    }
+    
+    .htmx-request .htmx-indicator {
+        display: inline-block;
+    }
+    
+    .htmx-request.htmx-indicator {
+        display: inline-block;
+    }
+</style>
 {% endblock %}

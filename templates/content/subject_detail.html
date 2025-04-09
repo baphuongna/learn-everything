@@ -4,115 +4,195 @@
 {% block title %}{{ subject.name }} - Nền Tảng Học Tập{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-md-2 text-center">
-        {% with subject_key=subject.name|lower|cut:' ' %}
-            {% if subject_key == 'python' %}
-            <img src="{% static 'images/subject_icons/python.svg' %}" alt="{{ subject.name }}" class="img-fluid" style="max-height: 150px;">
-            {% elif subject_key == 'java' %}
-            <img src="{% static 'images/subject_icons/java.svg' %}" alt="{{ subject.name }}" class="img-fluid" style="max-height: 150px;">
-            {% elif subject_key == 'javascript' %}
-            <img src="{% static 'images/subject_icons/javascript.svg' %}" alt="{{ subject.name }}" class="img-fluid" style="max-height: 150px;">
-            {% elif subject_key == 'english' or subject_key == 'tienganh' %}
-            <img src="{% static 'images/subject_icons/english.svg' %}" alt="{{ subject.name }}" class="img-fluid" style="max-height: 150px;">
-            {% elif subject_key == 'chinese' or subject_key == 'tiengtrung' %}
-            <img src="{% static 'images/subject_icons/chinese.svg' %}" alt="{{ subject.name }}" class="img-fluid" style="max-height: 150px;">
-            {% elif subject_key == 'math' or subject_key == 'toanhoc' %}
-            <img src="{% static 'images/subject_icons/math.svg' %}" alt="{{ subject.name }}" class="img-fluid" style="max-height: 150px;">
-            {% elif subject.icon %}
-            <img src="{{ subject.icon.url }}" alt="{{ subject.name }}" class="img-fluid" style="max-height: 150px;">
-            {% else %}
-            <div style="width: 150px; height: 150px; background-color: #007bff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
-                <span style="font-size: 72px; color: white; font-weight: bold;">{{ subject.name|first|upper }}</span>
-            </div>
+<div class="container" x-data="{ activeTopicId: null, showAllTopics: false }">
+    <div class="row mb-4">
+        <div class="col-md-2 text-center">
+            {% with subject_key=subject.name|lower|cut:' ' %}
+                {% if subject_key == 'python' %}
+                <img src="{% static 'images/subject_icons/python.svg' %}" alt="{{ subject.name }}" class="img-fluid" style="max-height: 150px;">
+                {% elif subject_key == 'java' %}
+                <img src="{% static 'images/subject_icons/java.svg' %}" alt="{{ subject.name }}" class="img-fluid" style="max-height: 150px;">
+                {% elif subject_key == 'javascript' %}
+                <img src="{% static 'images/subject_icons/javascript.svg' %}" alt="{{ subject.name }}" class="img-fluid" style="max-height: 150px;">
+                {% elif subject_key == 'english' or subject_key == 'tienganh' %}
+                <img src="{% static 'images/subject_icons/english.svg' %}" alt="{{ subject.name }}" class="img-fluid" style="max-height: 150px;">
+                {% elif subject_key == 'chinese' or subject_key == 'tiengtrung' %}
+                <img src="{% static 'images/subject_icons/chinese.svg' %}" alt="{{ subject.name }}" class="img-fluid" style="max-height: 150px;">
+                {% elif subject_key == 'math' or subject_key == 'toanhoc' %}
+                <img src="{% static 'images/subject_icons/math.svg' %}" alt="{{ subject.name }}" class="img-fluid" style="max-height: 150px;">
+                {% elif subject.icon %}
+                <img src="{{ subject.icon.url }}" alt="{{ subject.name }}" class="img-fluid" style="max-height: 150px;">
+                {% else %}
+                <div style="width: 150px; height: 150px; background-color: #007bff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                    <span style="font-size: 72px; color: white; font-weight: bold;">{{ subject.name|first|upper }}</span>
+                </div>
+                {% endif %}
+            {% endwith %}
+        </div>
+        <div class="col-md-6">
+            <h1 class="mb-3">{{ subject.name }}</h1>
+            <p class="lead">{{ subject.description }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            {% if user.is_authenticated %}
+            <form id="favorite-form"
+                  hx-post="{% url 'toggle_favorite_subject' subject.id %}"
+                  hx-swap="outerHTML"
+                  hx-indicator="#favorite-indicator">
+                {% csrf_token %}
+                <button type="submit" class="btn {% if is_favorite %}btn-warning{% else %}btn-outline-warning{% endif %} mb-3">
+                    <span id="favorite-indicator" class="htmx-indicator spinner-border spinner-border-sm me-1" role="status"></span>
+                    <i class="fas fa-star"></i> {% if is_favorite %}Bỏ yêu thích{% else %}Yêu thích{% endif %}
+                </button>
+            </form>
             {% endif %}
-        {% endwith %}
+            <a href="{% url 'subject_list' %}" class="btn btn-outline-primary"
+               hx-boost="true">
+                <i class="fas fa-arrow-left"></i> Quay lại danh sách
+            </a>
+        </div>
     </div>
-    <div class="col-md-6">
-        <h1 class="mb-3">{{ subject.name }}</h1>
-        <p class="lead">{{ subject.description }}</p>
-    </div>
-    <div class="col-md-4 text-end">
-        {% if user.is_authenticated %}
-        <form method="post" action="{% url 'toggle_favorite_subject' subject.id %}">
-            {% csrf_token %}
-            <button type="submit" class="btn {% if is_favorite %}btn-warning{% else %}btn-outline-warning{% endif %} mb-3">
-                <i class="fas fa-star"></i> {% if is_favorite %}Bỏ yêu thích{% else %}Yêu thích{% endif %}
-            </button>
-        </form>
-        {% endif %}
-        <a href="{% url 'subject_list' %}" class="btn btn-outline-primary">
-            <i class="fas fa-arrow-left"></i> Quay lại danh sách
-        </a>
-    </div>
-</div>
 
-<div class="row">
-    <div class="col-md-12">
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Chủ Đề Con</h4>
-            </div>
-            <div class="card-body">
-                <div class="accordion" id="topicAccordion">
-                    {% for topic in subject.topics.all %}
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="heading{{ topic.id }}">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ topic.id }}" aria-expanded="false" aria-controls="collapse{{ topic.id }}">
-                                {{ topic.name }}
-                            </button>
-                        </h2>
-                        <div id="collapse{{ topic.id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ topic.id }}" data-bs-parent="#topicAccordion">
-                            <div class="accordion-body">
-                                <p>{{ topic.description }}</p>
-                                <h5 class="mt-3">Bài Học</h5>
-                                <ul class="list-group">
-                                    {% for lesson in topic.lessons.all %}
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <a href="{% url 'lesson_detail' subject.slug topic.slug lesson.slug %}">{{ lesson.title }}</a>
-                                        {% if user.is_authenticated %}
-                                            {% if lesson.id in completed_lessons_ids %}
-                                            <span class="badge bg-success rounded-pill"><i class="fas fa-check"></i> Đã hoàn thành</span>
-                                            {% else %}
-                                            <span class="badge bg-secondary rounded-pill">Chưa hoàn thành</span>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Chủ Đề Con</h4>
+                    <button class="btn btn-sm btn-light" @click="showAllTopics = !showAllTopics">
+                        <i class="fas" :class="showAllTopics ? 'fa-compress-alt' : 'fa-expand-alt'"></i>
+                        <span x-text="showAllTopics ? 'Thu gọn tất cả' : 'Mở rộng tất cả'"></span>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="topicAccordion">
+                        {% for topic in subject.topics.all %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading{{ topic.id }}">
+                                <button class="accordion-button"
+                                        :class="{ 'collapsed': !(activeTopicId === {{ topic.id }} || showAllTopics) }"
+                                        type="button"
+                                        @click="activeTopicId = activeTopicId === {{ topic.id }} ? null : {{ topic.id }}">
+                                    {{ topic.name }}
+                                </button>
+                            </h2>
+                            <div :id="'collapse{{ topic.id }}'"
+                                 class="accordion-collapse collapse"
+                                 :class="{ 'show': activeTopicId === {{ topic.id }} || showAllTopics }">
+                                <div class="accordion-body">
+                                    <p>{{ topic.description }}</p>
+                                    <h5 class="mt-3">Bài Học</h5>
+                                    <ul class="list-group">
+                                        {% for lesson in topic.lessons.all %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <a href="{% url 'lesson_detail' subject.slug topic.slug lesson.slug %}"
+                                               hx-boost="true"
+                                               class="text-decoration-none">
+                                                {{ lesson.title }}
+                                            </a>
+                                            {% if user.is_authenticated %}
+                                                {% if lesson.id in completed_lessons_ids %}
+                                                <span class="badge bg-success rounded-pill">
+                                                    <i class="fas fa-check"></i> Đã hoàn thành
+                                                </span>
+                                                {% else %}
+                                                <button class="badge bg-secondary rounded-pill border-0"
+                                                        hx-post="{% url 'mark_lesson_complete' lesson.id %}"
+                                                        hx-swap="outerHTML"
+                                                        hx-target="closest li"
+                                                        hx-trigger="click">
+                                                    Chưa hoàn thành
+                                                </button>
+                                                {% endif %}
                                             {% endif %}
-                                        {% endif %}
-                                    </li>
-                                    {% empty %}
-                                    <li class="list-group-item">Chưa có bài học nào.</li>
-                                    {% endfor %}
-                                </ul>
+                                        </li>
+                                        {% empty %}
+                                        <li class="list-group-item">Chưa có bài học nào.</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
                             </div>
                         </div>
+                        {% empty %}
+                        <div class="alert alert-info">
+                            Hiện tại chưa có chủ đề con nào. Vui lòng quay lại sau.
+                        </div>
+                        {% endfor %}
                     </div>
-                    {% empty %}
-                    <div class="alert alert-info">
-                        Hiện tại chưa có chủ đề con nào. Vui lòng quay lại sau.
-                    </div>
-                    {% endfor %}
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-{% if user.is_authenticated %}
-<div class="row">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Tiến Độ Học Tập</h4>
-            </div>
-            <div class="card-body">
-                <div class="progress mb-3" style="height: 25px;">
-                    <div class="progress-bar" role="progressbar" style="width: {{ progress_percentage }}%;" aria-valuenow="{{ progress_percentage }}" aria-valuemin="0" aria-valuemax="100">
-                        {{ progress_percentage }}%
+    {% if user.is_authenticated %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Tiến Độ Học Tập</h4>
+                </div>
+                <div class="card-body">
+                    <div class="progress mb-3" style="height: 25px;">
+                        <div class="progress-bar" role="progressbar"
+                             :style="{ width: '{{ progress_percentage }}%' }"
+                             aria-valuenow="{{ progress_percentage }}"
+                             aria-valuemin="0"
+                             aria-valuemax="100">
+                            {{ progress_percentage }}%
+                        </div>
+                    </div>
+                    <p>Bạn đã hoàn thành {{ completed_lessons }}/{{ total_lessons }} bài học.</p>
+
+                    <div class="mt-3" id="progress-actions">
+                        <a href="{% url 'user_progress' %}" class="btn btn-outline-primary"
+                           hx-boost="true">
+                            <i class="fas fa-chart-line"></i> Xem chi tiết tiến độ
+                        </a>
+                        <button class="btn btn-outline-success ms-2"
+                                hx-get="{% url 'subject_detail' subject.slug %}?refresh_progress=true&format=partial"
+                                hx-target="#progress-actions"
+                                hx-swap="outerHTML"
+                                hx-indicator="#refresh-indicator">
+                            <span id="refresh-indicator" class="htmx-indicator spinner-border spinner-border-sm me-1" role="status"></span>
+                            <i class="fas fa-sync-alt"></i> Làm mới tiến độ
+                        </button>
                     </div>
                 </div>
-                <p>Bạn đã hoàn thành {{ completed_lessons }}/{{ total_lessons }} bài học.</p>
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
-{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Khởi tạo Alpine.js
+        if (typeof Alpine !== 'undefined') {
+            Alpine.start();
+        }
+
+        // Xử lý sự kiện HTMX sau khi tải nội dung
+        document.body.addEventListener('htmx:afterSwap', function(event) {
+            // Khởi tạo lại Alpine.js cho các phần tử mới
+            if (window.Alpine) {
+                window.Alpine.initTree(document.body);
+            }
+
+            // Hiển thị thông báo khi đánh dấu bài học đã hoàn thành
+            if (event.detail.pathInfo.requestPath.includes('mark_lesson_complete')) {
+                if (window.Alpine && Alpine.store('alerts')) {
+                    Alpine.store('alerts').add('Đã đánh dấu bài học hoàn thành', 'success');
+                }
+            }
+
+            // Hiển thị thông báo khi thay đổi trạng thái yêu thích
+            if (event.detail.pathInfo.requestPath.includes('toggle_favorite_subject')) {
+                if (window.Alpine && Alpine.store('alerts')) {
+                    Alpine.store('alerts').add('Đã cập nhật trạng thái yêu thích', 'success');
+                }
+            }
+        });
+    });
+</script>
 {% endblock %}

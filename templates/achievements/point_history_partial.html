@@ -1,0 +1,112 @@
+<div class="point-history-container">
+    <!-- Thông tin điểm thưởng -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <h3 class="mb-0">
+                        <i class="fas fa-coins text-warning"></i> Điểm Hiện Tại: <span class="text-primary">{{ reward_point.points }}</span>
+                    </h3>
+                </div>
+                <div class="col-md-4 text-center">
+                    <h5 class="mb-0 text-success">
+                        <i class="fas fa-plus-circle"></i> Đã Nhận: {{ total_earned }}
+                    </h5>
+                </div>
+                <div class="col-md-4 text-end">
+                    <h5 class="mb-0 text-danger">
+                        <i class="fas fa-minus-circle"></i> Đã Sử Dụng: {{ total_used }}
+                    </h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bộ lọc -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3" x-data="{ activeType: '{{ selected_type }}' }">
+                <div class="col-md-12">
+                    <div class="btn-group w-100" role="group">
+                        <button class="btn" 
+                                :class="activeType === '' ? 'btn-primary' : 'btn-outline-primary'"
+                                @click="activeType = ''"
+                                hx-get="{% url 'achievements:point_history' %}?format=partial"
+                                hx-target="#point-history-container"
+                                hx-swap="innerHTML"
+                                hx-push-url="false">
+                            <i class="fas fa-list"></i> Tất Cả
+                        </button>
+                        <button class="btn" 
+                                :class="activeType === 'earn' ? 'btn-success' : 'btn-outline-success'"
+                                @click="activeType = 'earn'"
+                                hx-get="{% url 'achievements:point_history' %}?type=earn&format=partial"
+                                hx-target="#point-history-container"
+                                hx-swap="innerHTML"
+                                hx-push-url="false">
+                            <i class="fas fa-plus-circle"></i> Nhận Điểm
+                        </button>
+                        <button class="btn" 
+                                :class="activeType === 'use' ? 'btn-danger' : 'btn-outline-danger'"
+                                @click="activeType = 'use'"
+                                hx-get="{% url 'achievements:point_history' %}?type=use&format=partial"
+                                hx-target="#point-history-container"
+                                hx-swap="innerHTML"
+                                hx-push-url="false">
+                            <i class="fas fa-minus-circle"></i> Sử Dụng Điểm
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lịch sử điểm thưởng -->
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-list"></i> Lịch Sử Giao Dịch</h5>
+        </div>
+        <div class="card-body p-0">
+            {% if history %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Thời gian</th>
+                                <th>Loại</th>
+                                <th>Điểm</th>
+                                <th>Lý do</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for entry in history %}
+                                <tr>
+                                    <td>{{ entry.timestamp|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        {% if entry.action_type == 'earn' %}
+                                            <span class="badge bg-success">Nhận điểm</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Sử dụng điểm</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if entry.action_type == 'earn' %}
+                                            <span class="text-success">+{{ entry.points }}</span>
+                                        {% else %}
+                                            <span class="text-danger">-{{ entry.points }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ entry.reason }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info m-3">
+                    <i class="fas fa-info-circle me-2"></i> Không có lịch sử giao dịch nào.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>

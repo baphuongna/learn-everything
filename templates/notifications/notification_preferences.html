@@ -21,25 +21,27 @@
         <div class="col-md-8">
             <div class="card">
                 <div class="card-body">
-                    <form method="post">
+                    <form method="post" id="preferences-form" hx-post="{% url 'notifications:preferences' %}" hx-target="#form-response" hx-swap="outerHTML" hx-indicator="#form-indicator">
                         {% csrf_token %}
+
+                        <div id="form-response"></div>
 
                         <h4 class="card-title mb-4">Cài Đặt Chung</h4>
 
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input" type="checkbox" id="receive_realtime_notifications" name="receive_realtime_notifications" {% if preferences.receive_realtime_notifications %}checked{% endif %}>
+                        <div class="form-check form-switch mb-3" x-data="{ enabled: {% if preferences.receive_realtime_notifications %}true{% else %}false{% endif %} }">
+                            <input class="form-check-input" type="checkbox" id="receive_realtime_notifications" name="receive_realtime_notifications" x-model="enabled" {% if preferences.receive_realtime_notifications %}checked{% endif %}>
                             <label class="form-check-label" for="receive_realtime_notifications">
                                 Nhận thông báo thời gian thực trong ứng dụng
                             </label>
-                            <div class="form-text">Hiển thị thông báo ngay lập tức khi có sự kiện mới.</div>
+                            <div class="form-text" :class="{ 'text-muted': !enabled, 'text-primary': enabled }">Hiển thị thông báo ngay lập tức khi có sự kiện mới.</div>
                         </div>
 
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input" type="checkbox" id="receive_email_notifications" name="receive_email_notifications" {% if preferences.receive_email_notifications %}checked{% endif %}>
+                        <div class="form-check form-switch mb-3" x-data="{ enabled: {% if preferences.receive_email_notifications %}true{% else %}false{% endif %} }">
+                            <input class="form-check-input" type="checkbox" id="receive_email_notifications" name="receive_email_notifications" x-model="enabled" {% if preferences.receive_email_notifications %}checked{% endif %}>
                             <label class="form-check-label" for="receive_email_notifications">
                                 Nhận thông báo qua email
                             </label>
-                            <div class="form-text">Gửi thông báo quan trọng đến địa chỉ email của bạn.</div>
+                            <div class="form-text" :class="{ 'text-muted': !enabled, 'text-primary': enabled }">Gửi thông báo quan trọng đến địa chỉ email của bạn.</div>
                         </div>
 
                         <hr>
@@ -137,6 +139,7 @@
 
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
                             <button type="submit" class="btn btn-primary">
+                                <span id="form-indicator" class="htmx-indicator spinner-border spinner-border-sm me-1"></span>
                                 <i class="fas fa-save me-2"></i> Lưu Tùy Chọn
                             </button>
                         </div>

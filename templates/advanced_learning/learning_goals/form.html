@@ -12,26 +12,51 @@
     
     .form-card {
         border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         margin-bottom: 20px;
     }
     
     .form-header {
-        background-color: #6f42c1;
-        color: white;
         padding: 15px 20px;
+        border-bottom: 1px solid #f1f1f1;
+        background-color: #f8f9fa;
         border-top-left-radius: 10px;
         border-top-right-radius: 10px;
     }
     
     .form-title {
-        font-size: 1.2rem;
-        font-weight: 600;
         margin-bottom: 0;
+        color: #6f42c1;
     }
     
     .form-body {
         padding: 20px;
+    }
+    
+    .btn-purple {
+        background-color: #6f42c1;
+        border-color: #6f42c1;
+        color: white;
+    }
+    
+    .btn-purple:hover {
+        background-color: #5a32a3;
+        border-color: #5a32a3;
+        color: white;
+    }
+    
+    .btn-outline-purple {
+        color: #6f42c1;
+        border-color: #6f42c1;
+    }
+    
+    .btn-outline-purple:hover {
+        background-color: #6f42c1;
+        color: white;
+    }
+    
+    .text-purple {
+        color: #6f42c1;
     }
     
     .goal-type-card {
@@ -40,28 +65,23 @@
         padding: 15px;
         margin-bottom: 15px;
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: all 0.3s ease;
     }
     
     .goal-type-card:hover {
-        background-color: #f8f9fa;
+        border-color: #6f42c1;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
     
     .goal-type-card.selected {
         border-color: #6f42c1;
-        background-color: #f3ebff;
+        background-color: #f8f4ff;
     }
     
     .goal-type-title {
         font-weight: 600;
-        margin-bottom: 5px;
-        display: flex;
-        align-items: center;
-    }
-    
-    .goal-type-title i {
-        margin-right: 10px;
         color: #6f42c1;
+        margin-bottom: 5px;
     }
     
     .goal-type-description {
@@ -69,39 +89,8 @@
         color: #6c757d;
     }
     
-    .goal-metric-card {
-        border: 1px solid #dee2e6;
-        border-radius: 10px;
-        padding: 15px;
-        margin-bottom: 15px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-    
-    .goal-metric-card:hover {
-        background-color: #f8f9fa;
-    }
-    
-    .goal-metric-card.selected {
-        border-color: #6f42c1;
-        background-color: #f3ebff;
-    }
-    
-    .goal-metric-title {
-        font-weight: 600;
-        margin-bottom: 5px;
-        display: flex;
-        align-items: center;
-    }
-    
-    .goal-metric-title i {
-        margin-right: 10px;
-        color: #6f42c1;
-    }
-    
-    .goal-metric-description {
-        font-size: 0.9rem;
-        color: #6c757d;
+    .goal-type-radio {
+        display: none;
     }
 </style>
 {% endblock %}
@@ -115,14 +104,73 @@
         <p class="lead">{% if is_create %}Tạo mục tiêu học tập mới để theo dõi tiến độ của bạn.{% else %}Chỉnh sửa thông tin mục tiêu học tập.{% endif %}</p>
     </div>
     <div class="col-md-4 text-end">
-        <a href="{% url 'advanced_learning:learning_goals' %}" class="btn btn-outline-purple">
+        <a href="{% url 'advanced_learning:learning_goals' %}" class="btn btn-outline-purple"
+           hx-get="{% url 'advanced_learning:learning_goals' %}?format=partial"
+           hx-target="#main-content"
+           hx-swap="innerHTML"
+           hx-push-url="true">
             <i class="fas fa-arrow-left"></i> Quay Lại Danh Sách
         </a>
     </div>
 </div>
 
-<div class="form-container">
-    <form method="post">
+<div class="form-container" x-data="{ 
+    goalType: '{{ form.goal_type.value|default:'daily' }}',
+    goalMetric: '{{ form.goal_metric.value|default:'study_time' }}',
+    targetValue: {{ form.target_value.value|default:1 }},
+    startDate: '{{ form.start_date.value|date:'Y-m-d'|default:'' }}',
+    endDate: '{{ form.end_date.value|date:'Y-m-d'|default:'' }}',
+    subject: '{{ form.subject.value|default:'' }}',
+    
+    updateEndDate() {
+        if (this.goalType === 'daily') {
+            // Đặt ngày kết thúc là ngày hôm nay
+            this.endDate = this.startDate;
+        } else if (this.goalType === 'weekly') {
+            // Đặt ngày kết thúc là 6 ngày sau ngày bắt đầu
+            let date = new Date(this.startDate);
+            date.setDate(date.getDate() + 6);
+            this.endDate = date.toISOString().split('T')[0];
+        } else if (this.goalType === 'monthly') {
+            // Đặt ngày kết thúc là 29 ngày sau ngày bắt đầu
+            let date = new Date(this.startDate);
+            date.setDate(date.getDate() + 29);
+            this.endDate = date.toISOString().split('T')[0];
+        }
+    },
+    
+    setDefaultTargetValue() {
+        if (this.goalMetric === 'study_time') {
+            if (this.goalType === 'daily') this.targetValue = 60; // 60 phút mỗi ngày
+            else if (this.goalType === 'weekly') this.targetValue = 300; // 5 giờ mỗi tuần
+            else if (this.goalType === 'monthly') this.targetValue = 1200; // 20 giờ mỗi tháng
+        } else if (this.goalMetric === 'notes_count') {
+            if (this.goalType === 'daily') this.targetValue = 1;
+            else if (this.goalType === 'weekly') this.targetValue = 5;
+            else if (this.goalType === 'monthly') this.targetValue = 20;
+        } else if (this.goalMetric === 'mindmaps_count') {
+            if (this.goalType === 'daily') this.targetValue = 1;
+            else if (this.goalType === 'weekly') this.targetValue = 3;
+            else if (this.goalType === 'monthly') this.targetValue = 10;
+        } else if (this.goalMetric === 'projects_progress') {
+            this.targetValue = 100; // 100%
+        } else if (this.goalMetric === 'exercises_completed') {
+            if (this.goalType === 'daily') this.targetValue = 2;
+            else if (this.goalType === 'weekly') this.targetValue = 10;
+            else if (this.goalType === 'monthly') this.targetValue = 40;
+        } else if (this.goalMetric === 'competition_points') {
+            if (this.goalType === 'daily') this.targetValue = 50;
+            else if (this.goalType === 'weekly') this.targetValue = 300;
+            else if (this.goalType === 'monthly') this.targetValue = 1000;
+        }
+    }
+}">
+    <form method="post" id="goal-form"
+          hx-post="{% if is_create %}{% url 'advanced_learning:create_learning_goal' %}{% else %}{% url 'advanced_learning:edit_learning_goal' goal_id=goal.id %}{% endif %}"
+          hx-target="#main-content"
+          hx-swap="innerHTML"
+          hx-push-url="true"
+          hx-indicator="#form-indicator">
         {% csrf_token %}
         
         <div class="card form-card">
@@ -157,207 +205,140 @@
                 <div class="mb-3">
                     <label class="form-label">Loại mục tiêu <span class="text-danger">*</span></label>
                     
-                    <div class="goal-type-card" data-type="daily">
-                        <div class="goal-type-title">
-                            <i class="fas fa-calendar-day"></i> Hàng ngày
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="goal-type-card" :class="{ 'selected': goalType === 'daily' }" data-type="daily" @click="goalType = 'daily'; updateEndDate()">
+                                <div class="goal-type-title">
+                                    <i class="fas fa-calendar-day"></i> Hàng ngày
+                                </div>
+                                <div class="goal-type-description">
+                                    Mục tiêu cần đạt được mỗi ngày.
+                                </div>
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input goal-type-radio" type="radio" name="goal_type" id="type-daily" value="daily" x-model="goalType">
+                                    <label class="form-check-label" for="type-daily">
+                                        Chọn
+                                    </label>
+                                </div>
+                            </div>
                         </div>
-                        <div class="goal-type-description">
-                            Mục tiêu cần đạt được mỗi ngày.
+                        
+                        <div class="col-md-4">
+                            <div class="goal-type-card" :class="{ 'selected': goalType === 'weekly' }" data-type="weekly" @click="goalType = 'weekly'; updateEndDate()">
+                                <div class="goal-type-title">
+                                    <i class="fas fa-calendar-week"></i> Hàng tuần
+                                </div>
+                                <div class="goal-type-description">
+                                    Mục tiêu cần đạt được trong một tuần.
+                                </div>
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input goal-type-radio" type="radio" name="goal_type" id="type-weekly" value="weekly" x-model="goalType">
+                                    <label class="form-check-label" for="type-weekly">
+                                        Chọn
+                                    </label>
+                                </div>
+                            </div>
                         </div>
-                        <div class="form-check mt-2">
-                            <input class="form-check-input goal-type-radio" type="radio" name="goal_type" id="type-daily" value="daily" {% if form.goal_type.value == 'daily' %}checked{% endif %}>
-                            <label class="form-check-label" for="type-daily">
-                                Chọn
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="goal-type-card" data-type="weekly">
-                        <div class="goal-type-title">
-                            <i class="fas fa-calendar-week"></i> Hàng tuần
-                        </div>
-                        <div class="goal-type-description">
-                            Mục tiêu cần đạt được mỗi tuần.
-                        </div>
-                        <div class="form-check mt-2">
-                            <input class="form-check-input goal-type-radio" type="radio" name="goal_type" id="type-weekly" value="weekly" {% if form.goal_type.value == 'weekly' %}checked{% endif %}>
-                            <label class="form-check-label" for="type-weekly">
-                                Chọn
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="goal-type-card" data-type="monthly">
-                        <div class="goal-type-title">
-                            <i class="fas fa-calendar-alt"></i> Hàng tháng
-                        </div>
-                        <div class="goal-type-description">
-                            Mục tiêu cần đạt được mỗi tháng.
-                        </div>
-                        <div class="form-check mt-2">
-                            <input class="form-check-input goal-type-radio" type="radio" name="goal_type" id="type-monthly" value="monthly" {% if form.goal_type.value == 'monthly' %}checked{% endif %}>
-                            <label class="form-check-label" for="type-monthly">
-                                Chọn
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="goal-type-card" data-type="custom">
-                        <div class="goal-type-title">
-                            <i class="fas fa-calendar-plus"></i> Tùy chỉnh
-                        </div>
-                        <div class="goal-type-description">
-                            Mục tiêu với khoảng thời gian tùy chỉnh.
-                        </div>
-                        <div class="form-check mt-2">
-                            <input class="form-check-input goal-type-radio" type="radio" name="goal_type" id="type-custom" value="custom" {% if form.goal_type.value == 'custom' %}checked{% endif %}>
-                            <label class="form-check-label" for="type-custom">
-                                Chọn
-                            </label>
+                        
+                        <div class="col-md-4">
+                            <div class="goal-type-card" :class="{ 'selected': goalType === 'monthly' }" data-type="monthly" @click="goalType = 'monthly'; updateEndDate()">
+                                <div class="goal-type-title">
+                                    <i class="fas fa-calendar-alt"></i> Hàng tháng
+                                </div>
+                                <div class="goal-type-description">
+                                    Mục tiêu cần đạt được trong một tháng.
+                                </div>
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input goal-type-radio" type="radio" name="goal_type" id="type-monthly" value="monthly" x-model="goalType">
+                                    <label class="form-check-label" for="type-monthly">
+                                        Chọn
+                                    </label>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
                 
                 <div class="mb-3">
                     <label class="form-label">Chỉ số đo lường <span class="text-danger">*</span></label>
-                    
-                    <div class="goal-metric-card" data-metric="study_time">
-                        <div class="goal-metric-title">
-                            <i class="fas fa-clock"></i> Thời gian học tập
-                        </div>
-                        <div class="goal-metric-description">
-                            Số phút học tập.
-                        </div>
-                        <div class="form-check mt-2">
-                            <input class="form-check-input goal-metric-radio" type="radio" name="goal_metric" id="metric-study_time" value="study_time" {% if form.goal_metric.value == 'study_time' %}checked{% endif %}>
-                            <label class="form-check-label" for="metric-study_time">
-                                Chọn
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="goal-metric-card" data-metric="notes_count">
-                        <div class="goal-metric-title">
-                            <i class="fas fa-sticky-note"></i> Số ghi chú
-                        </div>
-                        <div class="goal-metric-description">
-                            Số lượng ghi chú tạo ra.
-                        </div>
-                        <div class="form-check mt-2">
-                            <input class="form-check-input goal-metric-radio" type="radio" name="goal_metric" id="metric-notes_count" value="notes_count" {% if form.goal_metric.value == 'notes_count' %}checked{% endif %}>
-                            <label class="form-check-label" for="metric-notes_count">
-                                Chọn
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="goal-metric-card" data-metric="mindmaps_count">
-                        <div class="goal-metric-title">
-                            <i class="fas fa-project-diagram"></i> Số mind map
-                        </div>
-                        <div class="goal-metric-description">
-                            Số lượng mind map tạo ra.
-                        </div>
-                        <div class="form-check mt-2">
-                            <input class="form-check-input goal-metric-radio" type="radio" name="goal_metric" id="metric-mindmaps_count" value="mindmaps_count" {% if form.goal_metric.value == 'mindmaps_count' %}checked{% endif %}>
-                            <label class="form-check-label" for="metric-mindmaps_count">
-                                Chọn
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="goal-metric-card" data-metric="projects_progress">
-                        <div class="goal-metric-title">
-                            <i class="fas fa-tasks"></i> Tiến độ dự án
-                        </div>
-                        <div class="goal-metric-description">
-                            Phần trăm tiến độ dự án.
-                        </div>
-                        <div class="form-check mt-2">
-                            <input class="form-check-input goal-metric-radio" type="radio" name="goal_metric" id="metric-projects_progress" value="projects_progress" {% if form.goal_metric.value == 'projects_progress' %}checked{% endif %}>
-                            <label class="form-check-label" for="metric-projects_progress">
-                                Chọn
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="goal-metric-card" data-metric="exercises_completed">
-                        <div class="goal-metric-title">
-                            <i class="fas fa-dumbbell"></i> Số bài tập
-                        </div>
-                        <div class="goal-metric-description">
-                            Số lượng bài tập hoàn thành.
-                        </div>
-                        <div class="form-check mt-2">
-                            <input class="form-check-input goal-metric-radio" type="radio" name="goal_metric" id="metric-exercises_completed" value="exercises_completed" {% if form.goal_metric.value == 'exercises_completed' %}checked{% endif %}>
-                            <label class="form-check-label" for="metric-exercises_completed">
-                                Chọn
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="goal-metric-card" data-metric="competition_points">
-                        <div class="goal-metric-title">
-                            <i class="fas fa-trophy"></i> Điểm thi đấu
-                        </div>
-                        <div class="goal-metric-description">
-                            Số điểm thi đấu đạt được.
-                        </div>
-                        <div class="form-check mt-2">
-                            <input class="form-check-input goal-metric-radio" type="radio" name="goal_metric" id="metric-competition_points" value="competition_points" {% if form.goal_metric.value == 'competition_points' %}checked{% endif %}>
-                            <label class="form-check-label" for="metric-competition_points">
-                                Chọn
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="mb-3">
-                    <label for="{{ form.target_value.id_for_label }}" class="form-label">Giá trị mục tiêu <span class="text-danger">*</span></label>
-                    {{ form.target_value }}
-                    {% if form.target_value.errors %}
+                    <select class="form-select" name="goal_metric" id="{{ form.goal_metric.id_for_label }}" x-model="goalMetric" @change="setDefaultTargetValue()">
+                        <option value="study_time">Thời gian học tập (phút)</option>
+                        <option value="notes_count">Số ghi chú</option>
+                        <option value="mindmaps_count">Số mind map</option>
+                        <option value="projects_progress">Tiến độ dự án (%)</option>
+                        <option value="exercises_completed">Số bài tập hoàn thành</option>
+                        <option value="competition_points">Điểm thi đấu</option>
+                        <option value="custom">Tùy chỉnh</option>
+                    </select>
+                    {% if form.goal_metric.errors %}
                     <div class="text-danger">
-                        {% for error in form.target_value.errors %}
+                        {% for error in form.goal_metric.errors %}
                         {{ error }}
                         {% endfor %}
                     </div>
                     {% endif %}
-                    <div class="form-text">Giá trị cần đạt được để hoàn thành mục tiêu.</div>
                 </div>
                 
                 <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="{{ form.start_date.id_for_label }}" class="form-label">Ngày bắt đầu <span class="text-danger">*</span></label>
-                            {{ form.start_date }}
-                            {% if form.start_date.errors %}
-                            <div class="text-danger">
-                                {% for error in form.start_date.errors %}
-                                {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.target_value.id_for_label }}" class="form-label">Giá trị mục tiêu <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" name="target_value" id="{{ form.target_value.id_for_label }}" min="1" x-model="targetValue">
+                        {% if form.target_value.errors %}
+                        <div class="text-danger">
+                            {% for error in form.target_value.errors %}
+                            {{ error }}
+                            {% endfor %}
                         </div>
+                        {% endif %}
                     </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="{{ form.end_date.id_for_label }}" class="form-label">Ngày kết thúc</label>
-                            {{ form.end_date }}
-                            {% if form.end_date.errors %}
-                            <div class="text-danger">
-                                {% for error in form.end_date.errors %}
-                                {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                            <div class="form-text">Để trống nếu không có ngày kết thúc cụ thể.</div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.current_value.id_for_label }}" class="form-label">Giá trị hiện tại</label>
+                        {{ form.current_value }}
+                        {% if form.current_value.errors %}
+                        <div class="text-danger">
+                            {% for error in form.current_value.errors %}
+                            {{ error }}
+                            {% endfor %}
                         </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.start_date.id_for_label }}" class="form-label">Ngày bắt đầu <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" name="start_date" id="{{ form.start_date.id_for_label }}" x-model="startDate" @change="updateEndDate()">
+                        {% if form.start_date.errors %}
+                        <div class="text-danger">
+                            {% for error in form.start_date.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.end_date.id_for_label }}" class="form-label">Ngày kết thúc <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" name="end_date" id="{{ form.end_date.id_for_label }}" x-model="endDate">
+                        {% if form.end_date.errors %}
+                        <div class="text-danger">
+                            {% for error in form.end_date.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
                 
                 <div class="mb-3">
                     <label for="{{ form.subject.id_for_label }}" class="form-label">Môn học</label>
-                    {{ form.subject }}
+                    <select class="form-select" name="subject" id="{{ form.subject.id_for_label }}" x-model="subject">
+                        <option value="">-- Chọn môn học --</option>
+                        {% for subject in subjects %}
+                        <option value="{{ subject.id }}">{{ subject.name }}</option>
+                        {% endfor %}
+                    </select>
                     {% if form.subject.errors %}
                     <div class="text-danger">
                         {% for error in form.subject.errors %}
@@ -371,6 +352,7 @@
                 <div class="d-grid gap-2 mt-4">
                     <button type="submit" class="btn btn-purple">
                         <i class="fas fa-save"></i> {% if is_create %}Tạo Mục Tiêu{% else %}Lưu Thay Đổi{% endif %}
+                        <span id="form-indicator" class="htmx-indicator spinner-border spinner-border-sm"></span>
                     </button>
                 </div>
             </div>
@@ -382,64 +364,9 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Xử lý chọn loại mục tiêu
-        const goalTypeCards = document.querySelectorAll('.goal-type-card');
-        const goalTypeRadios = document.querySelectorAll('.goal-type-radio');
-        
-        goalTypeCards.forEach(card => {
-            card.addEventListener('click', function() {
-                const type = this.dataset.type;
-                const radio = document.getElementById('type-' + type);
-                
-                // Bỏ chọn tất cả các thẻ
-                goalTypeCards.forEach(c => c.classList.remove('selected'));
-                
-                // Chọn thẻ hiện tại
-                this.classList.add('selected');
-                
-                // Chọn radio button
-                radio.checked = true;
-            });
-        });
-        
-        // Xử lý chọn chỉ số đo lường
-        const goalMetricCards = document.querySelectorAll('.goal-metric-card');
-        const goalMetricRadios = document.querySelectorAll('.goal-metric-radio');
-        
-        goalMetricCards.forEach(card => {
-            card.addEventListener('click', function() {
-                const metric = this.dataset.metric;
-                const radio = document.getElementById('metric-' + metric);
-                
-                // Bỏ chọn tất cả các thẻ
-                goalMetricCards.forEach(c => c.classList.remove('selected'));
-                
-                // Chọn thẻ hiện tại
-                this.classList.add('selected');
-                
-                // Chọn radio button
-                radio.checked = true;
-            });
-        });
-        
-        // Chọn loại mục tiêu mặc định
-        const selectedGoalType = document.querySelector('.goal-type-radio:checked');
-        if (selectedGoalType) {
-            const type = selectedGoalType.value;
-            document.querySelector(`.goal-type-card[data-type="${type}"]`).classList.add('selected');
-        } else {
-            document.querySelector('.goal-type-card[data-type="daily"]').classList.add('selected');
-            document.getElementById('type-daily').checked = true;
-        }
-        
-        // Chọn chỉ số đo lường mặc định
-        const selectedGoalMetric = document.querySelector('.goal-metric-radio:checked');
-        if (selectedGoalMetric) {
-            const metric = selectedGoalMetric.value;
-            document.querySelector(`.goal-metric-card[data-metric="${metric}"]`).classList.add('selected');
-        } else {
-            document.querySelector('.goal-metric-card[data-metric="study_time"]').classList.add('selected');
-            document.getElementById('metric-study_time').checked = true;
+        // Khởi tạo Alpine.js nếu cần
+        if (typeof Alpine !== 'undefined') {
+            Alpine.start();
         }
     });
 </script>

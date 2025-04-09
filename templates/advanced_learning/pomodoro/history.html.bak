@@ -1,0 +1,177 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Lịch Sử Pomodoro - Nền Tảng Học Tập{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pomodoro-counter .tomato {
+        color: #dc3545;
+        font-size: 1.2rem;
+        margin: 0 2px;
+    }
+    
+    .stats-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        border-left: 5px solid #007bff;
+    }
+    
+    .session-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        margin-bottom: 15px;
+    }
+    
+    .session-card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .session-card.completed {
+        border-left: 4px solid #28a745;
+    }
+    
+    .session-card.active {
+        border-left: 4px solid #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-3">
+            <i class="fas fa-history text-primary"></i> Lịch Sử Pomodoro
+        </h1>
+        <p class="lead">Xem lại các phiên Pomodoro của bạn và theo dõi tiến độ học tập.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'advanced_learning:pomodoro_timer' %}" class="btn btn-primary">
+            <i class="fas fa-clock"></i> Quay Lại Pomodoro Timer
+        </a>
+    </div>
+</div>
+
+<!-- Thống kê tổng quan -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card stats-card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">Tổng Thời Gian Học Tập</h5>
+                <p class="display-4">{{ total_hours }}h {{ remaining_minutes }}m</p>
+                <p class="text-muted">Tổng thời gian bạn đã dành cho việc học tập</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-3">
+        <div class="card stats-card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">Tổng Số Pomodoros</h5>
+                <p class="display-4">{{ total_pomodoros }}</p>
+                <div class="pomodoro-counter">
+                    {% for i in "x"|ljust:total_pomodoros %}
+                        {% if forloop.counter <= 20 %}
+                        <i class="fas fa-apple-alt tomato"></i>
+                        {% endif %}
+                    {% endfor %}
+                    {% if total_pomodoros > 20 %}
+                    <span class="text-muted">+{{ total_pomodoros|add:"-20" }} nữa</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-3">
+        <div class="card stats-card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">Tổng Số Phiên</h5>
+                <p class="display-4">{{ sessions.count }}</p>
+                <p class="text-muted">Số phiên Pomodoro bạn đã thực hiện</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Danh sách các phiên Pomodoro -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-list"></i> Các Phiên Pomodoro</h5>
+                <span class="badge bg-light text-dark">{{ sessions.count }} phiên</span>
+            </div>
+            <div class="card-body">
+                {% if sessions %}
+                    {% for session in sessions %}
+                    <div class="card session-card {% if session.end_time %}completed{% else %}active{% endif %}">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <h5 class="card-title">
+                                        {% if session.subject %}
+                                        <span class="badge bg-primary">{{ session.subject.name }}</span>
+                                        {% endif %}
+                                        {% if session.topic %}
+                                        <span class="badge bg-secondary">{{ session.topic.name }}</span>
+                                        {% endif %}
+                                    </h5>
+                                    <p class="card-text">
+                                        <strong>Bắt đầu:</strong> {{ session.start_time|date:"d/m/Y H:i" }}<br>
+                                        {% if session.end_time %}
+                                        <strong>Kết thúc:</strong> {{ session.end_time|date:"d/m/Y H:i" }}
+                                        {% else %}
+                                        <span class="badge bg-danger">Đang hoạt động</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <div class="col-md-4">
+                                    <p class="card-text">
+                                        <strong>Thời gian làm việc:</strong> {{ session.work_duration }} phút<br>
+                                        <strong>Thời gian nghỉ:</strong> {{ session.break_duration }} phút<br>
+                                        {% if session.end_time %}
+                                        <strong>Tổng thời gian:</strong> 
+                                        {% with total_minutes=session.end_time|timeuntil:session.start_time %}
+                                            {{ total_minutes }}
+                                        {% endwith %}
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <div class="col-md-4">
+                                    <p class="card-text">
+                                        <strong>Pomodoros hoàn thành:</strong> {{ session.completed_pomodoros }}<br>
+                                        <div class="pomodoro-counter">
+                                            {% for i in "x"|ljust:session.completed_pomodoros %}
+                                                {% if forloop.counter <= 10 %}
+                                                <i class="fas fa-apple-alt tomato"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                            {% if session.completed_pomodoros > 10 %}
+                                            <span class="text-muted">+{{ session.completed_pomodoros|add:"-10" }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </p>
+                                    {% if session.notes %}
+                                    <p class="card-text">
+                                        <strong>Ghi chú:</strong> {{ session.notes|truncatechars:100 }}
+                                    </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Bạn chưa có phiên Pomodoro nào. Hãy bắt đầu một phiên mới để theo dõi thời gian học tập của bạn.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

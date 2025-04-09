@@ -1,0 +1,167 @@
+{% if notes %}
+    {% if view == 'list' %}
+        <!-- Chế độ xem danh sách -->
+        {% for note in notes %}
+        <div class="card note-card" x-data="{ showDetails: false }">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h5 class="note-title">{{ note.title }}</h5>
+                        <p class="note-meta">
+                            {% if note.subject %}
+                            <span class="badge bg-primary">{{ note.subject.name }}</span>
+                            {% endif %}
+                            <span class="ms-2"><i class="far fa-calendar-alt"></i> {{ note.created_at|date:"d/m/Y H:i" }}</span>
+                            {% if note.next_review_date and note.next_review_date <= now %}
+                            <span class="badge bg-danger ms-2">Cần ôn tập</span>
+                            {% endif %}
+                        </p>
+                        <p><strong><span class="step-number">1</span> Khái niệm:</strong> {{ note.concept|truncatechars:100 }}</p>
+                        <div class="mt-2">
+                            <button class="btn btn-sm btn-link p-0" @click="showDetails = !showDetails">
+                                <span x-show="!showDetails"><i class="fas fa-chevron-down"></i> Xem thêm</span>
+                                <span x-show="showDetails"><i class="fas fa-chevron-up"></i> Thu gọn</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-end d-flex align-items-center justify-content-end">
+                        <a href="{% url 'advanced_learning:feynman_note_detail' note_id=note.id %}" class="btn btn-outline-warning me-2"
+                           hx-get="{% url 'advanced_learning:feynman_note_detail' note_id=note.id %}?format=partial"
+                           hx-target="#notes-container"
+                           hx-swap="innerHTML"
+                           hx-push-url="true">
+                            <i class="fas fa-eye"></i> Xem
+                        </a>
+                        <a href="{% url 'advanced_learning:feynman_note_edit' note_id=note.id %}" class="btn btn-outline-secondary me-2">
+                            <i class="fas fa-edit"></i> Sửa
+                        </a>
+                        <button class="btn btn-outline-danger" 
+                                hx-delete="{% url 'advanced_learning:feynman_note_delete' note_id=note.id %}"
+                                hx-confirm="Bạn có chắc chắn muốn xóa ghi chú này không?"
+                                hx-target="#notes-container"
+                                hx-swap="innerHTML">
+                            <i class="fas fa-trash"></i> Xóa
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Chi tiết mở rộng -->
+                <div x-show="showDetails" x-transition class="mt-3">
+                    <div class="note-content">
+                        <p><strong><span class="step-number">2</span> Giải thích đơn giản:</strong></p>
+                        <p>{{ note.explanation|truncatechars:300|linebreaks }}</p>
+                        
+                        {% if note.gaps_identified %}
+                        <p><strong><span class="step-number">3</span> Lỗ hổng kiến thức:</strong></p>
+                        <p>{{ note.gaps_identified|truncatechars:200|linebreaks }}</p>
+                        {% endif %}
+                        
+                        {% if note.refined_explanation %}
+                        <p><strong><span class="step-number">4</span> Giải thích nâng cao:</strong></p>
+                        <p>{{ note.refined_explanation|truncatechars:200|linebreaks }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <div class="d-flex justify-content-end">
+                                <a href="{% url 'advanced_learning:feynman_note_export_pdf' note_id=note.id %}" class="btn btn-outline-danger me-2">
+                                    <i class="fas fa-file-pdf"></i> Xuất PDF
+                                </a>
+                                <a href="{% url 'advanced_learning:feynman_note_create_flashcards' note_id=note.id %}" class="btn btn-outline-info me-2">
+                                    <i class="fas fa-layer-group"></i> Tạo Flashcards
+                                </a>
+                                {% if note.next_review_date and note.next_review_date <= now %}
+                                <a href="{% url 'advanced_learning:feynman_note_review' note_id=note.id %}" class="btn btn-outline-success">
+                                    <i class="fas fa-sync-alt"></i> Ôn Tập
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <!-- Chế độ xem lưới (mặc định) -->
+        <div class="note-grid">
+            {% for note in notes %}
+            <div class="card note-grid-card h-100" x-data="{ showActions: false }">
+                {% if note.next_review_date and note.next_review_date <= now %}
+                <div class="review-badge">
+                    <span class="badge bg-danger">Cần ôn tập</span>
+                </div>
+                {% endif %}
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0 text-truncate" title="{{ note.title }}">{{ note.title }}</h5>
+                    {% if note.subject %}
+                        <span class="badge bg-primary">{{ note.subject.name }}</span>
+                    {% endif %}
+                </div>
+                <div class="card-body position-relative" @mouseenter="showActions = true" @mouseleave="showActions = false">
+                    <p class="card-text"><strong><span class="step-number">1</span> Khái niệm:</strong> {{ note.concept|truncatechars:80 }}</p>
+                    <p class="card-text"><strong><span class="step-number">2</span> Giải thích:</strong> {{ note.explanation|truncatechars:100 }}</p>
+                    <p class="text-muted small">
+                        <i class="far fa-calendar-alt"></i> {{ note.created_at|date:"d/m/Y" }}
+                    </p>
+                    
+                    <div x-show="showActions" x-transition class="action-overlay">
+                        <div class="btn-group-vertical w-100">
+                            <a href="{% url 'advanced_learning:feynman_note_detail' note_id=note.id %}" class="btn btn-sm btn-warning mb-2"
+                               hx-get="{% url 'advanced_learning:feynman_note_detail' note_id=note.id %}?format=partial"
+                               hx-target="#notes-container"
+                               hx-swap="innerHTML"
+                               hx-push-url="true">
+                                <i class="fas fa-eye"></i> Xem
+                            </a>
+                            <a href="{% url 'advanced_learning:feynman_note_edit' note_id=note.id %}" class="btn btn-sm btn-secondary mb-2">
+                                <i class="fas fa-edit"></i> Sửa
+                            </a>
+                            <a href="{% url 'advanced_learning:feynman_note_export_pdf' note_id=note.id %}" class="btn btn-sm btn-danger mb-2">
+                                <i class="fas fa-file-pdf"></i> Xuất PDF
+                            </a>
+                            <button class="btn btn-sm btn-outline-danger"
+                                    hx-delete="{% url 'advanced_learning:feynman_note_delete' note_id=note.id %}"
+                                    hx-confirm="Bạn có chắc chắn muốn xóa ghi chú này không?"
+                                    hx-target="#notes-container"
+                                    hx-swap="innerHTML">
+                                <i class="fas fa-trash"></i> Xóa
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between align-items-center">
+                        {% if note.next_review_date and note.next_review_date <= now %}
+                        <a href="{% url 'advanced_learning:feynman_note_review' note_id=note.id %}" class="btn btn-sm btn-success">
+                            <i class="fas fa-sync-alt"></i> Ôn Tập
+                        </a>
+                        {% else %}
+                        <small class="text-muted">{{ note.updated_at|date:"d/m/Y H:i" }}</small>
+                        {% endif %}
+                        <a href="{% url 'advanced_learning:feynman_note_detail' note_id=note.id %}" class="btn btn-sm btn-link p-0"
+                           hx-get="{% url 'advanced_learning:feynman_note_detail' note_id=note.id %}?format=partial"
+                           hx-target="#notes-container"
+                           hx-swap="innerHTML"
+                           hx-push-url="true">
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% else %}
+    <div class="alert alert-info">
+        <div class="empty-state">
+            <i class="fas fa-lightbulb"></i>
+            <h4>Không có ghi chú nào</h4>
+            <p class="text-muted">Bạn chưa có ghi chú Feynman nào. Hãy tạo ghi chú đầu tiên của bạn!</p>
+            <a href="{% url 'advanced_learning:feynman_note_create' %}" class="btn btn-warning mt-3">
+                <i class="fas fa-plus"></i> Tạo Ghi Chú Mới
+            </a>
+        </div>
+    </div>
+{% endif %}

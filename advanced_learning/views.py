@@ -28,10 +28,23 @@ from quizzes.models import Quiz, Question, Answer
 
 # Pomodoro Timer Views
 @login_required
+def get_topics(request):
+    """Lấy danh sách các chủ đề con theo chủ đề chính"""
+    subject_id = request.GET.get('subject', '')
+    topics = []
+
+    if subject_id:
+        topics = Topic.objects.filter(subject_id=subject_id)
+
+    return render(request, 'advanced_learning/pomodoro/topic_options.html', {'topics': topics})
+
+@login_required
 def pomodoro_timer(request):
     """Hiển thị trang Pomodoro Timer"""
     subjects = Subject.objects.all()
-    topics = Topic.objects.none()  # Sẽ được cập nhật bằng AJAX khi chọn subject
+    topics = Topic.objects.none()  # Sẽ được cập nhật bằng HTMX khi chọn subject
+    format_type = request.GET.get('format', '')
+    session_id = request.GET.get('session_id')
 
     # Lấy phiên Pomodoro đang hoạt động nếu có
     active_session = PomodoroSession.objects.filter(
@@ -104,15 +117,28 @@ def pomodoro_timer(request):
 
     import json
 
+    # Nếu có session_id, lấy thông tin phiên cụ thể
+    template_session = None
+    if session_id:
+        try:
+            template_session = PomodoroSession.objects.get(id=session_id, user=request.user)
+        except PomodoroSession.DoesNotExist:
+            pass
+
     context = {
         'subjects': subjects,
         'topics': topics,
         'active_session': active_session,
+        'template_session': template_session,
         'work_duration': 25,  # Mặc định 25 phút
         'break_duration': 5,  # Mặc định 5 phút
         'daily_chart_data': json.dumps(daily_chart_data),
         'subject_chart_data': json.dumps(subject_chart_data),
     }
+
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'advanced_learning/pomodoro/timer_partial.html', context)
 
     return render(request, 'advanced_learning/pomodoro/timer.html', context)
 
@@ -180,6 +206,11 @@ def pomodoro_end(request):
     session.completed_pomodoros = completed_pomodoros
     session.save()
 
+    # Kiểm tra nếu là request HTMX
+    if request.htmx:
+        # Chuyển hướng đến trang lịch sử Pomodoro với HTMX
+        return redirect('advanced_learning:pomodoro_history')
+
     # Trả về JSON response cho AJAX
     return JsonResponse({
         'success': True,
@@ -191,8 +222,25 @@ def pomodoro_end(request):
 @login_required
 def pomodoro_history(request):
     """Hiển thị lịch sử các phiên Pomodoro"""
+    # Lấy tham số từ request
+    format_type = request.GET.get('format', '')
+    subject_id = request.GET.get('subject', '')
+    date_str = request.GET.get('date', '')
+
     # Lấy tất cả các phiên Pomodoro của người dùng, sắp xếp theo thời gian bắt đầu giảm dần
     sessions = PomodoroSession.objects.filter(user=request.user).order_by('-start_time')
+
+    # Áp dụng bộ lọc
+    if subject_id:
+        sessions = sessions.filter(subject_id=subject_id)
+
+    if date_str:
+        try:
+            from datetime import datetime
+            date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+            sessions = sessions.filter(start_time__date=date_obj)
+        except (ValueError, TypeError):
+            pass
 
     # Tính tổng thời gian học tập
     total_minutes = 0
@@ -204,13 +252,60 @@ def pomodoro_history(request):
             total_minutes += duration
             total_pomodoros += session.completed_pomodoros
 
+    # Lấy danh sách các chủ đề cho bộ lọc
+    subjects = Subject.objects.all()
+
+    # Tạo dữ liệu cho biểu đồ
+    from datetime import timedelta
+    import json
+
+    # Lấy 7 ngày gần nhất
+    end_date = timezone.now().date()
+    start_date = end_date - timedelta(days=6)
+
+    # Tạo danh sách các ngày
+    date_range = [start_date + timedelta(days=i) for i in range(7)]
+    date_labels = [date.strftime('%d/%m') for date in date_range]
+
+    # Đếm số phiên và thời gian theo ngày
+    sessions_by_date = {}
+    minutes_by_date = {}
+    for date in date_range:
+        sessions_by_date[date] = 0
+        minutes_by_date[date] = 0
+
+    for session in sessions:
+        if not session.end_time:
+            continue
+
+        session_date = session.start_time.date()
+        if start_date <= session_date <= end_date:
+            if session_date in sessions_by_date:
+                sessions_by_date[session_date] += 1
+                # Tính tổng số phút làm việc
+                minutes_by_date[session_date] += session.work_duration * session.completed_pomodoros
+
+    # Chuyển đổi thành danh sách cho biểu đồ
+    chart_data = [sessions_by_date[date] for date in date_range]
+    chart_minutes = [minutes_by_date[date] for date in date_range]
+
     context = {
         'sessions': sessions,
+        'subjects': subjects,
+        'selected_subject': subject_id,
+        'selected_date': date_str,
         'total_minutes': total_minutes,
         'total_hours': total_minutes // 60,
         'remaining_minutes': total_minutes % 60,
-        'total_pomodoros': total_pomodoros
+        'total_pomodoros': total_pomodoros,
+        'chart_labels': json.dumps(date_labels),
+        'chart_data': json.dumps(chart_data),
+        'chart_minutes': json.dumps(chart_minutes),
     }
+
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'advanced_learning/pomodoro/history_partial.html', context)
 
     return render(request, 'advanced_learning/pomodoro/history.html', context)
 
@@ -221,6 +316,8 @@ def cornell_note_list(request):
     # Tìm kiếm và lọc
     search_query = request.GET.get('search', '')
     subject_id = request.GET.get('subject', '')
+    format_type = request.GET.get('format', '')
+    view_type = request.GET.get('view', 'grid')  # Mặc định là chế độ lưới
 
     notes = CornellNote.objects.filter(user=request.user).order_by('-created_at')
 
@@ -252,7 +349,13 @@ def cornell_note_list(request):
         'search_query': search_query,
         'selected_subject': subject_id,
         'notes_to_review_count': notes_to_review_count,
+        'view': view_type,
+        'now': now,  # Thêm thời gian hiện tại để so sánh với next_review_date
     }
+
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'advanced_learning/cornell_notes/list_partial.html', context)
 
     return render(request, 'advanced_learning/cornell_notes/list.html', context)
 
@@ -282,10 +385,19 @@ def cornell_note_create(request):
 def cornell_note_detail(request, note_id):
     """Chi tiết ghi chú Cornell"""
     note = get_object_or_404(CornellNote, id=note_id, user=request.user)
+    format_type = request.GET.get('format', '')
+
+    # Lấy thời gian hiện tại để so sánh với next_review_date
+    now = timezone.now()
 
     context = {
         'note': note,
+        'now': now,
     }
+
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'advanced_learning/cornell_notes/detail_partial.html', context)
 
     return render(request, 'advanced_learning/cornell_notes/detail.html', context)
 
@@ -317,6 +429,58 @@ def cornell_note_delete(request, note_id):
     """Xóa ghi chú Cornell"""
     note = get_object_or_404(CornellNote, id=note_id, user=request.user)
 
+    # Xử lý HTMX DELETE request
+    if request.method == 'DELETE' or (request.method == 'POST' and request.htmx):
+        note.delete()
+        messages.success(request, 'Ghi chú Cornell đã được xóa thành công!')
+
+        # Nếu là request HTMX, trả về danh sách partial
+        if request.htmx:
+            # Lấy các tham số tìm kiếm và lọc
+            search_query = request.GET.get('search', '')
+            subject_id = request.GET.get('subject', '')
+            view_type = request.GET.get('view', 'grid')
+
+            # Lấy danh sách ghi chú mới
+            notes = CornellNote.objects.filter(user=request.user).order_by('-created_at')
+
+            # Áp dụng bộ lọc
+            if search_query:
+                notes = notes.filter(
+                    Q(title__icontains=search_query) |
+                    Q(main_notes__icontains=search_query) |
+                    Q(cue_column__icontains=search_query) |
+                    Q(summary__icontains=search_query)
+                )
+
+            if subject_id:
+                notes = notes.filter(subject_id=subject_id)
+
+            # Lấy danh sách các chủ đề cho bộ lọc
+            subjects = Subject.objects.all()
+
+            # Đếm số ghi chú cần ôn tập
+            now = timezone.now()
+            notes_to_review_count = CornellNote.objects.filter(
+                user=request.user,
+                next_review_date__lte=now
+            ).count()
+
+            context = {
+                'notes': notes,
+                'subjects': subjects,
+                'search_query': search_query,
+                'selected_subject': subject_id,
+                'notes_to_review_count': notes_to_review_count,
+                'view': view_type,
+                'now': now,
+            }
+
+            return render(request, 'advanced_learning/cornell_notes/list_partial.html', context)
+
+        return redirect('advanced_learning:cornell_note_list')
+
+    # Xử lý POST request bình thường
     if request.method == 'POST':
         note.delete()
         messages.success(request, 'Ghi chú Cornell đã được xóa thành công!')
@@ -557,6 +721,8 @@ def mind_map_list(request):
     # Tìm kiếm và lọc
     search_query = request.GET.get('search', '')
     subject_id = request.GET.get('subject', '')
+    format_type = request.GET.get('format', '')
+    view_type = request.GET.get('view', 'grid')  # Mặc định là chế độ lưới
 
     mind_maps = MindMap.objects.filter(user=request.user).order_by('-created_at')
 
@@ -578,7 +744,12 @@ def mind_map_list(request):
         'subjects': subjects,
         'search_query': search_query,
         'selected_subject': subject_id,
+        'view': view_type,
     }
+
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'advanced_learning/mind_maps/list_partial.html', context)
 
     return render(request, 'advanced_learning/mind_maps/list.html', context)
 
@@ -608,10 +779,33 @@ def mind_map_create(request):
 def mind_map_detail(request, map_id):
     """Chi tiết sơ đồ tư duy"""
     mind_map = get_object_or_404(MindMap, id=map_id, user=request.user)
+    format_type = request.GET.get('format', '')
+
+    # Đếm số nút trong sơ đồ tư duy
+    node_count = 0
+    if mind_map.map_data:
+        # Hàm đệ quy đếm số nút
+        def count_nodes(node):
+            count = 1  # Đếm nút hiện tại
+            if 'children' in node:
+                for child in node['children']:
+                    count += count_nodes(child)
+            return count
+
+        # Đếm từ nút gốc
+        try:
+            node_count = count_nodes(mind_map.map_data)
+        except Exception:
+            node_count = 1
 
     context = {
         'mind_map': mind_map,
+        'node_count': node_count,
     }
+
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'advanced_learning/mind_maps/detail_partial.html', context)
 
     return render(request, 'advanced_learning/mind_maps/detail.html', context)
 
@@ -643,6 +837,47 @@ def mind_map_delete(request, map_id):
     """Xóa sơ đồ tư duy"""
     mind_map = get_object_or_404(MindMap, id=map_id, user=request.user)
 
+    # Xử lý HTMX DELETE request
+    if request.method == 'DELETE' or (request.method == 'POST' and request.htmx):
+        mind_map.delete()
+        messages.success(request, 'Sơ đồ tư duy đã được xóa thành công!')
+
+        # Nếu là request HTMX, trả về danh sách partial
+        if request.htmx:
+            # Lấy các tham số tìm kiếm và lọc
+            search_query = request.GET.get('search', '')
+            subject_id = request.GET.get('subject', '')
+            view_type = request.GET.get('view', 'grid')
+
+            # Lấy danh sách sơ đồ tư duy mới
+            mind_maps = MindMap.objects.filter(user=request.user).order_by('-created_at')
+
+            # Áp dụng bộ lọc
+            if search_query:
+                mind_maps = mind_maps.filter(
+                    Q(title__icontains=search_query) |
+                    Q(central_topic__icontains=search_query)
+                )
+
+            if subject_id:
+                mind_maps = mind_maps.filter(subject_id=subject_id)
+
+            # Lấy danh sách các chủ đề cho bộ lọc
+            subjects = Subject.objects.all()
+
+            context = {
+                'mind_maps': mind_maps,
+                'subjects': subjects,
+                'search_query': search_query,
+                'selected_subject': subject_id,
+                'view': view_type,
+            }
+
+            return render(request, 'advanced_learning/mind_maps/list_partial.html', context)
+
+        return redirect('advanced_learning:mind_map_list')
+
+    # Xử lý POST request bình thường
     if request.method == 'POST':
         mind_map.delete()
         messages.success(request, 'Sơ đồ tư duy đã được xóa thành công!')
@@ -959,6 +1194,8 @@ def feynman_note_list(request):
     # Tìm kiếm và lọc
     search_query = request.GET.get('search', '')
     subject_id = request.GET.get('subject', '')
+    format_type = request.GET.get('format', '')
+    view_type = request.GET.get('view', 'grid')  # Mặc định là chế độ lưới
 
     notes = FeynmanNote.objects.filter(user=request.user).order_by('-created_at')
 
@@ -991,7 +1228,13 @@ def feynman_note_list(request):
         'search_query': search_query,
         'selected_subject': subject_id,
         'notes_to_review_count': notes_to_review_count,
+        'view': view_type,
+        'now': now,
     }
+
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'advanced_learning/feynman_notes/list_partial.html', context)
 
     return render(request, 'advanced_learning/feynman_notes/list.html', context)
 
@@ -1021,10 +1264,23 @@ def feynman_note_create(request):
 def feynman_note_detail(request, note_id):
     """Chi tiết ghi chú Feynman"""
     note = get_object_or_404(FeynmanNote, id=note_id, user=request.user)
+    format_type = request.GET.get('format', '')
+
+    # Lấy thời gian hiện tại để so sánh với next_review_date
+    now = timezone.now()
+
+    # Kiểm tra xem ghi chú có cần ôn tập không
+    needs_review = note.next_review_date and note.next_review_date <= now
 
     context = {
         'note': note,
+        'now': now,
+        'needs_review': needs_review,
     }
+
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'advanced_learning/feynman_notes/detail_partial.html', context)
 
     return render(request, 'advanced_learning/feynman_notes/detail.html', context)
 
@@ -1056,6 +1312,59 @@ def feynman_note_delete(request, note_id):
     """Xóa ghi chú Feynman"""
     note = get_object_or_404(FeynmanNote, id=note_id, user=request.user)
 
+    # Xử lý HTMX DELETE request
+    if request.method == 'DELETE' or (request.method == 'POST' and request.htmx):
+        note.delete()
+        messages.success(request, 'Ghi chú Feynman đã được xóa thành công!')
+
+        # Nếu là request HTMX, trả về danh sách partial
+        if request.htmx:
+            # Lấy các tham số tìm kiếm và lọc
+            search_query = request.GET.get('search', '')
+            subject_id = request.GET.get('subject', '')
+            view_type = request.GET.get('view', 'grid')
+
+            # Lấy danh sách ghi chú mới
+            notes = FeynmanNote.objects.filter(user=request.user).order_by('-created_at')
+
+            # Áp dụng bộ lọc
+            if search_query:
+                notes = notes.filter(
+                    Q(title__icontains=search_query) |
+                    Q(concept__icontains=search_query) |
+                    Q(explanation__icontains=search_query) |
+                    Q(gaps_identified__icontains=search_query) |
+                    Q(refined_explanation__icontains=search_query)
+                )
+
+            if subject_id:
+                notes = notes.filter(subject_id=subject_id)
+
+            # Lấy danh sách các chủ đề cho bộ lọc
+            subjects = Subject.objects.all()
+
+            # Đếm số ghi chú cần ôn tập
+            now = timezone.now()
+            notes_to_review_count = FeynmanNote.objects.filter(
+                user=request.user,
+                next_review_date__lte=now
+            ).count()
+
+            context = {
+                'notes': notes,
+                'subjects': subjects,
+                'search_query': search_query,
+                'selected_subject': subject_id,
+                'notes_to_review_count': notes_to_review_count,
+                'view': view_type,
+                'now': now,
+            }
+
+            return render(request, 'advanced_learning/feynman_notes/list_partial.html', context)
+
+        return redirect('advanced_learning:feynman_note_list')
+
+    # Xử lý POST request bình thường
     if request.method == 'POST':
         note.delete()
         messages.success(request, 'Ghi chú Feynman đã được xóa thành công!')
@@ -1414,6 +1723,7 @@ def project_list(request):
     search_query = request.GET.get('search', '')
     subject_id = request.GET.get('subject', '')
     difficulty = request.GET.get('difficulty', '')
+    format_type = request.GET.get('format', '')
 
     # Lấy danh sách dự án
     projects = Project.objects.all().order_by('title')
@@ -1452,6 +1762,10 @@ def project_list(request):
         'difficulty_levels': Project.objects.values_list('difficulty_level', flat=True).distinct(),
     }
 
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'advanced_learning/projects/list_partial.html', context)
+
     return render(request, 'advanced_learning/projects/list.html', context)
 
 @login_required
@@ -1459,6 +1773,7 @@ def project_detail(request, project_id):
     """Chi tiết dự án học tập"""
     project = get_object_or_404(Project, id=project_id)
     tasks = project.tasks.all().order_by('order')
+    format_type = request.GET.get('format', '')
 
     # Kiểm tra xem người dùng đã tham gia dự án này chưa
     user_project = UserProject.objects.filter(user=request.user, project=project).first()
@@ -1468,6 +1783,10 @@ def project_detail(request, project_id):
         'tasks': tasks,
         'user_project': user_project,
     }
+
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'advanced_learning/projects/detail_partial.html', context)
 
     return render(request, 'advanced_learning/projects/detail.html', context)
 
@@ -1614,6 +1933,7 @@ def update_project_progress(request, project_id):
 def my_projects(request):
     """Hiển thị danh sách dự án của người dùng"""
     status_filter = request.GET.get('status', '')
+    format_type = request.GET.get('format', '')
 
     # Lấy danh sách dự án của người dùng
     user_projects = UserProject.objects.filter(user=request.user).order_by('-started_at')
@@ -1634,6 +1954,10 @@ def my_projects(request):
         'completed_projects': completed_projects,
         'highest_progress': highest_progress,
     }
+
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'advanced_learning/projects/my_projects_partial.html', context)
 
     return render(request, 'advanced_learning/projects/my_projects.html', context)
 
@@ -1845,6 +2169,7 @@ def exercise_list(request):
     search_query = request.GET.get('search', '')
     subject_id = request.GET.get('subject', '')
     exercise_type = request.GET.get('type', '')
+    format_type = request.GET.get('format', '')
 
     # Lấy danh sách bài tập
     exercises = InteractiveExercise.objects.all().order_by('-created_at')
@@ -1877,12 +2202,17 @@ def exercise_list(request):
         'selected_type': exercise_type,
     }
 
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'advanced_learning/exercises/list_partial.html', context)
+
     return render(request, 'advanced_learning/exercises/list.html', context)
 
 @login_required
 def exercise_detail(request, exercise_id):
     """Chi tiết bài tập thực hành tương tác"""
     exercise = get_object_or_404(InteractiveExercise, id=exercise_id)
+    format_type = request.GET.get('format', '')
 
     # Kiểm tra xem người dùng đã hoàn thành bài tập này chưa
     user_submission = None
@@ -1897,6 +2227,10 @@ def exercise_detail(request, exercise_id):
         'user_submission': user_submission,
         'show_solution': show_solution,
     }
+
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'advanced_learning/exercises/detail_partial.html', context)
 
     return render(request, 'advanced_learning/exercises/detail.html', context)
 
@@ -2207,6 +2541,7 @@ def my_exercise_submissions(request):
     # Tìm kiếm và lọc
     exercise_type = request.GET.get('type', '')
     status = request.GET.get('status', '')
+    format_type = request.GET.get('format', '')
 
     # Lấy các bài nộp của người dùng
     submissions = ExerciseSubmission.objects.filter(user=request.user).order_by('-created_at')
@@ -2231,12 +2566,26 @@ def my_exercise_submissions(request):
     except EmptyPage:
         submissions_page = paginator.page(paginator.num_pages)
 
+    # Tính toán thống kê
+    total_submissions = submissions.count()
+    correct_submissions = submissions.filter(is_correct=True).count()
+    total_points = submissions.filter(is_correct=True).aggregate(Sum('points'))['points__sum'] or 0
+    completion_rate = int(correct_submissions / total_submissions * 100) if total_submissions > 0 else 0
+
     context = {
         'submissions': submissions_page,
         'exercise_types': InteractiveExercise.EXERCISE_TYPES,
         'selected_type': exercise_type,
-        'selected_status': status
+        'selected_status': status,
+        'total_submissions': total_submissions,
+        'correct_submissions': correct_submissions,
+        'total_points': total_points,
+        'completion_rate': completion_rate
     }
+
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'advanced_learning/exercises/my_submissions_partial.html', context)
 
     return render(request, 'advanced_learning/exercises/my_submissions.html', context)
 
@@ -2459,6 +2808,9 @@ def competition_list(request):
     difficulty = request.GET.get('difficulty', '')
     competition_type = request.GET.get('type', '')
     lesson_id = request.GET.get('lesson', '')
+    format_type = request.GET.get('format', '')
+    view = request.GET.get('view', 'list')
+    tab = request.GET.get('tab', '')
 
     # Lấy danh sách cuộc thi
     competitions = CompetitionMode.objects.all().order_by('-start_time')
@@ -2534,7 +2886,12 @@ def competition_list(request):
         'has_subscription': has_subscription,
         'difficulty_levels': CompetitionMode.DIFFICULTY_LEVELS,
         'competition_types': CompetitionMode.COMPETITION_TYPES,
+        'view': view,
     }
+
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'advanced_learning/competitions/list_partial.html', context)
 
     return render(request, 'advanced_learning/competitions/list.html', context)
 
@@ -2542,78 +2899,68 @@ def competition_list(request):
 def competition_detail(request, competition_id):
     """Chi tiết cuộc thi đấu"""
     competition = get_object_or_404(CompetitionMode, id=competition_id)
+    format_type = request.GET.get('format', '')
 
     # Kiểm tra xem người dùng đã tham gia cuộc thi này chưa
-    user_participation = CompetitionParticipant.objects.filter(user=request.user, competition=competition).first()
+    user_participant = CompetitionParticipant.objects.filter(user=request.user, competition=competition).first()
 
-    # Lấy trạng thái hiện tại của cuộc thi
-    status = competition.get_status()
+    # Lấy danh sách câu hỏi
+    questions = CompetitionQuestion.objects.filter(competition=competition).order_by('order')
 
-    # Kiểm tra xem có thể tham gia cuộc thi không
-    can_join = competition.can_join()
+    # Lấy danh sách người tham gia
+    participants = CompetitionParticipant.objects.filter(competition=competition).order_by('-score')
 
     # Lấy số người tham gia
-    participant_count = competition.get_participant_count()
+    participant_count = participants.count()
 
-    # Lấy bảng xếp hạng
-    leaderboard = CompetitionParticipant.objects.filter(competition=competition, score__gt=0).order_by('-score')[:10]
-
-    # Lấy danh sách các đội tham gia (nếu là cuộc thi theo đội)
-    teams = None
-    if competition.competition_type == 'team':
-        teams = CompetitionTeam.objects.filter(competition=competition).order_by('-score')[:10]
-
-    # Kiểm tra xem người dùng có đăng ký nhận thông báo cho cuộc thi này không
-    has_subscription = CompetitionSubscription.objects.filter(
-        user=request.user,
-        notification_type='specific',
-        competition=competition
-    ).exists()
-
-    # Lấy danh sách các cuộc thi liên quan
-    related_competitions = CompetitionMode.objects.filter(
-        Q(subject=competition.subject) | Q(lesson=competition.lesson),
-        ~Q(id=competition.id),
-        is_active=True
-    ).order_by('-start_time')[:5]
-
-    # Lấy danh sách các thành tích liên quan đến cuộc thi
-    achievements = CompetitionAchievement.objects.filter(competition=competition)
-
-    # Lấy danh sách các cuộc thi trực tiếp đang diễn ra
-    live_competitions = LiveCompetition.objects.filter(
-        competition=competition,
-        status='active'
-    ).order_by('-start_time')[:5]
-
-    # Kiểm tra xem người dùng có phải là trưởng nhóm không
-    is_team_leader = CompetitionTeam.objects.filter(
-        competition=competition,
-        leader=request.user
-    ).exists()
-
-    # Lấy nhóm của người dùng (nếu có)
-    user_team = None
-    if user_participation and user_participation.team:
-        user_team = user_participation.team
+    # Lấy trạng thái hiện tại của cuộc thi
+    now = timezone.now()
+    is_active = competition.is_active and competition.start_time <= now and competition.end_time >= now
 
     context = {
         'competition': competition,
-        'user_participation': user_participation,
-        'status': status,
-        'can_join': can_join,
-        'participant_count': participant_count,
-        'leaderboard': leaderboard,
-        'teams': teams,
-        'has_subscription': has_subscription,
-        'related_competitions': related_competitions,
-        'achievements': achievements,
-        'live_competitions': live_competitions,
-        'is_team_leader': is_team_leader,
-        'user_team': user_team,
+        'user_participant': user_participant,
+        'questions': questions,
+        'participants': participants,
     }
 
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'advanced_learning/competitions/detail_partial.html', context)
+
     return render(request, 'advanced_learning/competitions/detail.html', context)
+
+@login_required
+def competition_leaderboard(request, competition_id):
+    """Bảng xếp hạng cuộc thi"""
+    competition = get_object_or_404(CompetitionMode, id=competition_id)
+    format_type = request.GET.get('format', '')
+
+    # Lấy bảng xếp hạng
+    participants = CompetitionParticipant.objects.filter(competition=competition).order_by('-score', 'end_time')
+
+    context = {
+        'competition': competition,
+        'participants': participants,
+    }
+
+    return render(request, 'advanced_learning/competitions/leaderboard_partial.html', context)
+
+@login_required
+def competition_participants(request, competition_id):
+    """Danh sách người tham gia cuộc thi"""
+    competition = get_object_or_404(CompetitionMode, id=competition_id)
+    format_type = request.GET.get('format', '')
+
+    # Lấy danh sách người tham gia
+    participants = CompetitionParticipant.objects.filter(competition=competition).order_by('-joined_at')
+
+    context = {
+        'competition': competition,
+        'participants': participants,
+    }
+
+    return render(request, 'advanced_learning/competitions/participants_partial.html', context)
 
 @login_required
 def join_competition(request, competition_id):
@@ -2798,11 +3145,44 @@ def create_feynman_from_competition(request, competition_id):
     return render(request, 'advanced_learning/feynman_notes/form.html', context)
 
 @login_required
+def competition_leaderboard(request, competition_id):
+    """Bảng xếp hạng cuộc thi"""
+    competition = get_object_or_404(CompetitionMode, id=competition_id)
+    format_type = request.GET.get('format', '')
+
+    # Lấy bảng xếp hạng
+    participants = CompetitionParticipant.objects.filter(competition=competition).order_by('-score', 'end_time')
+
+    context = {
+        'competition': competition,
+        'participants': participants,
+    }
+
+    return render(request, 'advanced_learning/competitions/leaderboard_partial.html', context)
+
+@login_required
+def competition_participants(request, competition_id):
+    """Danh sách người tham gia cuộc thi"""
+    competition = get_object_or_404(CompetitionMode, id=competition_id)
+    format_type = request.GET.get('format', '')
+
+    # Lấy danh sách người tham gia
+    participants = CompetitionParticipant.objects.filter(competition=competition).order_by('-joined_at')
+
+    context = {
+        'competition': competition,
+        'participants': participants,
+    }
+
+    return render(request, 'advanced_learning/competitions/participants_partial.html', context)
+
+@login_required
 def my_competitions(request):
     """Danh sách các cuộc thi đã tham gia"""
     # Tìm kiếm và lọc
     status = request.GET.get('status', '')
     competition_type = request.GET.get('type', '')
+    format_type = request.GET.get('format', '')
 
     # Lấy danh sách các cuộc thi đã tham gia
     participations = CompetitionParticipant.objects.filter(user=request.user).order_by('-start_time')
@@ -2850,6 +3230,10 @@ def my_competitions(request):
         'selected_type': competition_type,
         'competition_types': CompetitionMode.COMPETITION_TYPES,
     }
+
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'advanced_learning/competitions/my_competitions_partial.html', context)
 
     return render(request, 'advanced_learning/competitions/my_competitions.html', context)
 

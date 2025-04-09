@@ -1,0 +1,56 @@
+{% if active_pathways %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Tên Lộ Trình</th>
+                    <th>Chủ Đề</th>
+                    <th>Độ Khó</th>
+                    <th>Tiến Độ</th>
+                    <th>Thao Tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pathway in active_pathways %}
+                <tr>
+                    <td>{{ pathway.title }}</td>
+                    <td>{{ pathway.subject.name }}</td>
+                    <td>{{ pathway.get_difficulty_level_display }}</td>
+                    <td>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: {{ pathway.get_progress_percentage }}%;" 
+                                 aria-valuenow="{{ pathway.get_progress_percentage }}" 
+                                 aria-valuemin="0" aria-valuemax="100">
+                                {{ pathway.get_progress_percentage }}%
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <!-- Sử dụng HTMX để xem chi tiết nhanh -->
+                        <button class="btn btn-sm btn-info me-1"
+                                hx-get="{% url 'learning_pathway_detail' pathway_id=pathway.id %}?format=partial"
+                                hx-target="#pathway-detail-modal-body"
+                                hx-trigger="click"
+                                data-bs-toggle="modal"
+                                data-bs-target="#pathway-detail-modal">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <a href="{% url 'learning_pathway_detail' pathway_id=pathway.id %}" class="btn btn-sm btn-primary">
+                            Chi Tiết
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="text-end mt-3">
+        <a href="{% url 'learning_pathway_list' %}" class="btn btn-outline-success">Xem Tất Cả</a>
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        Bạn chưa có lộ trình học tập nào đang hoạt động.
+        <a href="{% url 'learning_pathway_create' %}" class="alert-link">Tạo lộ trình mới</a>
+    </div>
+{% endif %}

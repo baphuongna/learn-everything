@@ -1,0 +1,437 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Bảng Điều Khiển Cá Nhân Hóa{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Bảng Điều Khiển Cá Nhân Hóa</h4>
+                </div>
+                <div class="card-body">
+                    <p class="lead">Chào mừng đến với trải nghiệm học tập được cá nhân hóa của bạn!</p>
+                    <p>Tại đây, bạn có thể quản lý lộ trình học tập, tùy chỉnh giao diện, và nhận các đề xuất nội dung phù hợp với sở thích và khả năng của bạn.</p>
+
+                    <div class="row mt-4">
+                        <div class="col-md-4">
+                            <div class="card mb-3">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-route fa-3x text-primary mb-3"></i>
+                                    <h5>Lộ Trình Học Tập</h5>
+                                    <p>Tạo và quản lý lộ trình học tập cá nhân hóa</p>
+                                    <a href="{% url 'learning_pathway_list' %}" class="btn btn-primary">Xem Lộ Trình</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card mb-3">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-lightbulb fa-3x text-warning mb-3"></i>
+                                    <h5>Đề Xuất Nội Dung</h5>
+                                    <p>Khám phá nội dung học tập phù hợp với bạn</p>
+                                    <a href="{% url 'content_recommendation_list' %}" class="btn btn-warning">Xem Đề Xuất</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card mb-3">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-cogs fa-3x text-info mb-3"></i>
+                                    <h5>Tùy Chỉnh Giao Diện</h5>
+                                    <p>Điều chỉnh giao diện theo sở thích của bạn</p>
+                                    <a href="{% url 'ui_preference' %}" class="btn btn-info">Tùy Chỉnh</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lộ trình học tập đang hoạt động (Sử dụng HTMX và Alpine.js) -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Lộ Trình Học Tập Đang Hoạt Động</h5>
+                    <div>
+                        <!-- Nút làm mới dữ liệu với HTMX -->
+                        <button class="btn btn-sm btn-light"
+                                hx-get="{% url 'learning_pathway_list' %}?format=partial"
+                                hx-target="#active-pathways-container"
+                                hx-trigger="click"
+                                hx-indicator="#pathway-refresh-indicator">
+                            <span id="pathway-refresh-indicator" class="htmx-indicator spinner-border spinner-border-sm me-1" role="status"></span>
+                            <i class="fas fa-sync-alt"></i> Làm mới
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Container cho nội dung HTMX -->
+                <div id="active-pathways-container" class="card-body">
+                    <!-- Sử dụng Alpine.js để quản lý trạng thái và tương tác -->
+                    <div x-data="{
+                        showFilters: false,
+                        searchQuery: '',
+                        selectedDifficulty: '',
+                        filteredPathways: {{ active_pathways|safe }},
+
+                        // Lọc lộ trình theo tìm kiếm và độ khó
+                        filterPathways() {
+                            return this.pathways.filter(p => {
+                                const matchesSearch = this.searchQuery === '' ||
+                                    p.title.toLowerCase().includes(this.searchQuery.toLowerCase());
+                                const matchesDifficulty = this.selectedDifficulty === '' ||
+                                    p.difficulty_level === this.selectedDifficulty;
+                                return matchesSearch && matchesDifficulty;
+                            });
+                        }
+                    }">
+                        <!-- Bộ lọc với Alpine.js -->
+                        <div class="mb-3">
+                            <button @click="showFilters = !showFilters" class="btn btn-sm btn-outline-secondary mb-2">
+                                <i class="fas" :class="showFilters ? 'fa-chevron-up' : 'fa-filter'"></i>
+                                <span x-text="showFilters ? 'Bỏ lọc' : 'Bộ lọc'"></span>
+                            </button>
+
+                            <div x-show="showFilters" x-transition class="card card-body bg-light mb-3">
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <input type="text" class="form-control" placeholder="Tìm kiếm lộ trình..."
+                                               x-model="searchQuery">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <select class="form-select" x-model="selectedDifficulty">
+                                            <option value="">Tất cả độ khó</option>
+                                            <option value="beginner">Người mới bắt đầu</option>
+                                            <option value="intermediate">Trung cấp</option>
+                                            <option value="advanced">Nâng cao</option>
+                                            <option value="expert">Chuyên gia</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if active_pathways %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Tên Lộ Trình</th>
+                                            <th>Chủ Đề</th>
+                                            <th>Độ Khó</th>
+                                            <th>Tiến Độ</th>
+                                            <th>Thao Tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for pathway in active_pathways %}
+                                        <tr>
+                                            <td>{{ pathway.title }}</td>
+                                            <td>{{ pathway.subject.name }}</td>
+                                            <td>{{ pathway.get_difficulty_level_display }}</td>
+                                            <td>
+                                                <div class="progress">
+                                                    <div class="progress-bar bg-success" role="progressbar"
+                                                         style="width: {{ pathway.get_progress_percentage }}%;"
+                                                         aria-valuenow="{{ pathway.get_progress_percentage }}"
+                                                         aria-valuemin="0" aria-valuemax="100">
+                                                        {{ pathway.get_progress_percentage }}%
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <!-- Sử dụng HTMX để xem chi tiết nhanh -->
+                                                <button class="btn btn-sm btn-info me-1"
+                                                        hx-get="{% url 'learning_pathway_detail' pathway_id=pathway.id %}?format=partial"
+                                                        hx-target="#pathway-detail-modal-body"
+                                                        hx-trigger="click"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#pathway-detail-modal">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <a href="{% url 'learning_pathway_detail' pathway_id=pathway.id %}" class="btn btn-sm btn-primary">
+                                                    Chi Tiết
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="text-end mt-3">
+                                <a href="{% url 'learning_pathway_list' %}" class="btn btn-outline-success">Xem Tất Cả</a>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info">
+                                Bạn chưa có lộ trình học tập nào đang hoạt động.
+                                <a href="{% url 'learning_pathway_create' %}" class="alert-link">Tạo lộ trình mới</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal xem chi tiết lộ trình (HTMX sẽ điền nội dung) -->
+    <div class="modal fade" id="pathway-detail-modal" tabindex="-1" aria-labelledby="pathway-detail-modal-label" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="pathway-detail-modal-label">Chi Tiết Lộ Trình</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="pathway-detail-modal-body">
+                    <!-- Nội dung sẽ được HTMX điền vào đây -->
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Đang tải...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Đề xuất nội dung mới -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">Đề Xuất Nội Dung Mới</h5>
+                </div>
+                <div class="card-body">
+                    {% if new_recommendations %}
+                        <div class="list-group">
+                            {% for recommendation in new_recommendations %}
+                                <a href="{% url 'content_recommendation_detail' recommendation_id=recommendation.id %}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ recommendation.title }}</h6>
+                                        <small>{{ recommendation.get_recommendation_type_display }}</small>
+                                    </div>
+                                    <p class="mb-1 text-truncate">{{ recommendation.description }}</p>
+                                    <small>Độ liên quan: {{ recommendation.relevance_score|floatformat:2 }}</small>
+                                </a>
+                            {% endfor %}
+                        </div>
+                        <div class="text-end mt-3">
+                            <a href="{% url 'content_recommendation_list' %}" class="btn btn-outline-warning">Xem Tất Cả</a>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            Không có đề xuất nội dung mới nào.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Nhắc nhở học tập -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Nhắc Nhở Học Tập</h5>
+                </div>
+                <div class="card-body">
+                    {% if active_reminders %}
+                        <div class="list-group">
+                            {% for reminder in active_reminders %}
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ reminder.title }}</h6>
+                                        <small>{{ reminder.get_reminder_type_display }}</small>
+                                    </div>
+                                    <p class="mb-1">{{ reminder.message }}</p>
+                                    <small>Thời gian: {{ reminder.reminder_time|time:"H:i" }}</small>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <div class="text-end mt-3">
+                            <a href="{% url 'study_reminder_list' %}" class="btn btn-outline-info">Quản Lý Nhắc Nhở</a>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            Bạn chưa có nhắc nhở học tập nào.
+                            <a href="{% url 'study_reminder_create' %}" class="alert-link">Tạo nhắc nhở mới</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Điểm mạnh và điểm yếu -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Điểm Mạnh Hàng Đầu</h5>
+                </div>
+                <div class="card-body">
+                    {% if top_strengths %}
+                        <div class="list-group">
+                            {% for strength in top_strengths %}
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ strength.subject.name }}</h6>
+                                        <span class="badge bg-success">{{ strength.proficiency_score|floatformat:2 }}</span>
+                                    </div>
+                                    {% if strength.topic %}
+                                        <p class="mb-1">Chủ đề: {{ strength.topic.name }}</p>
+                                    {% endif %}
+                                    {% if strength.notes %}
+                                        <small>{{ strength.notes }}</small>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            Chưa có đánh giá điểm mạnh nào.
+                            <a href="{% url 'strength_weakness_create' %}" class="alert-link">Thêm đánh giá</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Điểm Yếu Cần Cải Thiện</h5>
+                </div>
+                <div class="card-body">
+                    {% if top_weaknesses %}
+                        <div class="list-group">
+                            {% for weakness in top_weaknesses %}
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ weakness.subject.name }}</h6>
+                                        <span class="badge bg-danger">{{ weakness.proficiency_score|floatformat:2 }}</span>
+                                    </div>
+                                    {% if weakness.topic %}
+                                        <p class="mb-1">Chủ đề: {{ weakness.topic.name }}</p>
+                                    {% endif %}
+                                    {% if weakness.notes %}
+                                        <small>{{ weakness.notes }}</small>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            Chưa có đánh giá điểm yếu nào.
+                            <a href="{% url 'strength_weakness_create' %}" class="alert-link">Thêm đánh giá</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sở thích học tập và tùy chỉnh giao diện -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Sở Thích Học Tập</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Phong cách học tập
+                            <span class="badge bg-primary rounded-pill">{{ learning_preference.get_preferred_learning_style_display }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Độ khó ưa thích
+                            <span class="badge bg-primary rounded-pill">{{ learning_preference.get_preferred_difficulty_display }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Thời gian học tập ưa thích
+                            <span class="badge bg-primary rounded-pill">{{ learning_preference.preferred_study_time|time:"H:i" }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Thời lượng phiên học ưa thích
+                            <span class="badge bg-primary rounded-pill">{{ learning_preference.preferred_session_duration }} phút</span>
+                        </li>
+                    </ul>
+                    <div class="text-end mt-3">
+                        <a href="{% url 'learning_preference' %}" class="btn btn-outline-primary">Cập Nhật Sở Thích</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Tùy Chỉnh Giao Diện</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Chủ đề màu sắc
+                            <span class="badge bg-secondary rounded-pill">{{ ui_preference.get_color_theme_display }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Cỡ chữ
+                            <span class="badge bg-secondary rounded-pill">{{ ui_preference.get_font_size_display }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Hiệu ứng chuyển động
+                            <span class="badge bg-secondary rounded-pill">{% if ui_preference.enable_animations %}Bật{% else %}Tắt{% endif %}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Thanh bên
+                            <span class="badge bg-secondary rounded-pill">{% if ui_preference.sidebar_collapsed %}Thu gọn{% else %}Mở rộng{% endif %}</span>
+                        </li>
+                    </ul>
+                    <div class="text-end mt-3">
+                        <a href="{% url 'ui_preference' %}" class="btn btn-outline-secondary">Cập Nhật Giao Diện</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Áp dụng tùy chỉnh giao diện của người dùng
+    document.addEventListener('DOMContentLoaded', function() {
+        // Áp dụng chủ đề màu sắc
+        const colorTheme = "{{ ui_preference.color_theme }}";
+        if (colorTheme) {
+            document.body.setAttribute('data-theme', colorTheme);
+        }
+
+        // Áp dụng cỡ chữ
+        const fontSize = "{{ ui_preference.font_size }}";
+        if (fontSize) {
+            document.body.classList.add('font-size-' + fontSize);
+        }
+
+        // Áp dụng hiệu ứng chuyển động
+        const enableAnimations = {{ ui_preference.enable_animations|yesno:"true,false" }};
+        if (!enableAnimations) {
+            document.body.classList.add('no-animations');
+        }
+
+        // Áp dụng trạng thái thanh bên
+        const sidebarCollapsed = {{ ui_preference.sidebar_collapsed|yesno:"true,false" }};
+        if (sidebarCollapsed) {
+            document.body.classList.add('sidebar-collapsed');
+        }
+    });
+</script>
+{% endblock %}

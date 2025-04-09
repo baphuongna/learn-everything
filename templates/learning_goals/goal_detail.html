@@ -38,338 +38,8 @@
         </div>
     </div>
 
-    <div class="row">
-        <!-- Thông tin mục tiêu -->
-        <div class="col-md-8">
-            <div class="card mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Thông Tin Mục Tiêu</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <strong>Loại mục tiêu:</strong>
-                        </div>
-                        <div class="col-md-8">
-                            {{ goal.get_goal_type_display }}
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <strong>Danh mục:</strong>
-                        </div>
-                        <div class="col-md-8">
-                            {{ goal.get_category_display }}
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <strong>Thời gian:</strong>
-                        </div>
-                        <div class="col-md-8">
-                            {{ goal.start_date|date:"d/m/Y" }} - {{ goal.end_date|date:"d/m/Y" }}
-                            {% if goal.is_active %}
-                                <span class="badge bg-info ms-2">Còn {{ goal.days_remaining }} ngày</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <strong>Trạng thái:</strong>
-                        </div>
-                        <div class="col-md-8">
-                            {% if goal.status == 'not_started' %}
-                                <span class="badge bg-secondary">Chưa bắt đầu</span>
-                            {% elif goal.status == 'in_progress' %}
-                                <span class="badge bg-primary">Đang thực hiện</span>
-                            {% elif goal.status == 'completed' %}
-                                <span class="badge bg-success">Đã hoàn thành</span>
-                            {% elif goal.status == 'overdue' %}
-                                <span class="badge bg-danger">Quá hạn</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% if goal.description %}
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <strong>Mô tả:</strong>
-                            </div>
-                            <div class="col-md-8">
-                                {{ goal.description|linebreaks }}
-                            </div>
-                        </div>
-                    {% endif %}
-                    {% if goal.subject or goal.topic or goal.lesson %}
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <strong>Liên kết nội dung:</strong>
-                            </div>
-                            <div class="col-md-8">
-                                {% if goal.subject %}
-                                    <div>Chủ đề: <a href="{% url 'subject_detail' goal.subject.slug %}">{{ goal.subject.name }}</a></div>
-                                {% endif %}
-                                {% if goal.topic %}
-                                    <div>Chủ đề con: {{ goal.topic.name }}</div>
-                                {% endif %}
-                                {% if goal.lesson %}
-                                    <div>Bài học: <a href="{% url 'lesson_detail' goal.subject.slug goal.topic.slug goal.lesson.slug %}">{{ goal.lesson.title }}</a></div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- Tiến độ mục tiêu -->
-            <div class="card mb-4">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">Tiến Độ Mục Tiêu</h5>
-                </div>
-                <div class="card-body">
-                    <div class="progress mb-3" style="height: 25px;">
-                        <div class="progress-bar {% if goal.is_behind_schedule and goal.status != 'completed' %}bg-warning{% else %}bg-success{% endif %}" role="progressbar" style="width: {{ goal.progress_percentage }}%;" aria-valuenow="{{ goal.progress_percentage }}" aria-valuemin="0" aria-valuemax="100">{{ goal.progress_percentage }}%</div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-6 text-center">
-                            <h5>Giá trị hiện tại</h5>
-                            <h2 class="display-5">{{ goal.current_value }}</h2>
-                        </div>
-                        <div class="col-md-6 text-center">
-                            <h5>Giá trị mục tiêu</h5>
-                            <h2 class="display-5">{{ goal.target_value }}</h2>
-                        </div>
-                    </div>
-
-                    {% if goal.is_active %}
-                        <div class="alert {% if goal.is_behind_schedule %}alert-warning{% else %}alert-info{% endif %}">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <strong>Tiến độ dự kiến:</strong> {{ expected_progress }}%
-                                </div>
-                                <div class="col-md-6">
-                                    <strong>Tiến độ hiện tại:</strong> {{ goal.progress_percentage }}%
-                                </div>
-                            </div>
-                            {% if goal.is_behind_schedule %}
-                                <div class="mt-2">
-                                    <i class="fas fa-exclamation-triangle"></i> Bạn đang chậm tiến độ so với kế hoạch.
-                                </div>
-                            {% else %}
-                                <div class="mt-2">
-                                    <i class="fas fa-check-circle"></i> Bạn đang đúng tiến độ hoặc vượt tiến độ.
-                                </div>
-                            {% endif %}
-                        </div>
-                    {% endif %}
-
-                    {% if goal.status != 'completed' and can_update_progress %}
-                        <form method="post" class="mt-4">
-                            {% csrf_token %}
-                            <input type="hidden" name="update_progress" value="1">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="{{ progress_form.value.id_for_label }}" class="form-label">{{ progress_form.value.label }}</label>
-                                        {{ progress_form.value }}
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="{{ progress_form.notes.id_for_label }}" class="form-label">{{ progress_form.notes.label }}</label>
-                                        {{ progress_form.notes }}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="text-end">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i> Cập Nhật Tiến Độ
-                                </button>
-                            </div>
-                        </form>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <!-- Lịch sử tiến độ -->
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0">Lịch Sử Tiến Độ</h5>
-                </div>
-                <div class="card-body">
-                    {% if progress_history %}
-                        <div class="list-group">
-                            {% for progress in progress_history %}
-                                <div class="list-group-item">
-                                    <div class="d-flex w-100 justify-content-between">
-                                        <h6 class="mb-1">{{ progress.date|date:"d/m/Y" }}</h6>
-                                        <span class="badge bg-primary">{{ progress.value }}</span>
-                                    </div>
-                                    {% if progress.notes %}
-                                        <p class="mb-1 small">{{ progress.notes }}</p>
-                                    {% endif %}
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i> Chưa có bản ghi tiến độ nào.
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            {% if collaborators %}
-            <!-- Người cộng tác -->
-            <div class="card mb-4">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0"><i class="fas fa-users"></i> Người Cộng Tác</h5>
-                </div>
-                <div class="card-body">
-                    <div class="list-group">
-                        {% for collaborator in collaborators %}
-                            <div class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <strong>{{ collaborator.user.username }}</strong>
-                                    <span class="badge bg-secondary ms-2">{{ collaborator.get_role_display }}</span>
-                                    <div class="small text-muted">Tham gia: {{ collaborator.joined_at|date:"d/m/Y" }}</div>
-                                </div>
-                                {% if is_owner %}
-                                    <div class="dropdown">
-                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton{{ collaborator.id }}" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="fas fa-ellipsis-v"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton{{ collaborator.id }}">
-                                            <li><a class="dropdown-item" href="#"><i class="fas fa-user-edit"></i> Đổi vai trò</a></li>
-                                            <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-user-times"></i> Xóa</a></li>
-                                        </ul>
-                                    </div>
-                                {% endif %}
-                            </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% if can_invite %}
-                <div class="card-footer">
-                    <button class="btn btn-sm btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInviteForm" aria-expanded="false" aria-controls="collapseInviteForm">
-                        <i class="fas fa-user-plus"></i> Mời người dùng
-                    </button>
-                    <div class="collapse mt-3" id="collapseInviteForm">
-                        <form method="post" action="">
-                            {% csrf_token %}
-                            <input type="hidden" name="send_invitation" value="1">
-                            <div class="row g-3">
-                                <div class="col-md-5">
-                                    <label for="{{ invitation_form.username.id_for_label }}" class="form-label">{{ invitation_form.username.label }}</label>
-                                    {{ invitation_form.username }}
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="{{ invitation_form.role.id_for_label }}" class="form-label">{{ invitation_form.role.label }}</label>
-                                    {{ invitation_form.role }}
-                                </div>
-                                <div class="col-md-3 d-flex align-items-end">
-                                    <button type="submit" class="btn btn-primary w-100">Gửi lời mời</button>
-                                </div>
-                            </div>
-                            <div class="mt-2">
-                                <label for="{{ invitation_form.message.id_for_label }}" class="form-label">{{ invitation_form.message.label }}</label>
-                                {{ invitation_form.message }}
-                            </div>
-                        </form>
-                    </div>
-                </div>
-                {% endif %}
-            </div>
-            {% endif %}
-
-            {% if comments %}
-            <!-- Bình luận -->
-            <div class="card mb-4">
-                <div class="card-header bg-secondary text-white">
-                    <h5 class="mb-0"><i class="fas fa-comments"></i> Bình Luận</h5>
-                </div>
-                <div class="card-body">
-                    <div class="comment-list">
-                        {% for comment in comments %}
-                            <div class="comment mb-3 p-3 border rounded{% if comment.user == request.user %} bg-light{% endif %}">
-                                <div class="d-flex justify-content-between">
-                                    <div class="comment-header">
-                                        <strong>{{ comment.user.username }}</strong>
-                                        <span class="text-muted small ms-2">{{ comment.created_at|date:"d/m/Y H:i" }}</span>
-                                    </div>
-                                    {% if comment.user == request.user %}
-                                        <div class="dropdown">
-                                            <button class="btn btn-sm text-muted" type="button" id="dropdownComment{{ comment.id }}" data-bs-toggle="dropdown" aria-expanded="false">
-                                                <i class="fas fa-ellipsis-v"></i>
-                                            </button>
-                                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownComment{{ comment.id }}">
-                                                <li><a class="dropdown-item" href="#"><i class="fas fa-edit"></i> Chỉnh sửa</a></li>
-                                                <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-trash"></i> Xóa</a></li>
-                                            </ul>
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                <div class="comment-content mt-2">
-                                    {{ comment.content|linebreaks }}
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                <div class="card-footer">
-                    <form method="post" action="">
-                        {% csrf_token %}
-                        <input type="hidden" name="add_comment" value="1">
-                        <div class="mb-3">
-                            <label for="{{ comment_form.content.id_for_label }}" class="form-label">{{ comment_form.content.label }}</label>
-                            {{ comment_form.content }}
-                        </div>
-                        <div class="text-end">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-paper-plane"></i> Gửi bình luận
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-            {% else %}
-            <!-- Form bình luận -->
-            <div class="card mb-4">
-                <div class="card-header bg-secondary text-white">
-                    <h5 class="mb-0"><i class="fas fa-comments"></i> Bình Luận</h5>
-                </div>
-                <div class="card-body">
-                    <p class="text-muted">Chưa có bình luận nào.</p>
-                </div>
-                <div class="card-footer">
-                    <form method="post" action="">
-                        {% csrf_token %}
-                        <input type="hidden" name="add_comment" value="1">
-                        <div class="mb-3">
-                            <label for="{{ comment_form.content.id_for_label }}" class="form-label">{{ comment_form.content.label }}</label>
-                            {{ comment_form.content }}
-                        </div>
-                        <div class="text-end">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-paper-plane"></i> Gửi bình luận
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Biểu đồ tiến độ -->
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="fas fa-chart-line"></i> Biểu Đồ Tiến Độ</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="progressChart" width="400" height="300"></canvas>
-                </div>
-            </div>
-        </div>
+    <div id="goal-detail-container">
+        {% include 'learning_goals/goal_detail_partial.html' %}
     </div>
 </div>
 
@@ -396,77 +66,72 @@
 </div>
 {% endblock %}
 
+{% block extra_css %}
+<style>
+    .goal-detail-container {
+        margin-bottom: 30px;
+    }
+    
+    .card {
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    
+    .card-header {
+        padding: 15px;
+        font-weight: 600;
+    }
+    
+    .goal-info-item {
+        margin-bottom: 10px;
+    }
+    
+    .goal-info-item i {
+        width: 20px;
+        text-align: center;
+        margin-right: 10px;
+    }
+    
+    .comment-item {
+        margin-bottom: 15px;
+    }
+    
+    .comment-header {
+        margin-bottom: 5px;
+    }
+    
+    /* Spinner */
+    .htmx-indicator {
+        display: none;
+    }
+    
+    .htmx-request .htmx-indicator {
+        display: inline-block;
+    }
+    
+    .htmx-request.htmx-indicator {
+        display: inline-block;
+    }
+</style>
+{% endblock %}
+
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Lấy dữ liệu tiến độ từ API
-        fetch('{% url "learning_goals:api_goal_progress_data" goal_id=goal.id %}')
-            .then(response => response.json())
-            .then(data => {
-                // Tạo biểu đồ tiến độ
-                const ctx = document.getElementById('progressChart').getContext('2d');
-                const progressChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: data.labels,
-                        datasets: data.datasets
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                title: {
-                                    display: true,
-                                    text: 'Giá trị'
-                                },
-                                max: {{ goal.target_value }}
-                            },
-                            x: {
-                                title: {
-                                    display: true,
-                                    text: 'Ngày'
-                                }
-                            }
-                        },
-                        plugins: {
-                            tooltip: {
-                                mode: 'index',
-                                intersect: false
-                            },
-                            legend: {
-                                position: 'bottom'
-                            },
-                            annotation: {
-                                annotations: {
-                                    line1: {
-                                        type: 'line',
-                                        yMin: {{ goal.target_value }},
-                                        yMax: {{ goal.target_value }},
-                                        borderColor: 'rgb(255, 99, 132)',
-                                        borderWidth: 2,
-                                        borderDash: [5, 5],
-                                        label: {
-                                            content: 'Mục tiêu: {{ goal.target_value }}',
-                                            enabled: true,
-                                            position: 'end'
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            })
-            .catch(error => {
-                console.error('Lỗi khi lấy dữ liệu tiến độ:', error);
-                document.getElementById('progressChart').parentNode.innerHTML = `
-                    <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-circle me-2"></i> Không thể tải biểu đồ tiến độ.
-                    </div>
-                `;
-            });
+        // Xử lý sự kiện cập nhật từng phần
+        document.body.addEventListener('htmx:afterSwap', function(event) {
+            if (event.detail.target.id === 'goal-detail-container' || 
+                event.detail.target.id === 'progress-section' || 
+                event.detail.target.id === 'comment-section') {
+                
+                // Khởi tạo lại Alpine.js cho các phần tử mới
+                if (window.Alpine) {
+                    window.Alpine.initTree(document.body);
+                }
+            }
+        });
     });
 </script>
 {% endblock %}

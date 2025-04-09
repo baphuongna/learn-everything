@@ -26,7 +26,12 @@
                 <h5 class="mb-0"><i class="fas fa-search"></i> Tìm Kiếm & Lọc</h5>
             </div>
             <div class="card-body">
-                <form method="get" class="row g-3">
+                <form id="search-form"
+                      hx-get="{% url 'memory_search' %}"
+                      hx-target="#search-results-container"
+                      hx-trigger="submit, change delay:500ms"
+                      hx-indicator="#search-indicator"
+                      class="row g-3">
                     <div class="col-md-6">
                         {{ search_form.query|as_crispy_field }}
                     </div>
@@ -48,8 +53,13 @@
                     <div class="col-12 text-end">
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-search"></i> Tìm Kiếm
+                            <span id="search-indicator" class="htmx-indicator spinner-border spinner-border-sm"></span>
                         </button>
-                        <a href="{% url 'memory_search' %}" class="btn btn-outline-secondary">
+                        <a href="{% url 'memory_search' %}"
+                           class="btn btn-outline-secondary"
+                           hx-get="{% url 'memory_search' %}?format=partial"
+                           hx-target="#search-results-container"
+                           hx-swap="innerHTML">
                             <i class="fas fa-redo"></i> Đặt Lại
                         </a>
                     </div>
@@ -58,103 +68,8 @@
         </div>
 
         <!-- Kết quả tìm kiếm -->
-        <div class="card">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="fas fa-list"></i> Kết Quả Tìm Kiếm</h5>
-                <span class="badge bg-light text-dark">{{ total_items }} ghi nhớ</span>
-            </div>
-            <div class="card-body p-0">
-                <div class="list-group list-group-flush">
-                    {% for item in items %}
-                    <div class="list-group-item">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <a href="{% url 'memory_item_detail' item.pk %}" class="text-decoration-none">
-                                    <h5 class="mb-1">{{ item.title }}</h5>
-                                </a>
-                                <p class="mb-1 text-truncate">{{ item.content|striptags|truncatechars:100 }}</p>
-                                <small>
-                                    <span class="badge bg-primary">{{ item.category.name }}</span>
-                                    
-                                    {% if item.is_favorite %}
-                                    <span class="badge bg-warning"><i class="fas fa-star"></i> Yêu thích</span>
-                                    {% endif %}
-                                    
-                                    {% if item.priority == 3 %}
-                                    <span class="badge bg-danger">Ưu tiên cao</span>
-                                    {% elif item.priority == 2 %}
-                                    <span class="badge bg-warning">Ưu tiên trung bình</span>
-                                    {% else %}
-                                    <span class="badge bg-secondary">Ưu tiên thấp</span>
-                                    {% endif %}
-                                    
-                                    {% if item.tags %}
-                                    {% for tag in item.get_tags_list %}
-                                    <span class="badge bg-info">{{ tag }}</span>
-                                    {% endfor %}
-                                    {% endif %}
-                                    
-                                    <span class="text-muted">Cập nhật: {{ item.updated_at|date:"d/m/Y H:i" }}</span>
-                                </small>
-                            </div>
-                            <div>
-                                <a href="{% url 'memory_item_detail' item.pk %}" class="btn btn-sm btn-outline-primary me-1">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="{% url 'memory_item_edit' item.pk %}" class="btn btn-sm btn-outline-secondary me-1">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a href="{% url 'memory_item_review' item.pk %}" class="btn btn-sm btn-outline-info">
-                                    <i class="fas fa-sync-alt"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    {% empty %}
-                    <div class="list-group-item">
-                        <p class="mb-0 text-center">Không tìm thấy ghi nhớ nào phù hợp với tiêu chí tìm kiếm.</p>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            
-            {% if items.paginator.num_pages > 1 %}
-            <div class="card-footer">
-                <nav aria-label="Phân trang">
-                    <ul class="pagination justify-content-center mb-0">
-                        {% if items.has_previous %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page=1{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.is_favorite %}&is_favorite=on{% endif %}">
-                                <i class="fas fa-angle-double-left"></i>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ items.previous_page_number }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.is_favorite %}&is_favorite=on{% endif %}">
-                                <i class="fas fa-angle-left"></i>
-                            </a>
-                        </li>
-                        {% endif %}
-                        
-                        <li class="page-item disabled">
-                            <span class="page-link">Trang {{ items.number }} / {{ items.paginator.num_pages }}</span>
-                        </li>
-                        
-                        {% if items.has_next %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ items.next_page_number }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.is_favorite %}&is_favorite=on{% endif %}">
-                                <i class="fas fa-angle-right"></i>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ items.paginator.num_pages }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.is_favorite %}&is_favorite=on{% endif %}">
-                                <i class="fas fa-angle-double-right"></i>
-                            </a>
-                        </li>
-                        {% endif %}
-                    </ul>
-                </nav>
-            </div>
-            {% endif %}
+        <div id="search-results-container">
+            {% include 'memory_bank/search_results_partial.html' %}
         </div>
     </div>
 </div>

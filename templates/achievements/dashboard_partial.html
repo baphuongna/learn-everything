@@ -1,0 +1,227 @@
+<div class="dashboard-container">
+    <!-- Thống kê tổng quan -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Điểm Thưởng</h5>
+                    <h2 class="display-4">{{ reward_point.points }}</h2>
+                    <p class="mb-0">Điểm hiện có</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Huy Hiệu</h5>
+                    <h2 class="display-4">{{ user_badges_count }}</h2>
+                    <p class="mb-0">Đã đạt được</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning text-dark h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Phần Thưởng</h5>
+                    <h2 class="display-4">{{ user_rewards_count }}</h2>
+                    <p class="mb-0">Đã đổi</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Huy hiệu theo danh mục -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-medal"></i> Huy Hiệu Theo Danh Mục</h5>
+                    <button class="btn btn-sm btn-light" 
+                            hx-get="{% url 'achievements:dashboard' %}?section=badges&format=partial" 
+                            hx-target="#badges-section" 
+                            hx-swap="innerHTML"
+                            hx-indicator="#badges-indicator">
+                        <span id="badges-indicator" class="htmx-indicator spinner-border spinner-border-sm"></span>
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <div class="card-body" id="badges-section">
+                    {% for category, stats in badge_stats.items %}
+                        <div class="badge-category mb-3">
+                            <h6>{{ stats.name }}</h6>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar bg-info" role="progressbar" style="width: {{ stats.percentage }}%;" aria-valuenow="{{ stats.percentage }}" aria-valuemin="0" aria-valuemax="100">
+                                    {{ stats.earned }}/{{ stats.total }} ({{ stats.percentage }}%)
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                    <div class="text-center mt-3">
+                        <a href="{% url 'achievements:badge_list' %}" class="btn btn-outline-primary">Xem Tất Cả Huy Hiệu</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lịch sử điểm thưởng -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-history"></i> Lịch Sử Điểm Thưởng</h5>
+                    <button class="btn btn-sm btn-light" 
+                            hx-get="{% url 'achievements:dashboard' %}?section=points&format=partial" 
+                            hx-target="#points-section" 
+                            hx-swap="innerHTML"
+                            hx-indicator="#points-indicator">
+                        <span id="points-indicator" class="htmx-indicator spinner-border spinner-border-sm"></span>
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <div class="card-body" id="points-section">
+                    {% if point_history %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Ngày</th>
+                                        <th>Điểm</th>
+                                        <th>Loại</th>
+                                        <th>Lý Do</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for entry in point_history %}
+                                        <tr>
+                                            <td>{{ entry.timestamp|date:"d/m/Y H:i" }}</td>
+                                            <td class="{% if entry.action_type == 'earn' %}text-success{% else %}text-danger{% endif %}">
+                                                {% if entry.action_type == 'earn' %}+{% else %}-{% endif %}{{ entry.points }}
+                                            </td>
+                                            <td>
+                                                {% if entry.action_type == 'earn' %}
+                                                    <span class="badge bg-success">Nhận</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Sử dụng</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ entry.reason }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="{% url 'achievements:point_history' %}" class="btn btn-outline-success">Xem Tất Cả</a>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">Chưa có lịch sử điểm thưởng nào.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Huy hiệu mới nhận -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-award"></i> Huy Hiệu Mới Nhận</h5>
+                    <button class="btn btn-sm btn-light" 
+                            hx-get="{% url 'achievements:dashboard' %}?section=badges&format=partial" 
+                            hx-target="#recent-badges-section" 
+                            hx-swap="innerHTML"
+                            hx-indicator="#recent-badges-indicator">
+                        <span id="recent-badges-indicator" class="htmx-indicator spinner-border spinner-border-sm"></span>
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <div class="card-body" id="recent-badges-section">
+                    {% if recent_badges %}
+                        <div class="row">
+                            {% for user_badge in recent_badges %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-body text-center">
+                                            <div class="badge-icon mb-2">
+                                                <i class="{{ user_badge.badge.icon }} fa-3x text-{{ user_badge.badge.get_level_color }}"></i>
+                                            </div>
+                                            <h6 class="card-title">{{ user_badge.badge.name }}</h6>
+                                            <p class="card-text small">{{ user_badge.badge.description }}</p>
+                                            <div class="badge-meta">
+                                                <small class="text-muted">Nhận: {{ user_badge.earned_at|date:"d/m/Y" }}</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">Bạn chưa nhận được huy hiệu nào.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Phần thưởng mới đổi -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-gift"></i> Phần Thưởng Mới Đổi</h5>
+                    <button class="btn btn-sm btn-light" 
+                            hx-get="{% url 'achievements:dashboard' %}?section=rewards&format=partial" 
+                            hx-target="#recent-rewards-section" 
+                            hx-swap="innerHTML"
+                            hx-indicator="#recent-rewards-indicator">
+                        <span id="recent-rewards-indicator" class="htmx-indicator spinner-border spinner-border-sm"></span>
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <div class="card-body" id="recent-rewards-section">
+                    {% if recent_rewards %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Phần Thưởng</th>
+                                        <th>Ngày Đổi</th>
+                                        <th>Trạng Thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user_reward in recent_rewards %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="reward-icon me-2">
+                                                        <i class="{{ user_reward.reward.icon }} text-warning"></i>
+                                                    </div>
+                                                    <div>
+                                                        <strong>{{ user_reward.reward.name }}</strong>
+                                                        <div class="small text-muted">{{ user_reward.reward.points_required }} điểm</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>{{ user_reward.redeemed_at|date:"d/m/Y" }}</td>
+                                            <td>
+                                                {% if user_reward.is_used %}
+                                                    <span class="badge bg-secondary">Đã sử dụng</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">Khả dụng</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="{% url 'achievements:reward_list' %}" class="btn btn-outline-warning">Xem Tất Cả</a>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">Bạn chưa đổi phần thưởng nào.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

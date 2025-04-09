@@ -1,0 +1,277 @@
+{% load custom_filters %}
+<div class="dashboard-container">
+    <!-- Thống kê tổng quan -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Tổng Số Mục Tiêu</h5>
+                    <h2 class="display-4">{{ total_goals }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Đã Hoàn Thành</h5>
+                    <h2 class="display-4">{{ completed_goals }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Đang Thực Hiện</h5>
+                    <h2 class="display-4">{{ active_goals }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Quá Hạn</h5>
+                    <h2 class="display-4">{{ overdue_goals }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Mục tiêu theo loại -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> Mục Tiêu Theo Thời Gian</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h3>{{ daily_goals.count }}</h3>
+                                    <p class="mb-0">Hàng ngày</p>
+                                </div>
+                            </div>
+                            <a href="{% url 'learning_goals:goal_list' %}?type=daily" class="btn btn-sm btn-outline-primary">Xem</a>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h3>{{ weekly_goals.count }}</h3>
+                                    <p class="mb-0">Hàng tuần</p>
+                                </div>
+                            </div>
+                            <a href="{% url 'learning_goals:goal_list' %}?type=weekly" class="btn btn-sm btn-outline-primary">Xem</a>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h3>{{ monthly_goals.count }}</h3>
+                                    <p class="mb-0">Hàng tháng</p>
+                                </div>
+                            </div>
+                            <a href="{% url 'learning_goals:goal_list' %}?type=monthly" class="btn btn-sm btn-outline-primary">Xem</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tỷ lệ hoàn thành -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Tỷ Lệ Hoàn Thành</h5>
+                </div>
+                <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                    <div class="progress-circle" x-data="{ progress: 0 }" x-init="setTimeout(() => progress = {{ completion_rate }}, 500)">
+                        <svg viewBox="0 0 36 36" class="circular-chart">
+                            <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <path class="circle" stroke-dasharray="100, 100" :stroke-dasharray="`${progress}, 100`" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <text x="18" y="20.35" class="percentage" x-text="progress + '%'">0%</text>
+                        </svg>
+                    </div>
+                    <p class="text-center mt-3">
+                        Bạn đã hoàn thành {{ completed_goals }} trên tổng số {{ total_goals }} mục tiêu.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Mục tiêu đang hoạt động -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-tasks"></i> Mục Tiêu Đang Hoạt Động</h5>
+                    <button class="btn btn-sm btn-light"
+                            hx-get="{% url 'learning_goals:dashboard' %}?section=active_goals&format=partial"
+                            hx-target="#active-goals-section"
+                            hx-swap="innerHTML"
+                            hx-indicator="#active-goals-indicator">
+                        <span id="active-goals-indicator" class="htmx-indicator spinner-border spinner-border-sm"></span>
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <div class="card-body" id="active-goals-section">
+                    {% if active_goals_list %}
+                        <div class="list-group">
+                            {% for goal in active_goals_list %}
+                                <a href="{% url 'learning_goals:goal_detail' goal_id=goal.id %}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ goal.title }}</h6>
+                                        <small>
+                                            {% if goal.days_remaining > 0 %}
+                                                <span class="text-primary">Còn {{ goal.days_remaining }} ngày</span>
+                                            {% elif goal.days_remaining == 0 %}
+                                                <span class="text-warning">Đến hạn hôm nay</span>
+                                            {% else %}
+                                                <span class="text-danger">Quá hạn {{ goal.days_remaining|abs }} ngày</span>
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                    <div class="progress mt-2" style="height: 10px;">
+                                        <div class="progress-bar {% if goal.is_behind_schedule %}bg-danger{% else %}bg-primary{% endif %}"
+                                             role="progressbar"
+                                             style="width: {{ goal.progress_percentage }}%;"
+                                             aria-valuenow="{{ goal.progress_percentage }}"
+                                             aria-valuemin="0"
+                                             aria-valuemax="100">
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between mt-1">
+                                        <small>{{ goal.current_value }}/{{ goal.target_value }} {{ goal.unit }}</small>
+                                        <small>{{ goal.progress_percentage }}%</small>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="{% url 'learning_goals:goal_list' %}?status=in_progress" class="btn btn-sm btn-outline-primary">Xem tất cả</a>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">Không có mục tiêu đang hoạt động nào.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Mục tiêu gần đến hạn -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-clock"></i> Mục Tiêu Gần Đến Hạn</h5>
+                    <button class="btn btn-sm btn-light"
+                            hx-get="{% url 'learning_goals:dashboard' %}?section=upcoming_deadlines&format=partial"
+                            hx-target="#upcoming-deadlines-section"
+                            hx-swap="innerHTML"
+                            hx-indicator="#upcoming-deadlines-indicator">
+                        <span id="upcoming-deadlines-indicator" class="htmx-indicator spinner-border spinner-border-sm"></span>
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <div class="card-body" id="upcoming-deadlines-section">
+                    {% if upcoming_deadlines %}
+                        <div class="list-group">
+                            {% for goal in upcoming_deadlines %}
+                                <a href="{% url 'learning_goals:goal_detail' goal_id=goal.id %}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ goal.title }}</h6>
+                                        <small>
+                                            {% if goal.days_remaining > 0 %}
+                                                <span class="text-primary">Còn {{ goal.days_remaining }} ngày</span>
+                                            {% elif goal.days_remaining == 0 %}
+                                                <span class="text-warning">Đến hạn hôm nay</span>
+                                            {% else %}
+                                                <span class="text-danger">Quá hạn {{ goal.days_remaining|abs }} ngày</span>
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                    <div class="progress mt-2" style="height: 10px;">
+                                        <div class="progress-bar {% if goal.is_behind_schedule %}bg-danger{% else %}bg-primary{% endif %}"
+                                             role="progressbar"
+                                             style="width: {{ goal.progress_percentage }}%;"
+                                             aria-valuenow="{{ goal.progress_percentage }}"
+                                             aria-valuemin="0"
+                                             aria-valuemax="100">
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between mt-1">
+                                        <small>{{ goal.current_value }}/{{ goal.target_value }} {{ goal.unit }}</small>
+                                        <small>{{ goal.progress_percentage }}%</small>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="{% url 'learning_goals:goal_list' %}" class="btn btn-sm btn-outline-primary">Xem tất cả</a>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">Không có mục tiêu gần đến hạn nào.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mục tiêu mới hoàn thành -->
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-check-circle"></i> Mục Tiêu Mới Hoàn Thành</h5>
+                    <button class="btn btn-sm btn-light"
+                            hx-get="{% url 'learning_goals:dashboard' %}?section=recently_completed&format=partial"
+                            hx-target="#recently-completed-section"
+                            hx-swap="innerHTML"
+                            hx-indicator="#recently-completed-indicator">
+                        <span id="recently-completed-indicator" class="htmx-indicator spinner-border spinner-border-sm"></span>
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <div class="card-body" id="recently-completed-section">
+                    {% if recently_completed %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Mục Tiêu</th>
+                                        <th>Loại</th>
+                                        <th>Kết Quả</th>
+                                        <th>Hoàn Thành</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for goal in recently_completed %}
+                                        <tr>
+                                            <td>
+                                                <a href="{% url 'learning_goals:goal_detail' goal_id=goal.id %}">{{ goal.title }}</a>
+                                            </td>
+                                            <td>
+                                                {% if goal.goal_type == 'daily' %}
+                                                    <span class="badge bg-info">Hàng ngày</span>
+                                                {% elif goal.goal_type == 'weekly' %}
+                                                    <span class="badge bg-info">Hàng tuần</span>
+                                                {% elif goal.goal_type == 'monthly' %}
+                                                    <span class="badge bg-info">Hàng tháng</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ goal.current_value }}/{{ goal.target_value }} {{ goal.unit }}</td>
+                                            <td>{{ goal.updated_at|date:"d/m/Y" }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="{% url 'learning_goals:goal_list' %}?status=completed" class="btn btn-sm btn-outline-success">Xem tất cả mục tiêu đã hoàn thành</a>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">Không có mục tiêu mới hoàn thành nào.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,162 @@
+<!-- Kết quả tìm kiếm -->
+<div class="card">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-list"></i> Kết Quả Tìm Kiếm</h5>
+        <span class="badge bg-light text-dark">{{ total_items }} ghi nhớ</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="list-group list-group-flush">
+            {% for item in items %}
+            <div class="list-group-item" x-data="{ showActions: false }">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <a href="{% url 'memory_item_detail' item.pk %}" class="text-decoration-none">
+                            <h5 class="mb-1">{{ item.title }}</h5>
+                        </a>
+                        <p class="mb-1 text-truncate">{{ item.content|striptags|truncatechars:100 }}</p>
+                        <small>
+                            <span class="badge bg-primary">{{ item.category.name }}</span>
+                            {% if item.is_favorite %}
+                            <span class="badge bg-warning"><i class="fas fa-star"></i> Yêu thích</span>
+                            {% endif %}
+                            {% if item.priority == 3 %}
+                            <span class="badge bg-danger">Ưu tiên cao</span>
+                            {% elif item.priority == 2 %}
+                            <span class="badge bg-warning">Ưu tiên trung bình</span>
+                            {% elif item.priority == 1 %}
+                            <span class="badge bg-info">Ưu tiên thấp</span>
+                            {% endif %}
+                            
+                            <span class="text-muted">Cập nhật: {{ item.updated_at|date:"d/m/Y H:i" }}</span>
+                        </small>
+                    </div>
+                    <div class="d-flex">
+                        <div class="dropdown" @mouseenter="showActions = true" @mouseleave="showActions = false">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end" x-show="showActions" x-transition>
+                                <a href="{% url 'memory_item_detail' item.pk %}" class="dropdown-item">
+                                    <i class="fas fa-eye"></i> Xem chi tiết
+                                </a>
+                                <a href="{% url 'memory_item_edit' item.pk %}" class="dropdown-item">
+                                    <i class="fas fa-edit"></i> Chỉnh sửa
+                                </a>
+                                <a href="{% url 'memory_item_review' item.pk %}" class="dropdown-item">
+                                    <i class="fas fa-sync-alt"></i> Ôn tập
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <button class="dropdown-item text-danger" 
+                                        hx-post="{% url 'memory_item_toggle_favorite' item.pk %}"
+                                        hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                                        hx-swap="none"
+                                        hx-trigger="click"
+                                        hx-indicator="#favorite-indicator-{{ item.pk }}">
+                                    {% if item.is_favorite %}
+                                    <i class="far fa-star"></i> Bỏ yêu thích
+                                    {% else %}
+                                    <i class="fas fa-star"></i> Đánh dấu yêu thích
+                                    {% endif %}
+                                    <span id="favorite-indicator-{{ item.pk }}" class="htmx-indicator spinner-border spinner-border-sm"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="list-group-item">
+                <p class="mb-0 text-center">Không tìm thấy ghi nhớ nào phù hợp với tiêu chí tìm kiếm.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Phân trang -->
+    {% if items.has_other_pages %}
+    <div class="card-footer">
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center mb-0">
+                {% if items.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page=1" aria-label="First">
+                        <span aria-hidden="true">&laquo;&laquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ items.previous_page_number }}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" aria-label="First">
+                        <span aria-hidden="true">&laquo;&laquo;</span>
+                    </a>
+                </li>
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for num in items.paginator.page_range %}
+                    {% if items.number == num %}
+                    <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                    {% elif num > items.number|add:'-3' and num < items.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if items.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ items.next_page_number }}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ items.paginator.num_pages }}" aria-label="Last">
+                        <span aria-hidden="true">&raquo;&raquo;</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" aria-label="Last">
+                        <span aria-hidden="true">&raquo;&raquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Hiển thị thông báo khi thay đổi trạng thái yêu thích -->
+<div id="favorite-toast" class="toast position-fixed bottom-0 end-0 m-3" role="alert" aria-live="assertive" aria-atomic="true" style="z-index: 1050;">
+    <div class="toast-header bg-success text-white">
+        <strong class="me-auto">Thông báo</strong>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+    <div class="toast-body" id="favorite-toast-message">
+        Đã cập nhật trạng thái yêu thích!
+    </div>
+</div>
+
+<script>
+    // Xử lý sự kiện khi toggle yêu thích thành công
+    document.body.addEventListener('htmx:afterSwap', function(event) {
+        if (event.detail.target && event.detail.target.id.startsWith('favorite-indicator-')) {
+            const toast = new bootstrap.Toast(document.getElementById('favorite-toast'));
+            toast.show();
+        }
+    });
+</script>

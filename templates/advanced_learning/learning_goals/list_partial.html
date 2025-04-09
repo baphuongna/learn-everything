@@ -1,0 +1,274 @@
+{% if goals %}
+    {% if view == 'list' %}
+        <!-- Chế độ xem danh sách -->
+        {% for goal in goals %}
+        <div class="goal-card {% if goal.is_completed %}goal-completed{% endif %}" x-data="{ showDetails: false }">
+            <div class="goal-header">
+                <div class="goal-title">{{ goal.title }}</div>
+                <div>
+                    {% if goal.is_completed %}
+                    <span class="badge bg-success">Đã hoàn thành</span>
+                    {% elif not goal.is_active %}
+                    <span class="badge bg-secondary">Không hoạt động</span>
+                    {% elif goal.end_date and goal.end_date < today %}
+                    <span class="badge bg-danger">Đã hết hạn</span>
+                    {% else %}
+                    <span class="badge bg-primary">Đang hoạt động</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="goal-body">
+                <div class="goal-info">
+                    <div class="goal-info-item">
+                        <i class="fas fa-calendar-alt"></i> Loại: 
+                        {% if goal.goal_type == 'daily' %}Hàng ngày
+                        {% elif goal.goal_type == 'weekly' %}Hàng tuần
+                        {% elif goal.goal_type == 'monthly' %}Hàng tháng
+                        {% else %}Tùy chỉnh
+                        {% endif %}
+                    </div>
+                    <div class="goal-info-item">
+                        <i class="fas fa-chart-line"></i> Chỉ số: 
+                        {% if goal.goal_metric == 'study_time' %}Thời gian học tập
+                        {% elif goal.goal_metric == 'notes_count' %}Số ghi chú
+                        {% elif goal.goal_metric == 'mindmaps_count' %}Số mind map
+                        {% elif goal.goal_metric == 'projects_progress' %}Tiến độ dự án
+                        {% elif goal.goal_metric == 'exercises_completed' %}Số bài tập hoàn thành
+                        {% elif goal.goal_metric == 'competition_points' %}Điểm thi đấu
+                        {% else %}Tùy chỉnh
+                        {% endif %}
+                    </div>
+                    <div class="goal-info-item">
+                        <i class="fas fa-bullseye"></i> Mục tiêu: {{ goal.current_value }} / {{ goal.target_value }}
+                    </div>
+                    {% if goal.subject %}
+                    <div class="goal-info-item">
+                        <i class="fas fa-book"></i> Môn học: {{ goal.subject.name }}
+                    </div>
+                    {% endif %}
+                    <div class="goal-info-item">
+                        <i class="fas fa-calendar-day"></i> Thời gian: {{ goal.start_date|date:"d/m/Y" }} - {% if goal.end_date %}{{ goal.end_date|date:"d/m/Y" }}{% else %}Không giới hạn{% endif %}
+                    </div>
+                    <div class="mt-2">
+                        <button class="btn btn-sm btn-link p-0" @click="showDetails = !showDetails">
+                            <span x-show="!showDetails"><i class="fas fa-chevron-down"></i> Xem thêm</span>
+                            <span x-show="showDetails"><i class="fas fa-chevron-up"></i> Thu gọn</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="goal-progress">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <div>Tiến độ</div>
+                        <div>{{ goal.current_value * 100 // goal.target_value }}%</div>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-purple" role="progressbar" style="width: {{ goal.current_value * 100 // goal.target_value }}%" aria-valuenow="{{ goal.current_value * 100 // goal.target_value }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+                
+                <!-- Chi tiết mở rộng -->
+                <div x-show="showDetails" x-transition class="mt-3">
+                    {% if goal.description %}
+                    <div class="mb-3">
+                        <h6>Mô tả:</h6>
+                        <p>{{ goal.description }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Thông tin chi tiết</h6>
+                            <ul class="list-group">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Ngày tạo
+                                    <span>{{ goal.created_at|date:"d/m/Y" }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Cập nhật lần cuối
+                                    <span>{{ goal.updated_at|date:"d/m/Y" }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Trạng thái
+                                    <span>
+                                        {% if goal.is_completed %}
+                                        <span class="badge bg-success">Đã hoàn thành</span>
+                                        {% elif not goal.is_active %}
+                                        <span class="badge bg-secondary">Không hoạt động</span>
+                                        {% elif goal.end_date and goal.end_date < today %}
+                                        <span class="badge bg-danger">Đã hết hạn</span>
+                                        {% else %}
+                                        <span class="badge bg-primary">Đang hoạt động</span>
+                                        {% endif %}
+                                    </span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Cập nhật tiến độ</h6>
+                            <form method="post" action="{% url 'advanced_learning:update_learning_goal_progress' goal_id=goal.id %}"
+                                  hx-post="{% url 'advanced_learning:update_learning_goal_progress' goal_id=goal.id %}"
+                                  hx-target="#goals-container"
+                                  hx-swap="innerHTML"
+                                  hx-indicator="#progress-indicator-{{ goal.id }}">
+                                {% csrf_token %}
+                                <div class="input-group mb-3">
+                                    <input type="number" class="form-control" name="current_value" value="{{ goal.current_value }}" min="0" max="{{ goal.target_value }}">
+                                    <button class="btn btn-outline-purple" type="submit">
+                                        <i class="fas fa-save"></i> Cập nhật
+                                        <span id="progress-indicator-{{ goal.id }}" class="htmx-indicator spinner-border spinner-border-sm"></span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="goal-actions mt-3">
+                    <a href="{% url 'advanced_learning:edit_learning_goal' goal_id=goal.id %}" class="btn btn-outline-purple">
+                        <i class="fas fa-edit"></i> Sửa
+                    </a>
+                    {% if not goal.is_completed %}
+                    <form method="post" action="{% url 'advanced_learning:complete_learning_goal' goal_id=goal.id %}" class="d-inline"
+                          hx-post="{% url 'advanced_learning:complete_learning_goal' goal_id=goal.id %}"
+                          hx-target="#goals-container"
+                          hx-swap="innerHTML"
+                          hx-confirm="Bạn có chắc chắn muốn đánh dấu mục tiêu này là đã hoàn thành?"
+                          hx-indicator="#complete-indicator-{{ goal.id }}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-success">
+                            <i class="fas fa-check"></i> Hoàn thành
+                            <span id="complete-indicator-{{ goal.id }}" class="htmx-indicator spinner-border spinner-border-sm"></span>
+                        </button>
+                    </form>
+                    {% endif %}
+                    <form method="post" action="{% url 'advanced_learning:delete_learning_goal' goal_id=goal.id %}" class="d-inline"
+                          hx-post="{% url 'advanced_learning:delete_learning_goal' goal_id=goal.id %}"
+                          hx-target="#goals-container"
+                          hx-swap="innerHTML"
+                          hx-confirm="Bạn có chắc chắn muốn xóa mục tiêu này?"
+                          hx-indicator="#delete-indicator-{{ goal.id }}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger">
+                            <i class="fas fa-trash-alt"></i> Xóa
+                            <span id="delete-indicator-{{ goal.id }}" class="htmx-indicator spinner-border spinner-border-sm"></span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <!-- Chế độ xem lưới -->
+        <div class="goal-grid">
+            {% for goal in goals %}
+            <div class="card goal-grid-card h-100" x-data="{ showActions: false }">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0 text-truncate" title="{{ goal.title }}">{{ goal.title }}</h5>
+                    <div>
+                        {% if goal.is_completed %}
+                        <span class="badge bg-success">Hoàn thành</span>
+                        {% elif not goal.is_active %}
+                        <span class="badge bg-secondary">Không hoạt động</span>
+                        {% elif goal.end_date and goal.end_date < today %}
+                        <span class="badge bg-danger">Hết hạn</span>
+                        {% else %}
+                        <span class="badge bg-primary">Đang hoạt động</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body position-relative" @mouseenter="showActions = true" @mouseleave="showActions = false">
+                    <p class="card-text">
+                        <i class="fas fa-calendar-alt"></i> 
+                        {% if goal.goal_type == 'daily' %}Hàng ngày
+                        {% elif goal.goal_type == 'weekly' %}Hàng tuần
+                        {% elif goal.goal_type == 'monthly' %}Hàng tháng
+                        {% else %}Tùy chỉnh
+                        {% endif %}
+                    </p>
+                    <p class="card-text">
+                        <i class="fas fa-bullseye"></i> {{ goal.current_value }} / {{ goal.target_value }}
+                        {% if goal.goal_metric == 'study_time' %} phút
+                        {% elif goal.goal_metric == 'notes_count' %} ghi chú
+                        {% elif goal.goal_metric == 'mindmaps_count' %} mind map
+                        {% elif goal.goal_metric == 'projects_progress' %}%
+                        {% elif goal.goal_metric == 'exercises_completed' %} bài tập
+                        {% elif goal.goal_metric == 'competition_points' %} điểm
+                        {% endif %}
+                    </p>
+                    <div class="progress mb-3">
+                        <div class="progress-bar bg-purple" role="progressbar" style="width: {{ goal.current_value * 100 // goal.target_value }}%" aria-valuenow="{{ goal.current_value * 100 // goal.target_value }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <p class="text-muted small">
+                        <i class="fas fa-calendar-day"></i> {{ goal.start_date|date:"d/m/Y" }} - {% if goal.end_date %}{{ goal.end_date|date:"d/m/Y" }}{% else %}Không giới hạn{% endif %}
+                    </p>
+                    
+                    <div x-show="showActions" x-transition class="action-overlay">
+                        <div class="btn-group-vertical w-100">
+                            <a href="{% url 'advanced_learning:edit_learning_goal' goal_id=goal.id %}" class="btn btn-sm btn-purple mb-2">
+                                <i class="fas fa-edit"></i> Sửa
+                            </a>
+                            {% if not goal.is_completed %}
+                            <form method="post" action="{% url 'advanced_learning:complete_learning_goal' goal_id=goal.id %}" class="d-grid mb-2"
+                                  hx-post="{% url 'advanced_learning:complete_learning_goal' goal_id=goal.id %}"
+                                  hx-target="#goals-container"
+                                  hx-swap="innerHTML"
+                                  hx-confirm="Bạn có chắc chắn muốn đánh dấu mục tiêu này là đã hoàn thành?"
+                                  hx-indicator="#grid-complete-indicator-{{ goal.id }}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-success">
+                                    <i class="fas fa-check"></i> Hoàn thành
+                                    <span id="grid-complete-indicator-{{ goal.id }}" class="htmx-indicator spinner-border spinner-border-sm"></span>
+                                </button>
+                            </form>
+                            {% endif %}
+                            <form method="post" action="{% url 'advanced_learning:delete_learning_goal' goal_id=goal.id %}" class="d-grid"
+                                  hx-post="{% url 'advanced_learning:delete_learning_goal' goal_id=goal.id %}"
+                                  hx-target="#goals-container"
+                                  hx-swap="innerHTML"
+                                  hx-confirm="Bạn có chắc chắn muốn xóa mục tiêu này?"
+                                  hx-indicator="#grid-delete-indicator-{{ goal.id }}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash-alt"></i> Xóa
+                                    <span id="grid-delete-indicator-{{ goal.id }}" class="htmx-indicator spinner-border spinner-border-sm"></span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <form method="post" action="{% url 'advanced_learning:update_learning_goal_progress' goal_id=goal.id %}"
+                                  hx-post="{% url 'advanced_learning:update_learning_goal_progress' goal_id=goal.id %}"
+                                  hx-target="#goals-container"
+                                  hx-swap="innerHTML"
+                                  hx-indicator="#grid-progress-indicator-{{ goal.id }}">
+                                {% csrf_token %}
+                                <div class="input-group input-group-sm">
+                                    <input type="number" class="form-control form-control-sm" name="current_value" value="{{ goal.current_value }}" min="0" max="{{ goal.target_value }}" style="max-width: 70px;">
+                                    <button class="btn btn-sm btn-outline-purple" type="submit">
+                                        <i class="fas fa-save"></i>
+                                        <span id="grid-progress-indicator-{{ goal.id }}" class="htmx-indicator spinner-border spinner-border-sm"></span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        <small class="text-muted">{{ goal.updated_at|date:"d/m/Y" }}</small>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% else %}
+    <div class="empty-state">
+        <i class="fas fa-bullseye"></i>
+        <h3>Không có mục tiêu nào</h3>
+        <p>Hãy tạo mục tiêu học tập đầu tiên của bạn!</p>
+        <a href="{% url 'advanced_learning:create_learning_goal' %}" class="btn btn-purple mt-3">
+            <i class="fas fa-plus"></i> Tạo Mục Tiêu Mới
+        </a>
+    </div>
+{% endif %}

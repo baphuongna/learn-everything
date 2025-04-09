@@ -1,0 +1,477 @@
+{% load crispy_forms_tags %}
+
+<div class="row" x-data="pomodoroApp">
+    <!-- Cấu hình Pomodoro -->
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-cog"></i> Cấu Hình Pomodoro</h5>
+            </div>
+            <div class="card-body">
+                <form id="pomodoro-form" method="post" action="{% url 'advanced_learning:pomodoro_start' %}"
+                      hx-post="{% url 'advanced_learning:pomodoro_start' %}"
+                      hx-trigger="submit"
+                      hx-target="#pomodoro-status"
+                      hx-swap="innerHTML"
+                      hx-indicator="#form-indicator">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="subject" class="form-label">Chủ đề học tập</label>
+                        <select class="form-select" id="subject" name="subject" 
+                                hx-get="{% url 'advanced_learning:get_topics' %}"
+                                hx-target="#topic"
+                                hx-trigger="change"
+                                x-model="subject">
+                            <option value="">-- Chọn chủ đề --</option>
+                            {% for subject in subjects %}
+                            <option value="{{ subject.id }}" {% if active_session and active_session.subject.id == subject.id %}selected{% endif %}>
+                                {{ subject.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="topic" class="form-label">Chủ đề con</label>
+                        <select class="form-select" id="topic" name="topic" x-model="topic">
+                            <option value="">-- Chọn chủ đề con --</option>
+                            {% for topic in topics %}
+                            <option value="{{ topic.id }}" {% if active_session and active_session.topic.id == topic.id %}selected{% endif %}>
+                                {{ topic.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="work_duration" class="form-label">Thời gian làm việc (phút)</label>
+                            <input type="number" class="form-control" id="work_duration" name="work_duration" 
+                                   min="1" max="60" value="{{ active_session.work_duration|default:25 }}"
+                                   x-model="workDuration"
+                                   @change="updateTimerDisplay()">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="break_duration" class="form-label">Thời gian nghỉ (phút)</label>
+                            <input type="number" class="form-control" id="break_duration" name="break_duration" 
+                                   min="1" max="30" value="{{ active_session.break_duration|default:5 }}"
+                                   x-model="breakDuration">
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="long_break_duration" class="form-label">Nghỉ dài (phút)</label>
+                            <input type="number" class="form-control" id="long_break_duration" name="long_break_duration" 
+                                   min="5" max="60" value="{{ active_session.long_break_duration|default:15 }}"
+                                   x-model="longBreakDuration">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="pomodoros_until_long_break" class="form-label">Pomodoros/nghỉ dài</label>
+                            <input type="number" class="form-control" id="pomodoros_until_long_break" name="pomodoros_until_long_break" 
+                                   min="1" max="10" value="{{ active_session.pomodoros_until_long_break|default:4 }}"
+                                   x-model="pomodorosUntilLongBreak">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Ghi chú</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="2" 
+                                  placeholder="Ghi chú về phiên học tập này...">{{ active_session.notes|default:'' }}</textarea>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary" :disabled="isRunning">
+                            <i class="fas fa-save"></i> Lưu Cấu Hình
+                            <span id="form-indicator" class="htmx-indicator spinner-border spinner-border-sm"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timer -->
+    <div class="col-md-8 mb-4">
+        <div class="timer-card h-100" :class="timerCardClass" id="timer-card">
+            <div class="card-body">
+                <div class="timer-phase" id="timer-phase" x-text="timerPhaseText"></div>
+                <div class="timer-display" id="timer-display" x-text="timerDisplay"></div>
+                <div class="progress">
+                    <div class="progress-bar" :class="progressBarClass" id="timer-progress" role="progressbar" :style="'width: ' + progressPercentage + '%'"></div>
+                </div>
+                <div class="timer-controls mt-4">
+                    <button class="btn btn-success" id="start-timer" x-show="!isRunning" @click="startTimer()">
+                        <i class="fas fa-play"></i> Bắt đầu
+                    </button>
+                    <button class="btn btn-warning" id="pause-timer" x-show="isRunning && !isPaused" @click="pauseTimer()">
+                        <i class="fas fa-pause"></i> Tạm dừng
+                    </button>
+                    <button class="btn btn-primary" id="resume-timer" x-show="isRunning && isPaused" @click="resumeTimer()">
+                        <i class="fas fa-play"></i> Tiếp tục
+                    </button>
+                    <button class="btn btn-danger" id="reset-timer" @click="resetTimer()">
+                        <i class="fas fa-redo"></i> Đặt lại
+                    </button>
+                    <button class="btn btn-secondary" id="skip-timer" x-show="isRunning" @click="skipPhase()">
+                        <i class="fas fa-forward"></i> Bỏ qua
+                    </button>
+                </div>
+                
+                <div class="pomodoro-count mt-4">
+                    <h6>Pomodoros hoàn thành: <span id="pomodoro-count" x-text="completedPomodoros"></span></h6>
+                    <div class="pomodoro-icons">
+                        <template x-for="i in Math.min(completedPomodoros, 10)">
+                            <i class="fas fa-apple-alt text-danger"></i>
+                        </template>
+                        <span x-show="completedPomodoros > 10" class="text-muted" x-text="'+' + (completedPomodoros - 10)"></span>
+                    </div>
+                </div>
+                
+                <div class="timer-settings mt-4">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="enable-notifications" x-model="enableNotifications">
+                        <label class="form-check-label" for="enable-notifications">Bật thông báo</label>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="enable-sounds" x-model="enableSounds">
+                        <label class="form-check-label" for="enable-sounds">Bật âm thanh</label>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="auto-start-breaks" x-model="autoStartBreaks">
+                        <label class="form-check-label" for="auto-start-breaks">Tự động bắt đầu nghỉ</label>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="auto-start-pomodoros" x-model="autoStartPomodoros">
+                        <label class="form-check-label" for="auto-start-pomodoros">Tự động bắt đầu pomodoro</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Trạng thái phiên Pomodoro -->
+<div id="pomodoro-status">
+    {% if active_session %}
+    <div class="alert alert-info">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <i class="fas fa-info-circle"></i> 
+                Phiên Pomodoro đang hoạt động: 
+                <strong>{{ active_session.subject.name }}</strong>
+                {% if active_session.topic %}
+                - <strong>{{ active_session.topic.name }}</strong>
+                {% endif %}
+                (Bắt đầu: {{ active_session.start_time|date:"H:i:s" }})
+            </div>
+            <form method="post" action="{% url 'advanced_learning:pomodoro_end' %}"
+                  hx-post="{% url 'advanced_learning:pomodoro_end' %}"
+                  hx-target="#pomodoro-status"
+                  hx-swap="outerHTML"
+                  hx-indicator="#end-indicator">
+                {% csrf_token %}
+                <input type="hidden" name="session_id" value="{{ active_session.id }}">
+                <input type="hidden" name="completed_pomodoros" id="completed_pomodoros_input" value="0">
+                <button type="submit" class="btn btn-sm btn-danger">
+                    <i class="fas fa-stop-circle"></i> Kết thúc phiên
+                    <span id="end-indicator" class="htmx-indicator spinner-border spinner-border-sm"></span>
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Biểu đồ thống kê -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Thống Kê Pomodoro</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="pomodoro-chart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('alpine:init', function() {
+        Alpine.data('pomodoroApp', function() {
+            return {
+                // Biến trạng thái
+                isRunning: false,
+                isPaused: false,
+                isWorkPhase: true,
+                timerInterval: null,
+                sessionId: '{{ active_session.id|default:"" }}',
+                completedPomodoros: 0,
+                totalSeconds: 0,
+                currentSeconds: 0,
+                workDuration: parseInt('{{ active_session.work_duration|default:25 }}'),
+                breakDuration: parseInt('{{ active_session.break_duration|default:5 }}'),
+                longBreakDuration: parseInt('{{ active_session.long_break_duration|default:15 }}'),
+                pomodorosUntilLongBreak: parseInt('{{ active_session.pomodoros_until_long_break|default:4 }}'),
+                subject: '{{ active_session.subject.id|default:"" }}',
+                topic: '{{ active_session.topic.id|default:"" }}',
+                
+                // Cài đặt
+                enableNotifications: true,
+                enableSounds: true,
+                autoStartBreaks: false,
+                autoStartPomodoros: false,
+                
+                // Tính toán
+                get timerDisplay() {
+                    const minutes = Math.floor(this.currentSeconds / 60);
+                    const seconds = this.currentSeconds % 60;
+                    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                },
+                
+                get timerPhaseText() {
+                    if (!this.isRunning && !this.isPaused) {
+                        return 'Sẵn sàng bắt đầu';
+                    }
+                    
+                    if (this.isWorkPhase) {
+                        return 'Thời gian làm việc';
+                    } else {
+                        if (this.completedPomodoros % this.pomodorosUntilLongBreak === 0) {
+                            return 'Thời gian nghỉ dài';
+                        } else {
+                            return 'Thời gian nghỉ ngắn';
+                        }
+                    }
+                },
+                
+                get timerCardClass() {
+                    if (!this.isRunning && !this.isPaused) {
+                        return 'ready';
+                    }
+                    
+                    if (this.isPaused) {
+                        return 'paused';
+                    }
+                    
+                    return this.isWorkPhase ? 'work' : 'break';
+                },
+                
+                get progressBarClass() {
+                    return this.isWorkPhase ? 'bg-danger' : 'bg-success';
+                },
+                
+                get progressPercentage() {
+                    if (this.totalSeconds === 0) return 0;
+                    return 100 - (this.currentSeconds / this.totalSeconds * 100);
+                },
+                
+                // Phương thức
+                init() {
+                    this.updateTimerDisplay();
+                    
+                    // Khởi tạo âm thanh
+                    this.tickSound = new Audio('/static/sounds/tick.mp3');
+                    this.alarmSound = new Audio('/static/sounds/alarm.mp3');
+                    
+                    // Yêu cầu quyền thông báo
+                    if (this.enableNotifications && Notification.permission !== 'granted') {
+                        Notification.requestPermission();
+                    }
+                    
+                    // Khởi tạo biểu đồ
+                    this.initChart();
+                    
+                    // Cập nhật số pomodoro đã hoàn thành
+                    document.getElementById('completed_pomodoros_input').value = this.completedPomodoros;
+                },
+                
+                updateTimerDisplay() {
+                    this.totalSeconds = this.workDuration * 60;
+                    this.currentSeconds = this.totalSeconds;
+                },
+                
+                startTimer() {
+                    // Lấy giá trị từ form
+                    this.workDuration = parseInt(document.getElementById('work_duration').value);
+                    this.breakDuration = parseInt(document.getElementById('break_duration').value);
+                    this.longBreakDuration = parseInt(document.getElementById('long_break_duration').value);
+                    this.pomodorosUntilLongBreak = parseInt(document.getElementById('pomodoros_until_long_break').value);
+                    
+                    // Thiết lập timer
+                    this.isWorkPhase = true;
+                    this.totalSeconds = this.workDuration * 60;
+                    this.currentSeconds = this.totalSeconds;
+                    
+                    // Bắt đầu đếm ngược
+                    this.isRunning = true;
+                    this.isPaused = false;
+                    
+                    this.timerInterval = setInterval(() => this.tick(), 1000);
+                },
+                
+                pauseTimer() {
+                    clearInterval(this.timerInterval);
+                    this.isPaused = true;
+                },
+                
+                resumeTimer() {
+                    this.isPaused = false;
+                    this.timerInterval = setInterval(() => this.tick(), 1000);
+                },
+                
+                resetTimer() {
+                    clearInterval(this.timerInterval);
+                    this.isRunning = false;
+                    this.isPaused = false;
+                    this.isWorkPhase = true;
+                    this.updateTimerDisplay();
+                },
+                
+                skipPhase() {
+                    clearInterval(this.timerInterval);
+                    
+                    if (this.isWorkPhase) {
+                        // Hoàn thành một pomodoro
+                        this.completedPomodoros++;
+                        document.getElementById('completed_pomodoros_input').value = this.completedPomodoros;
+                        
+                        // Chuyển sang nghỉ
+                        this.isWorkPhase = false;
+                        
+                        // Kiểm tra xem có nên nghỉ dài không
+                        const isLongBreak = this.completedPomodoros % this.pomodorosUntilLongBreak === 0;
+                        this.totalSeconds = isLongBreak ? this.longBreakDuration * 60 : this.breakDuration * 60;
+                    } else {
+                        // Chuyển sang làm việc
+                        this.isWorkPhase = true;
+                        this.totalSeconds = this.workDuration * 60;
+                    }
+                    
+                    this.currentSeconds = this.totalSeconds;
+                    
+                    // Tự động bắt đầu nếu được bật
+                    if ((this.isWorkPhase && this.autoStartPomodoros) || (!this.isWorkPhase && this.autoStartBreaks)) {
+                        this.timerInterval = setInterval(() => this.tick(), 1000);
+                    } else {
+                        this.isRunning = false;
+                        this.isPaused = false;
+                    }
+                },
+                
+                tick() {
+                    if (this.currentSeconds > 0) {
+                        this.currentSeconds--;
+                        
+                        // Phát âm thanh tick nếu được bật
+                        if (this.enableSounds && this.currentSeconds <= 10 && this.currentSeconds > 0) {
+                            this.tickSound.play();
+                        }
+                    } else {
+                        // Hết thời gian
+                        clearInterval(this.timerInterval);
+                        
+                        // Phát âm thanh báo nếu được bật
+                        if (this.enableSounds) {
+                            this.alarmSound.play();
+                        }
+                        
+                        // Hiển thị thông báo
+                        this.showNotification();
+                        
+                        if (this.isWorkPhase) {
+                            // Tăng số pomodoro đã hoàn thành
+                            this.completedPomodoros++;
+                            document.getElementById('completed_pomodoros_input').value = this.completedPomodoros;
+                            
+                            // Kiểm tra xem có nên nghỉ dài không
+                            const isLongBreak = this.completedPomodoros % this.pomodorosUntilLongBreak === 0;
+                            
+                            // Chuyển sang nghỉ
+                            this.isWorkPhase = false;
+                            this.totalSeconds = isLongBreak ? this.longBreakDuration * 60 : this.breakDuration * 60;
+                            this.currentSeconds = this.totalSeconds;
+                            
+                            // Tự động bắt đầu nghỉ nếu được bật
+                            if (this.autoStartBreaks) {
+                                this.timerInterval = setInterval(() => this.tick(), 1000);
+                            } else {
+                                this.isRunning = false;
+                                this.isPaused = false;
+                            }
+                        } else {
+                            // Chuyển sang làm việc
+                            this.isWorkPhase = true;
+                            this.totalSeconds = this.workDuration * 60;
+                            this.currentSeconds = this.totalSeconds;
+                            
+                            // Tự động bắt đầu pomodoro nếu được bật
+                            if (this.autoStartPomodoros) {
+                                this.timerInterval = setInterval(() => this.tick(), 1000);
+                            } else {
+                                this.isRunning = false;
+                                this.isPaused = false;
+                            }
+                        }
+                    }
+                },
+                
+                showNotification() {
+                    if (this.enableNotifications && Notification.permission === 'granted') {
+                        const title = this.isWorkPhase ? 'Thời gian làm việc kết thúc!' : 'Thời gian nghỉ kết thúc!';
+                        const body = this.isWorkPhase ? 'Đã đến lúc nghỉ ngơi.' : 'Đã đến lúc quay lại làm việc.';
+                        
+                        const notification = new Notification(title, {
+                            body: body,
+                            icon: '/static/img/pomodoro-icon.png'
+                        });
+                        
+                        // Tự động đóng thông báo sau 5 giây
+                        setTimeout(() => notification.close(), 5000);
+                    }
+                },
+                
+                initChart() {
+                    const ctx = document.getElementById('pomodoro-chart').getContext('2d');
+                    
+                    // Dữ liệu biểu đồ
+                    const chartData = {
+                        labels: {{ chart_labels|safe }},
+                        datasets: [
+                            {
+                                label: 'Số phiên Pomodoro',
+                                data: {{ chart_data|safe }},
+                                backgroundColor: 'rgba(0, 123, 255, 0.5)',
+                                borderColor: 'rgba(0, 123, 255, 1)',
+                                borderWidth: 1
+                            }
+                        ]
+                    };
+                    
+                    // Tùy chọn biểu đồ
+                    const chartOptions = {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0
+                                }
+                            }
+                        },
+                        responsive: true,
+                        maintainAspectRatio: false
+                    };
+                    
+                    // Tạo biểu đồ
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: chartData,
+                        options: chartOptions
+                    });
+                }
+            };
+        });
+    });
+</script>

@@ -1,0 +1,25 @@
+<div class="row">
+    <div class="col-md-8">
+        <!-- Ghi nhớ gần đây -->
+        <div class="card mb-4" id="recent-items-section">
+            {% include 'memory_bank/partials/recent_items.html' %}
+        </div>
+
+        <!-- Ghi nhớ yêu thích -->
+        <div class="card mb-4" id="favorite-items-section">
+            {% include 'memory_bank/partials/favorite_items.html' %}
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Thống kê -->
+        <div class="card mb-4" id="stats-section">
+            {% include 'memory_bank/partials/stats.html' %}
+        </div>
+        
+        <!-- Ghi nhớ cần ôn tập -->
+        <div class="card" id="review-items-section">
+            {% include 'memory_bank/partials/review_items.html' %}
+        </div>
+    </div>
+</div>

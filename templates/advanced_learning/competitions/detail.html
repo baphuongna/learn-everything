@@ -5,17 +5,12 @@
 
 {% block extra_css %}
 <style>
-    .competition-container {
-        max-width: 1000px;
-        margin: 0 auto;
-    }
-    
     .competition-header {
-        background-color: #f8f9fa;
-        border-radius: 10px;
+        background-color: #fff8f0;
         padding: 20px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        border-radius: 10px;
         margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
     
     .competition-title {
@@ -24,117 +19,158 @@
     }
     
     .competition-meta {
-        font-size: 0.9rem;
-        color: #6c757d;
         margin-bottom: 15px;
     }
     
     .competition-description {
-        line-height: 1.6;
         margin-bottom: 20px;
-    }
-    
-    .status-badge {
-        font-size: 0.8rem;
-        padding: 0.25rem 0.5rem;
-    }
-    
-    .status-upcoming {
-        background-color: #6c757d;
-    }
-    
-    .status-active {
-        background-color: #28a745;
-    }
-    
-    .status-past {
-        background-color: #dc3545;
+        color: #6c757d;
     }
     
     .competition-stats {
         display: flex;
         flex-wrap: wrap;
         gap: 15px;
-        margin-top: 10px;
+        margin-top: 15px;
     }
     
     .competition-stat {
+        background-color: #f8f9fa;
+        padding: 10px 15px;
+        border-radius: 5px;
+        color: #6c757d;
+        font-size: 0.9rem;
         display: flex;
         align-items: center;
-        font-size: 0.9rem;
-        background-color: #f8f9fa;
-        padding: 5px 10px;
-        border-radius: 5px;
+        gap: 5px;
     }
     
     .competition-stat i {
-        margin-right: 5px;
         color: #fd7e14;
     }
     
-    .leaderboard {
-        background-color: #f8f9fa;
+    .participant-card {
         border-radius: 10px;
-        padding: 20px;
+        margin-bottom: 15px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }
+    
+    .participant-card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .participant-header {
+        padding: 15px 20px;
+        border-bottom: 1px solid #f1f1f1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .participant-name {
+        font-weight: 600;
+        color: #343a40;
+        margin-bottom: 0;
+    }
+    
+    .participant-body {
+        padding: 15px 20px;
+    }
+    
+    .participant-stats {
+        display: flex;
+        gap: 15px;
+        margin-top: 10px;
+    }
+    
+    .participant-stat {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .btn-orange {
+        background-color: #fd7e14;
+        border-color: #fd7e14;
+        color: white;
+    }
+    
+    .btn-orange:hover {
+        background-color: #e96b02;
+        border-color: #e96b02;
+        color: white;
+    }
+    
+    .btn-outline-orange {
+        color: #fd7e14;
+        border-color: #fd7e14;
+    }
+    
+    .btn-outline-orange:hover {
+        background-color: #fd7e14;
+        color: white;
+    }
+    
+    .text-orange {
+        color: #fd7e14;
+    }
+    
+    .countdown-container {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 10px;
+        text-align: center;
         margin-bottom: 20px;
     }
     
-    .leaderboard-title {
-        color: #fd7e14;
-        margin-bottom: 15px;
-        border-bottom: 1px solid #dee2e6;
-        padding-bottom: 10px;
+    .countdown-title {
+        font-size: 1.1rem;
+        color: #343a40;
+        margin-bottom: 10px;
     }
     
-    .leaderboard-item {
-        display: flex;
-        align-items: center;
-        padding: 10px 0;
-        border-bottom: 1px solid #eee;
-    }
-    
-    .leaderboard-rank {
-        font-size: 1.2rem;
+    .countdown-timer {
+        font-size: 2rem;
         font-weight: bold;
-        width: 40px;
+        color: #fd7e14;
+    }
+    
+    .countdown-info {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-top: 10px;
+    }
+    
+    .leaderboard-table th {
+        background-color: #f8f9fa;
+    }
+    
+    .leaderboard-table .position {
+        font-weight: bold;
+        width: 50px;
         text-align: center;
     }
     
-    .leaderboard-user {
-        flex-grow: 1;
-        padding-left: 10px;
-    }
-    
-    .leaderboard-score {
-        font-weight: bold;
-        color: #fd7e14;
-    }
-    
-    .rank-1 {
+    .leaderboard-table .top-1 {
         color: #ffc107;
     }
     
-    .rank-2 {
+    .leaderboard-table .top-2 {
         color: #adb5bd;
     }
     
-    .rank-3 {
+    .leaderboard-table .top-3 {
         color: #cd7f32;
     }
     
-    .countdown {
-        font-size: 1.2rem;
+    .leaderboard-table .score {
         font-weight: bold;
         color: #fd7e14;
-        margin-bottom: 15px;
     }
     
-    .user-participation-info {
-        background-color: #e9f8fb;
-        border-radius: 10px;
-        padding: 15px;
-        margin-bottom: 20px;
+    .leaderboard-table .current-user {
+        background-color: #fff8f0;
     }
 </style>
 {% endblock %}
@@ -147,262 +183,27 @@
         </h1>
     </div>
     <div class="col-md-4 text-end">
-        <a href="{% url 'advanced_learning:competition_list' %}" class="btn btn-outline-orange">
-            <i class="fas fa-arrow-left"></i> Quay Lại Danh Sách
+        <a href="{% url 'advanced_learning:competition_list' %}" class="btn btn-outline-orange"
+           hx-get="{% url 'advanced_learning:competition_list' %}?format=partial"
+           hx-target="#main-content"
+           hx-swap="innerHTML"
+           hx-push-url="true">
+            <i class="fas fa-list"></i> Danh Sách Cuộc Thi
         </a>
     </div>
 </div>
 
-<div class="competition-container">
-    <div class="competition-header">
-        <h2 class="competition-title">{{ competition.title }}</h2>
-        <div class="competition-meta">
-            {% if competition.subject %}
-            <span class="badge bg-primary">{{ competition.subject.name }}</span>
-            {% endif %}
-            
-            {% now "Y-m-d H:i:s" as current_time %}
-            {% if competition.start_time|date:"Y-m-d H:i:s" > current_time %}
-                <span class="badge status-upcoming status-badge">Sắp diễn ra</span>
-            {% elif competition.end_time|date:"Y-m-d H:i:s" < current_time %}
-                <span class="badge status-past status-badge">Đã kết thúc</span>
-            {% elif competition.is_active %}
-                <span class="badge status-active status-badge">Đang diễn ra</span>
-            {% else %}
-                <span class="badge status-upcoming status-badge">Chưa kích hoạt</span>
-            {% endif %}
-        </div>
-        
-        <div class="competition-stats">
-            <div class="competition-stat">
-                <i class="fas fa-clock"></i> {{ competition.time_limit }} phút
-            </div>
-            <div class="competition-stat">
-                <i class="fas fa-calendar-alt"></i> Bắt đầu: {{ competition.start_time|date:"d/m/Y H:i" }}
-            </div>
-            <div class="competition-stat">
-                <i class="fas fa-calendar-alt"></i> Kết thúc: {{ competition.end_time|date:"d/m/Y H:i" }}
-            </div>
-            <div class="competition-stat">
-                <i class="fas fa-users"></i> {{ participant_count }} người tham gia
-            </div>
-            {% if competition.max_participants > 0 %}
-            <div class="competition-stat">
-                <i class="fas fa-user-plus"></i> {{ competition.max_participants }} chỗ tối đa
-            </div>
-            {% endif %}
-        </div>
-        
-        <hr>
-        
-        <div class="competition-description">
-            {{ competition.description|linebreaks }}
-        </div>
-        
-        {% if user_participation %}
-            <div class="user-participation-info">
-                <h5><i class="fas fa-user-check"></i> Thông tin tham gia của bạn</h5>
-                
-                {% if user_participation.end_time %}
-                    <p>
-                        <strong>Trạng thái:</strong>
-                        <span class="badge bg-success">Đã hoàn thành</span>
-                    </p>
-                    <p><strong>Điểm số:</strong> {{ user_participation.score }}</p>
-                    <p><strong>Xếp hạng:</strong> {{ user_participation.rank|default:"Chưa xếp hạng" }}</p>
-                    <p>
-                        <strong>Thời gian bắt đầu:</strong> {{ user_participation.start_time|date:"d/m/Y H:i:s" }}<br>
-                        <strong>Thời gian kết thúc:</strong> {{ user_participation.end_time|date:"d/m/Y H:i:s" }}
-                    </p>
-                    
-                    <div class="text-end">
-                        <a href="{% url 'advanced_learning:competition_result' competition_id=competition.id %}" class="btn btn-orange">
-                            <i class="fas fa-chart-bar"></i> Xem Kết Quả Chi Tiết
-                        </a>
-                    </div>
-                {% else %}
-                    <p>
-                        <strong>Trạng thái:</strong>
-                        <span class="badge bg-primary">Đang làm bài</span>
-                    </p>
-                    <p>
-                        <strong>Thời gian bắt đầu:</strong> {{ user_participation.start_time|date:"d/m/Y H:i:s" }}<br>
-                        <strong>Thời gian còn lại:</strong> <span id="time-remaining">Đang tính...</span>
-                    </p>
-                    
-                    <div class="text-end">
-                        <a href="{% url 'advanced_learning:take_competition' competition_id=competition.id %}" class="btn btn-orange">
-                            <i class="fas fa-play"></i> Tiếp Tục Làm Bài
-                        </a>
-                    </div>
-                {% endif %}
-            </div>
-        {% else %}
-            {% if is_active and can_join %}
-                <div class="text-center my-4">
-                    <div class="countdown mb-3">
-                        <i class="fas fa-hourglass-half"></i> Thời gian còn lại: <span id="competition-countdown">Đang tính...</span>
-                    </div>
-                    <a href="{% url 'advanced_learning:join_competition' competition_id=competition.id %}" class="btn btn-orange btn-lg">
-                        <i class="fas fa-play"></i> Tham Gia Ngay
-                    </a>
-                </div>
-            {% elif not is_active %}
-                <div class="alert alert-warning">
-                    <i class="fas fa-exclamation-triangle"></i> Cuộc thi này hiện không khả dụng. Vui lòng quay lại sau.
-                </div>
-            {% elif not can_join %}
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle"></i> Cuộc thi này đã đạt giới hạn số người tham gia.
-                </div>
-            {% endif %}
-        {% endif %}
-    </div>
-    
-    <div class="leaderboard">
-        <h3 class="leaderboard-title"><i class="fas fa-crown text-orange"></i> Bảng Xếp Hạng</h3>
-        
-        {% if leaderboard %}
-            <div class="leaderboard-list">
-                {% for participant in leaderboard %}
-                <div class="leaderboard-item">
-                    <div class="leaderboard-rank {% if participant.rank == 1 %}rank-1{% elif participant.rank == 2 %}rank-2{% elif participant.rank == 3 %}rank-3{% endif %}">
-                        {% if participant.rank == 1 %}
-                            <i class="fas fa-trophy"></i>
-                        {% elif participant.rank == 2 %}
-                            <i class="fas fa-medal"></i>
-                        {% elif participant.rank == 3 %}
-                            <i class="fas fa-award"></i>
-                        {% else %}
-                            {{ participant.rank }}
-                        {% endif %}
-                    </div>
-                    <div class="leaderboard-user">
-                        {{ participant.user.username }}
-                        {% if participant.user == request.user %}
-                            <span class="badge bg-info">Bạn</span>
-                        {% endif %}
-                    </div>
-                    <div class="leaderboard-score">
-                        {{ participant.score }} điểm
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i> Chưa có người tham gia nào hoàn thành cuộc thi này.
-            </div>
-        {% endif %}
-    </div>
-    
-    {% if request.user.is_staff %}
-        <div class="card mb-4">
-            <div class="card-header bg-orange text-white">
-                <h5 class="mb-0"><i class="fas fa-cogs"></i> Quản Lý Cuộc Thi</h5>
-            </div>
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <a href="{% url 'advanced_learning:edit_competition' competition_id=competition.id %}" class="btn btn-outline-orange">
-                        <i class="fas fa-edit"></i> Chỉnh Sửa Thông Tin
-                    </a>
-                    <a href="{% url 'advanced_learning:edit_competition_questions' competition_id=competition.id %}" class="btn btn-outline-orange">
-                        <i class="fas fa-question-circle"></i> Quản Lý Câu Hỏi
-                    </a>
-                    <a href="{% url 'advanced_learning:delete_competition' competition_id=competition.id %}" class="btn btn-outline-danger">
-                        <i class="fas fa-trash"></i> Xóa Cuộc Thi
-                    </a>
-                </div>
-            </div>
-        </div>
-    {% endif %}
+<div id="competition-detail-container">
+    {% include 'advanced_learning/competitions/detail_partial.html' %}
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Thêm CSS cho màu cam
-        const style = document.createElement('style');
-        style.textContent = `
-            .btn-orange {
-                background-color: #fd7e14;
-                border-color: #fd7e14;
-                color: white;
-            }
-            .btn-orange:hover {
-                background-color: #e76b00;
-                border-color: #e76b00;
-                color: white;
-            }
-            .btn-outline-orange {
-                color: #fd7e14;
-                border-color: #fd7e14;
-            }
-            .btn-outline-orange:hover {
-                background-color: #fd7e14;
-                color: white;
-            }
-            .bg-orange {
-                background-color: #fd7e14 !important;
-            }
-            .text-orange {
-                color: #fd7e14 !important;
-            }
-        `;
-        document.head.appendChild(style);
-        
-        // Tính thời gian còn lại cho cuộc thi
-        const competitionCountdown = document.getElementById('competition-countdown');
-        if (competitionCountdown) {
-            const endTime = new Date('{{ competition.end_time|date:"Y-m-d H:i:s" }}');
-            
-            function updateCountdown() {
-                const now = new Date();
-                const diff = endTime - now;
-                
-                if (diff <= 0) {
-                    competitionCountdown.textContent = 'Đã kết thúc';
-                    return;
-                }
-                
-                const hours = Math.floor(diff / (1000 * 60 * 60));
-                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-                
-                competitionCountdown.textContent = `${hours}h ${minutes}m ${seconds}s`;
-            }
-            
-            updateCountdown();
-            setInterval(updateCountdown, 1000);
-        }
-        
-        // Tính thời gian còn lại cho người tham gia
-        const timeRemaining = document.getElementById('time-remaining');
-        if (timeRemaining) {
-            {% if user_participation and not user_participation.end_time %}
-                const startTime = new Date('{{ user_participation.start_time|date:"Y-m-d H:i:s" }}');
-                const timeLimit = {{ competition.time_limit }} * 60 * 1000; // Chuyển đổi phút thành mili giây
-                const endTime = new Date(startTime.getTime() + timeLimit);
-                
-                function updateTimeRemaining() {
-                    const now = new Date();
-                    const diff = endTime - now;
-                    
-                    if (diff <= 0) {
-                        timeRemaining.textContent = 'Hết thời gian';
-                        return;
-                    }
-                    
-                    const minutes = Math.floor(diff / (1000 * 60));
-                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-                    
-                    timeRemaining.textContent = `${minutes}m ${seconds}s`;
-                }
-                
-                updateTimeRemaining();
-                setInterval(updateTimeRemaining, 1000);
-            {% endif %}
+        // Khởi tạo Alpine.js nếu cần
+        if (typeof Alpine !== 'undefined') {
+            Alpine.start();
         }
     });
 </script>

@@ -1,0 +1,220 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Sở Thích Học Tập{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'personalization_dashboard' %}">Bảng Điều Khiển</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Sở Thích Học Tập</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Sở Thích Học Tập</h4>
+                </div>
+                <div class="card-body">
+                    <p class="lead">Cá nhân hóa trải nghiệm học tập của bạn bằng cách thiết lập sở thích học tập.</p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <h5>Phong Cách Học Tập</h5>
+                                <p class="text-muted">Chọn phong cách học tập phù hợp nhất với bạn.</p>
+                                
+                                <div class="row">
+                                    {% for value, text in form.fields.preferred_learning_style.choices %}
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card h-100 learning-style-card {% if preference.preferred_learning_style == value %}border-primary{% endif %}">
+                                                <div class="card-body">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="preferred_learning_style" id="learning_style_{{ value }}" value="{{ value }}" {% if preference.preferred_learning_style == value %}checked{% endif %}>
+                                                        <label class="form-check-label" for="learning_style_{{ value }}">
+                                                            <h6>{{ text }}</h6>
+                                                        </label>
+                                                    </div>
+                                                    
+                                                    <div class="mt-2 ps-4">
+                                                        {% if value == 'visual' %}
+                                                            <p>Bạn học tốt nhất thông qua hình ảnh, biểu đồ, và video.</p>
+                                                            <i class="fas fa-images fa-2x text-primary"></i>
+                                                        {% elif value == 'auditory' %}
+                                                            <p>Bạn học tốt nhất thông qua âm thanh, bài giảng, và thảo luận.</p>
+                                                            <i class="fas fa-headphones fa-2x text-primary"></i>
+                                                        {% elif value == 'reading' %}
+                                                            <p>Bạn học tốt nhất thông qua đọc và viết.</p>
+                                                            <i class="fas fa-book fa-2x text-primary"></i>
+                                                        {% elif value == 'kinesthetic' %}
+                                                            <p>Bạn học tốt nhất thông qua thực hành và trải nghiệm.</p>
+                                                            <i class="fas fa-hands fa-2x text-primary"></i>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <h5>Độ Khó Ưa Thích</h5>
+                                <p class="text-muted">Chọn cách bạn muốn tiếp cận độ khó của nội dung học tập.</p>
+                                
+                                <div class="row">
+                                    {% for value, text in form.fields.preferred_difficulty.choices %}
+                                        <div class="col-md-4 mb-3">
+                                            <div class="card h-100 difficulty-card {% if preference.preferred_difficulty == value %}border-primary{% endif %}">
+                                                <div class="card-body">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="preferred_difficulty" id="difficulty_{{ value }}" value="{{ value }}" {% if preference.preferred_difficulty == value %}checked{% endif %}>
+                                                        <label class="form-check-label" for="difficulty_{{ value }}">
+                                                            <h6>{{ text }}</h6>
+                                                        </label>
+                                                    </div>
+                                                    
+                                                    <div class="mt-2 ps-4">
+                                                        {% if value == 'easy_to_hard' %}
+                                                            <p>Bắt đầu với nội dung cơ bản và dần dần tăng độ khó.</p>
+                                                            <div class="difficulty-visual">
+                                                                <span class="badge bg-success">Dễ</span>
+                                                                <i class="fas fa-arrow-right"></i>
+                                                                <span class="badge bg-warning">Trung bình</span>
+                                                                <i class="fas fa-arrow-right"></i>
+                                                                <span class="badge bg-danger">Khó</span>
+                                                            </div>
+                                                        {% elif value == 'hard_to_easy' %}
+                                                            <p>Bắt đầu với thử thách và dần dần giảm độ khó.</p>
+                                                            <div class="difficulty-visual">
+                                                                <span class="badge bg-danger">Khó</span>
+                                                                <i class="fas fa-arrow-right"></i>
+                                                                <span class="badge bg-warning">Trung bình</span>
+                                                                <i class="fas fa-arrow-right"></i>
+                                                                <span class="badge bg-success">Dễ</span>
+                                                            </div>
+                                                        {% elif value == 'mixed' %}
+                                                            <p>Kết hợp các mức độ khó khác nhau để giữ sự hứng thú.</p>
+                                                            <div class="difficulty-visual">
+                                                                <span class="badge bg-warning">Trung bình</span>
+                                                                <i class="fas fa-arrow-right"></i>
+                                                                <span class="badge bg-danger">Khó</span>
+                                                                <i class="fas fa-arrow-right"></i>
+                                                                <span class="badge bg-success">Dễ</span>
+                                                            </div>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                {{ form.preferred_study_time|as_crispy_field }}
+                                <small class="text-muted">Chọn thời gian trong ngày bạn học tập hiệu quả nhất.</small>
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.preferred_session_duration|as_crispy_field }}
+                                <small class="text-muted">Chọn thời lượng phiên học tập lý tưởng của bạn (phút).</small>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <h5>Chủ Đề Ưa Thích</h5>
+                                <p class="text-muted">Chọn các chủ đề bạn quan tâm nhất.</p>
+                                
+                                {{ form.preferred_topics|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="{% url 'personalization_dashboard' %}" class="btn btn-secondary me-md-2">Hủy</a>
+                            <button type="submit" class="btn btn-primary">Lưu Sở Thích</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Card styling */
+    .learning-style-card, .difficulty-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .learning-style-card:hover, .difficulty-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .learning-style-card.border-primary, .difficulty-card.border-primary {
+        box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+    }
+    
+    /* Difficulty visual */
+    .difficulty-visual {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 10px;
+    }
+    
+    .difficulty-visual .fas {
+        margin: 0 5px;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Làm cho toàn bộ thẻ có thể nhấp để chọn radio button
+        const learningStyleCards = document.querySelectorAll('.learning-style-card');
+        const difficultyCards = document.querySelectorAll('.difficulty-card');
+        
+        learningStyleCards.forEach(card => {
+            card.addEventListener('click', function() {
+                const radio = this.querySelector('input[type="radio"]');
+                radio.checked = true;
+                
+                // Cập nhật giao diện
+                learningStyleCards.forEach(c => c.classList.remove('border-primary'));
+                this.classList.add('border-primary');
+            });
+        });
+        
+        difficultyCards.forEach(card => {
+            card.addEventListener('click', function() {
+                const radio = this.querySelector('input[type="radio"]');
+                radio.checked = true;
+                
+                // Cập nhật giao diện
+                difficultyCards.forEach(c => c.classList.remove('border-primary'));
+                this.classList.add('border-primary');
+            });
+        });
+    });
+</script>
+{% endblock %}

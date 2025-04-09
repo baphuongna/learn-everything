@@ -1,0 +1,106 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Thông Báo{% endblock %}
+
+{% block content %}
+<div class="container mt-4" x-data="{ unreadCount: {{ unread_count }} }">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                Thông Báo
+                <span class="badge bg-danger" x-show="unreadCount > 0" x-text="unreadCount"></span>
+            </h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="btn-group">
+                <a href="{% url 'notifications:preferences' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-cog"></i> Tùy Chọn Thông Báo
+                </a>
+                <button class="btn btn-outline-success ms-2"
+                        x-show="unreadCount > 0"
+                        hx-post="{% url 'notifications:mark_all_read' %}"
+                        hx-target="#notification-list-container"
+                        hx-swap="beforebegin"
+                        hx-indicator="#mark-all-read-indicator">
+                    <span id="mark-all-read-indicator" class="htmx-indicator spinner-border spinner-border-sm me-1"></span>
+                    <i class="fas fa-check-double"></i> Đánh Dấu Tất Cả Đã Đọc
+                </button>
+                <button class="btn btn-outline-danger ms-2"
+                        x-show="{{ total_count }} > 0"
+                        hx-post="{% url 'notifications:delete_all' %}"
+                        hx-target="#notification-list-container"
+                        hx-swap="innerHTML"
+                        hx-confirm="Bạn có chắc chắn muốn xóa tất cả thông báo?"
+                        hx-indicator="#delete-all-indicator">
+                    <span id="delete-all-indicator" class="htmx-indicator spinner-border spinner-border-sm me-1"></span>
+                    <i class="fas fa-trash"></i> Xóa Tất Cả
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification-list-container">
+        {% include 'notifications/notification_list_partial.html' %}
+    </div>
+</div>
+
+<script>
+    // Lắng nghe sự kiện cập nhật số lượng thông báo chưa đọc
+    document.addEventListener('update-unread-count', function(e) {
+        Alpine.store('notifications', { unreadCount: e.detail.count });
+        
+        // Cập nhật biến Alpine.js trong component hiện tại
+        const alpineComponent = Alpine.getComponent(document.querySelector('[x-data]'));
+        if (alpineComponent) {
+            alpineComponent.unreadCount = e.detail.count;
+        }
+        
+        // Cập nhật badge trên thanh điều hướng
+        const navBadge = document.querySelector('#notification-nav-badge');
+        if (navBadge) {
+            if (e.detail.count > 0) {
+                navBadge.textContent = e.detail.count;
+                navBadge.classList.remove('d-none');
+            } else {
+                navBadge.classList.add('d-none');
+            }
+        }
+    });
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .notification-list .list-group-item {
+        border-left: 3px solid transparent;
+        transition: all 0.2s;
+    }
+
+    .notification-list .list-group-item.unread {
+        border-left: 3px solid #007bff;
+        background-color: rgba(0, 123, 255, 0.05);
+    }
+
+    .notification-list .list-group-item:hover {
+        background-color: rgba(0, 0, 0, 0.03);
+    }
+
+    .notification-content {
+        flex: 1;
+    }
+
+    .notification-actions {
+        white-space: nowrap;
+    }
+    
+    .notification-filters .btn-group {
+        border-radius: 0.25rem;
+        overflow: hidden;
+    }
+    
+    .notification-filters .btn {
+        border-radius: 0;
+    }
+</style>
+{% endblock %}

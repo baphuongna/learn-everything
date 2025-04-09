@@ -1,0 +1,288 @@
+{% load static %}
+
+<div class="cornell-note-preview" x-data="{ activeTab: 'preview' }">
+    <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">{{ note.title }}</h5>
+            <div>
+                <span class="badge bg-light text-dark">{{ note.subject.name }}</span>
+                {% if note.next_review_date and note.next_review_date <= now %}
+                    <span class="badge bg-warning">Cần ôn tập</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- Tab Navigation -->
+            <ul class="nav nav-tabs mb-4">
+                <li class="nav-item">
+                    <a class="nav-link" :class="{ 'active': activeTab === 'preview' }" href="#" @click.prevent="activeTab = 'preview'">
+                        <i class="fas fa-eye"></i> Xem trước
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" :class="{ 'active': activeTab === 'study' }" href="#" @click.prevent="activeTab = 'study'">
+                        <i class="fas fa-book-reader"></i> Chế độ học
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" :class="{ 'active': activeTab === 'info' }" href="#" @click.prevent="activeTab = 'info'">
+                        <i class="fas fa-info-circle"></i> Thông tin
+                    </a>
+                </li>
+            </ul>
+            
+            <!-- Tab Content -->
+            <div x-show="activeTab === 'preview'">
+                <div class="cornell-note-container">
+                    <div class="cornell-note-header">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Chủ đề:</strong> {{ note.subject.name }}</p>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <p><strong>Ngày tạo:</strong> {{ note.created_at|date:"d/m/Y" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="cornell-note-body">
+                        <div class="row">
+                            <div class="col-md-3 cornell-cue-column">
+                                <h6 class="text-center mb-3">Cột gợi ý</h6>
+                                <div class="cue-content">
+                                    {{ note.cue_column|linebreaks }}
+                                </div>
+                            </div>
+                            <div class="col-md-9 cornell-main-notes">
+                                <h6 class="text-center mb-3">Ghi chú chính</h6>
+                                <div class="main-content">
+                                    {{ note.main_notes|linebreaks }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="cornell-note-summary mt-4">
+                        <h6 class="text-center mb-3">Tóm tắt</h6>
+                        <div class="summary-content">
+                            {{ note.summary|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div x-show="activeTab === 'study'" x-data="{ hideMain: false, hideSummary: false }">
+                <div class="alert alert-info mb-4">
+                    <i class="fas fa-info-circle"></i> Chế độ học: Sử dụng cột gợi ý để tự trả lời, sau đó kiểm tra với nội dung ghi chú chính.
+                </div>
+                
+                <div class="cornell-note-container">
+                    <div class="cornell-note-body">
+                        <div class="row">
+                            <div class="col-md-4 cornell-cue-column">
+                                <h6 class="text-center mb-3">Cột gợi ý</h6>
+                                <div class="cue-content">
+                                    {{ note.cue_column|linebreaks }}
+                                </div>
+                            </div>
+                            <div class="col-md-8 cornell-main-notes">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="mb-0">Ghi chú chính</h6>
+                                    <button class="btn btn-sm btn-outline-primary" @click="hideMain = !hideMain">
+                                        <span x-show="!hideMain"><i class="fas fa-eye-slash"></i> Ẩn</span>
+                                        <span x-show="hideMain"><i class="fas fa-eye"></i> Hiện</span>
+                                    </button>
+                                </div>
+                                <div class="main-content" x-show="!hideMain" x-transition>
+                                    {{ note.main_notes|linebreaks }}
+                                </div>
+                                <div class="main-content-hidden text-center p-5" x-show="hideMain" x-transition>
+                                    <p class="text-muted">Nội dung đã được ẩn. Hãy thử trả lời các câu hỏi từ cột gợi ý trước.</p>
+                                    <button class="btn btn-primary" @click="hideMain = false">
+                                        <i class="fas fa-eye"></i> Hiện nội dung
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="cornell-note-summary mt-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="mb-0">Tóm tắt</h6>
+                            <button class="btn btn-sm btn-outline-primary" @click="hideSummary = !hideSummary">
+                                <span x-show="!hideSummary"><i class="fas fa-eye-slash"></i> Ẩn</span>
+                                <span x-show="hideSummary"><i class="fas fa-eye"></i> Hiện</span>
+                            </button>
+                        </div>
+                        <div class="summary-content" x-show="!hideSummary" x-transition>
+                            {{ note.summary|linebreaks }}
+                        </div>
+                        <div class="summary-content-hidden text-center p-5" x-show="hideSummary" x-transition>
+                            <p class="text-muted">Tóm tắt đã được ẩn. Hãy thử tóm tắt nội dung bằng lời của bạn trước.</p>
+                            <button class="btn btn-primary" @click="hideSummary = false">
+                                <i class="fas fa-eye"></i> Hiện tóm tắt
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <a href="{% url 'advanced_learning:cornell_note_review' note_id=note.id %}" class="btn btn-success">
+                        <i class="fas fa-check-circle"></i> Đánh dấu đã ôn tập
+                    </a>
+                </div>
+            </div>
+            
+            <div x-show="activeTab === 'info'">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="fas fa-info-circle"></i> Thông tin ghi chú</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Tiêu đề:</span>
+                                        <span class="text-primary">{{ note.title }}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Chủ đề:</span>
+                                        <span>{{ note.subject.name }}</span>
+                                    </li>
+                                    {% if note.topic %}
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Chủ đề con:</span>
+                                        <span>{{ note.topic.name }}</span>
+                                    </li>
+                                    {% endif %}
+                                    {% if note.lesson %}
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Bài học:</span>
+                                        <span>{{ note.lesson.title }}</span>
+                                    </li>
+                                    {% endif %}
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Ngày tạo:</span>
+                                        <span>{{ note.created_at|date:"d/m/Y H:i" }}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Cập nhật lần cuối:</span>
+                                        <span>{{ note.updated_at|date:"d/m/Y H:i" }}</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="fas fa-sync-alt"></i> Thông tin ôn tập</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Số lần ôn tập:</span>
+                                        <span class="badge bg-primary">{{ note.review_count }}</span>
+                                    </li>
+                                    {% if note.last_review_date %}
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Lần ôn tập gần nhất:</span>
+                                        <span>{{ note.last_review_date|date:"d/m/Y" }}</span>
+                                    </li>
+                                    {% endif %}
+                                    {% if note.next_review_date %}
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Ôn tập tiếp theo:</span>
+                                        <span {% if note.next_review_date <= now %}class="text-danger"{% endif %}>
+                                            {{ note.next_review_date|date:"d/m/Y" }}
+                                            {% if note.next_review_date <= now %}
+                                            <i class="fas fa-exclamation-circle"></i>
+                                            {% endif %}
+                                        </span>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                                
+                                <div class="text-center mt-3">
+                                    <a href="{% url 'advanced_learning:cornell_note_review' note_id=note.id %}" class="btn btn-info">
+                                        <i class="fas fa-sync-alt"></i> Ôn tập ngay
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="fas fa-tools"></i> Công cụ</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-grid gap-2">
+                                    <a href="{% url 'advanced_learning:cornell_note_export_pdf' note_id=note.id %}" class="btn btn-outline-danger">
+                                        <i class="fas fa-file-pdf"></i> Xuất PDF
+                                    </a>
+                                    <a href="{% url 'advanced_learning:cornell_note_create_flashcards' note_id=note.id %}" class="btn btn-outline-primary">
+                                        <i class="fas fa-layer-group"></i> Tạo Flashcards
+                                    </a>
+                                    <a href="{% url 'advanced_learning:cornell_note_share' note_id=note.id %}" class="btn btn-outline-success">
+                                        <i class="fas fa-share-alt"></i> Chia sẻ
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4 text-center">
+                <a href="{% url 'advanced_learning:cornell_note_detail' note_id=note.id %}" class="btn btn-primary"
+                   hx-get="{% url 'advanced_learning:cornell_note_detail' note_id=note.id %}?format=partial"
+                   hx-target="#notes-container"
+                   hx-swap="innerHTML"
+                   hx-push-url="true">
+                    <i class="fas fa-external-link-alt"></i> Xem đầy đủ
+                </a>
+                <a href="{% url 'advanced_learning:cornell_note_list' %}" class="btn btn-outline-secondary ms-2"
+                   hx-get="{% url 'advanced_learning:cornell_note_list' %}?format=partial"
+                   hx-target="#notes-container"
+                   hx-swap="innerHTML"
+                   hx-push-url="true">
+                    <i class="fas fa-arrow-left"></i> Quay lại danh sách
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .cornell-note-container {
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 15px;
+        background-color: #f9f9f9;
+    }
+    
+    .cornell-cue-column {
+        border-right: 2px solid #007bff;
+        min-height: 300px;
+    }
+    
+    .cornell-note-body {
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .cue-content, .main-content, .summary-content {
+        white-space: pre-line;
+        padding: 10px;
+        background-color: white;
+        border-radius: 5px;
+        min-height: 100px;
+    }
+    
+    .nav-tabs .nav-link.active {
+        font-weight: bold;
+        border-bottom: 2px solid #007bff;
+    }
+</style>

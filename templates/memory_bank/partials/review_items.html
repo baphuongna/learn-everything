@@ -1,0 +1,46 @@
+<div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+    <h5 class="mb-0"><i class="fas fa-sync-alt"></i> Ghi Nhớ Cần Ôn Tập</h5>
+    <button class="btn btn-sm btn-light" 
+            hx-get="{% url 'memory_home' %}?section=review" 
+            hx-target="#review-items-section" 
+            hx-swap="outerHTML"
+            hx-indicator="#review-items-indicator">
+        <i class="fas fa-sync-alt"></i>
+        <span id="review-items-indicator" class="htmx-indicator spinner-border spinner-border-sm"></span>
+    </button>
+</div>
+<div class="card-body p-0">
+    <div class="list-group list-group-flush">
+        {% for item in review_items %}
+        <div class="list-group-item">
+            <a href="{% url 'memory_item_review' item.pk %}" class="text-decoration-none">
+                <h5 class="mb-1">{{ item.title }}</h5>
+            </a>
+            <small>
+                <span class="badge bg-primary">{{ item.category.name }}</span>
+                {% if item.review_count == 0 %}
+                <span class="badge bg-info">Lần đầu ôn tập</span>
+                {% else %}
+                <span class="badge bg-secondary">Lần ôn tập thứ {{ item.review_count|add:1 }}</span>
+                {% endif %}
+            </small>
+        </div>
+        {% empty %}
+        <div class="list-group-item">
+            <div class="alert alert-success mb-0">
+                <h5 class="alert-heading">Chúc mừng!</h5>
+                <p class="mb-0">Bạn đã ôn tập tất cả ghi nhớ cần thiết cho hôm nay.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+<div class="card-footer">
+    <a href="{% url 'memory_review_list' %}" class="btn btn-danger">
+        {% if total_review_items > 0 %}
+        Ôn tập ngay ({{ total_review_items }})
+        {% else %}
+        Xem lịch ôn tập
+        {% endif %}
+    </a>
+</div>

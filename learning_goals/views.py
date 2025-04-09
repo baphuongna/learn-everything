@@ -31,6 +31,7 @@ def goal_list(request):
     # Lọc theo loại mục tiêu
     goal_type = request.GET.get('type', '')
     status = request.GET.get('status', '')
+    format_type = request.GET.get('format', '')
 
     # Lấy danh sách mục tiêu
     goals = LearningGoal.objects.filter(user=request.user)
@@ -56,6 +57,17 @@ def goal_list(request):
     if total_goals > 0:
         completion_rate = int((completed_goals / total_goals) * 100)
 
+    # Sắp xếp mục tiêu
+    sort_by = request.GET.get('sort', 'end_date')
+    if sort_by == 'priority':
+        goals = goals.order_by('-priority', 'end_date')
+    elif sort_by == 'progress':
+        goals = goals.order_by('-progress_percentage', 'end_date')
+    elif sort_by == 'created':
+        goals = goals.order_by('-created_at')
+    else:  # end_date
+        goals = goals.order_by('end_date')
+
     context = {
         'goals': goals,
         'daily_goals': daily_goals,
@@ -68,13 +80,22 @@ def goal_list(request):
         'completion_rate': completion_rate,
         'selected_type': goal_type,
         'selected_status': status,
+        'sort_by': sort_by
     }
+
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'learning_goals/goal_list_partial.html', context)
 
     return render(request, 'learning_goals/goal_list.html', context)
 
 @login_required
 def goal_detail(request, goal_id):
     """Hiển thị chi tiết mục tiêu học tập"""
+    # Lấy tham số từ request
+    format_type = request.GET.get('format', '')
+    section = request.GET.get('section', '')
+
     # Kiểm tra xem người dùng có quyền truy cập mục tiêu không
     goal = get_object_or_404(LearningGoal, id=goal_id)
 
@@ -121,6 +142,16 @@ def goal_detail(request, goal_id):
                 latest_progress.notes = notes
                 latest_progress.save()
 
+                if request.htmx:
+                    context = {
+                        'goal': goal,
+                        'progress_history': progress_history,
+                        'days_remaining': goal.days_remaining(),
+                        'expected_progress': goal.expected_progress(),
+                        'is_behind': goal.is_behind_schedule(),
+                    }
+                    return render(request, 'learning_goals/goal_progress_updated.html', context)
+
                 messages.success(request, 'Tiến độ đã được cập nhật thành công!')
                 return redirect('learning_goals:goal_detail', goal_id=goal.id)
         else:
@@ -138,6 +169,13 @@ def goal_detail(request, goal_id):
                 user=request.user,
                 content=content
             )
+
+            if request.htmx:
+                context = {
+                    'comment': comment,
+                    'goal': goal,
+                }
+                return render(request, 'learning_goals/comment_added.html', context)
 
             messages.success(request, 'Bình luận đã được thêm thành công!')
             return redirect('learning_goals:goal_detail', goal_id=goal.id)
@@ -171,6 +209,13 @@ def goal_detail(request, goal_id):
                     message=message
                 )
 
+                if request.htmx:
+                    context = {
+                        'invitation': invitation,
+                        'goal': goal,
+                    }
+                    return render(request, 'learning_goals/invitation_sent.html', context)
+
                 messages.success(request, f'Lời mời đã được gửi đến {username}')
                 return redirect('learning_goals:goal_detail', goal_id=goal.id)
     else:
@@ -195,6 +240,17 @@ def goal_detail(request, goal_id):
         'can_invite': can_invite,
         'is_owner': goal.user == request.user,
     }
+
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        if section == 'progress':
+            return render(request, 'learning_goals/goal_progress_partial.html', context)
+        elif section == 'comments':
+            return render(request, 'learning_goals/goal_comments_partial.html', context)
+        elif section == 'collaborators':
+            return render(request, 'learning_goals/goal_collaborators_partial.html', context)
+        else:
+            return render(request, 'learning_goals/goal_detail_partial.html', context)
 
     return render(request, 'learning_goals/goal_detail.html', context)
 
@@ -266,10 +322,22 @@ def goal_delete(request, goal_id):
     return redirect('learning_goals:goal_list')
 
 @login_required
-@require_POST
 def update_progress(request, goal_id):
-    """Cập nhật tiến độ mục tiêu (AJAX)"""
-    goal = get_object_or_404(LearningGoal, id=goal_id, user=request.user)
+    """Cập nhật tiến độ mục tiêu (AJAX/HTMX)"""
+    goal = get_object_or_404(LearningGoal, id=goal_id)
+
+    # Kiểm tra quyền truy cập
+    can_update_progress = (goal.user == request.user) or goal.collaborators.filter(user=request.user, role__in=['collaborator', 'admin']).exists()
+
+    if not can_update_progress:
+        if request.htmx:
+            return render(request, 'learning_goals/error_message.html', {
+                'message': 'Bạn không có quyền cập nhật tiến độ của mục tiêu này'
+            })
+        return JsonResponse({
+            'success': False,
+            'error': 'Bạn không có quyền cập nhật tiến độ của mục tiêu này',
+        })
 
     try:
         new_value = int(request.POST.get('value', 0))
@@ -283,6 +351,20 @@ def update_progress(request, goal_id):
         latest_progress.notes = notes
         latest_progress.save()
 
+        # Lấy lịch sử tiến độ
+        progress_history = goal.progress_records.all().order_by('date')
+
+        # Kiểm tra nếu là request HTMX
+        if request.htmx:
+            context = {
+                'goal': goal,
+                'progress_history': progress_history,
+                'days_remaining': goal.days_remaining(),
+                'expected_progress': goal.expected_progress(),
+                'is_behind': goal.is_behind_schedule(),
+            }
+            return render(request, 'learning_goals/goal_progress_updated.html', context)
+
         return JsonResponse({
             'success': True,
             'progress': progress_percentage,
@@ -291,6 +373,10 @@ def update_progress(request, goal_id):
             'status_display': goal.get_status_display(),
         })
     except Exception as e:
+        if request.htmx:
+            return render(request, 'learning_goals/error_message.html', {
+                'message': f'Lỗi: {str(e)}'
+            })
         return JsonResponse({
             'success': False,
             'error': str(e),
@@ -299,6 +385,10 @@ def update_progress(request, goal_id):
 @login_required
 def goal_dashboard(request):
     """Trang tổng quan mục tiêu học tập"""
+    # Lấy tham số từ request
+    format_type = request.GET.get('format', '')
+    section = request.GET.get('section', '')
+
     # Lấy tất cả mục tiêu của người dùng
     goals = LearningGoal.objects.filter(user=request.user)
 
@@ -351,6 +441,19 @@ def goal_dashboard(request):
         'upcoming_deadlines': upcoming_deadlines,
         'recently_completed': recently_completed,
     }
+
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        if section == 'stats':
+            return render(request, 'learning_goals/dashboard_stats_partial.html', context)
+        elif section == 'active_goals':
+            return render(request, 'learning_goals/dashboard_active_goals_partial.html', context)
+        elif section == 'upcoming_deadlines':
+            return render(request, 'learning_goals/dashboard_upcoming_deadlines_partial.html', context)
+        elif section == 'recently_completed':
+            return render(request, 'learning_goals/dashboard_recently_completed_partial.html', context)
+        else:
+            return render(request, 'learning_goals/goal_dashboard_partial.html', context)
 
     return render(request, 'learning_goals/goal_dashboard.html', context)
 

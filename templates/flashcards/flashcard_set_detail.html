@@ -9,7 +9,7 @@
         height: 300px;
         margin-bottom: 2rem;
     }
-    
+
     .flashcard-inner {
         position: relative;
         width: 100%;
@@ -19,11 +19,11 @@
         transform-style: preserve-3d;
         cursor: pointer;
     }
-    
+
     .flashcard.flipped .flashcard-inner {
         transform: rotateY(180deg);
     }
-    
+
     .flashcard-front, .flashcard-back {
         position: absolute;
         width: 100%;
@@ -37,24 +37,24 @@
         padding: 1rem;
         border-radius: 0.25rem;
     }
-    
+
     .flashcard-front {
         background-color: #f8f9fa;
         border: 1px solid #dee2e6;
     }
-    
+
     .flashcard-back {
         background-color: #e9ecef;
         border: 1px solid #dee2e6;
         transform: rotateY(180deg);
     }
-    
+
     .flashcard-controls {
         display: flex;
         justify-content: space-between;
         margin-top: 1rem;
     }
-    
+
     .recall-buttons {
         display: flex;
         justify-content: center;
@@ -83,18 +83,69 @@
 
 <div class="row">
     <div class="col-md-8">
-        <div class="card mb-4">
+        <div class="card mb-4" x-data="{
+            currentIndex: 0,
+            totalCards: {{ flashcards|length }},
+            flipped: false,
+            flashcards: {{ flashcards|safe }},
+
+            nextCard() {
+                if (this.currentIndex < this.totalCards - 1) {
+                    this.currentIndex++;
+                    this.flipped = false;
+                }
+            },
+
+            prevCard() {
+                if (this.currentIndex > 0) {
+                    this.currentIndex--;
+                    this.flipped = false;
+                }
+            },
+
+            flipCard() {
+                this.flipped = !this.flipped;
+            },
+
+            updateRecallLevel(level) {
+                const flashcardId = this.flashcards[this.currentIndex].id;
+
+                // Show feedback message
+                this.$refs.feedbackContainer.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div></div>';
+
+                // Send request to server
+                htmx.ajax('POST', '{% url "update_recall_level" %}', {
+                    target: '#feedback-container',
+                    swap: 'innerHTML',
+                    values: {
+                        'flashcard_id': flashcardId,
+                        'recall_level': level,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    }
+                });
+
+                // Move to next card automatically after a short delay
+                setTimeout(() => {
+                    if (this.currentIndex < this.totalCards - 1) {
+                        this.nextCard();
+                    }
+                }, 1500);
+            }
+        }">
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Flashcards</h5>
                 <div>
-                    <span id="current-card">1</span>/<span id="total-cards">{{ flashcards|length }}</span>
+                    <span x-text="currentIndex + 1"></span>/<span x-text="totalCards"></span>
                 </div>
             </div>
             <div class="card-body">
                 <div id="flashcard-container">
                     {% for flashcard in flashcards %}
-                    <div class="flashcard {% if forloop.first %}active{% else %}d-none{% endif %}" data-id="{{ flashcard.id }}">
-                        <div class="flashcard-inner">
+                    <div class="flashcard"
+                         x-show="currentIndex === {{ forloop.counter0 }}"
+                         x-transition.opacity
+                         data-id="{{ flashcard.id }}">
+                        <div class="flashcard-inner" :class="{ 'flipped': flipped }" @click="flipCard()">
                             <div class="flashcard-front">
                                 <h3>{{ flashcard.front }}</h3>
                                 {% if flashcard.image %}
@@ -113,39 +164,45 @@
                     </div>
                     {% endfor %}
                 </div>
-                
+
                 {% if flashcards %}
                 <div class="flashcard-controls">
-                    <button id="prev-btn" class="btn btn-outline-primary" {% if flashcards|length == 1 %}disabled{% endif %}>
+                    <button class="btn btn-outline-primary"
+                            @click="prevCard()"
+                            :disabled="currentIndex === 0">
                         <i class="fas fa-arrow-left"></i> Trước
                     </button>
-                    <button id="flip-btn" class="btn btn-primary">
+                    <button class="btn btn-primary" @click="flipCard()">
                         <i class="fas fa-sync-alt"></i> Lật
                     </button>
-                    <button id="next-btn" class="btn btn-outline-primary" {% if flashcards|length == 1 %}disabled{% endif %}>
+                    <button class="btn btn-outline-primary"
+                            @click="nextCard()"
+                            :disabled="currentIndex === totalCards - 1">
                         Tiếp <i class="fas fa-arrow-right"></i>
                     </button>
                 </div>
-                
+
                 {% if user.is_authenticated %}
                 <div class="recall-buttons mt-4">
                     <h5 class="w-100 text-center mb-3">Mức độ nhớ của bạn?</h5>
-                    <button class="btn btn-danger recall-btn" data-level="1">
+                    <button class="btn btn-danger" @click="updateRecallLevel(1)">
                         <i class="fas fa-frown"></i> Khó nhớ
                     </button>
-                    <button class="btn btn-warning recall-btn" data-level="2">
+                    <button class="btn btn-warning" @click="updateRecallLevel(2)">
                         <i class="fas fa-meh"></i> Nhớ mờ mờ
                     </button>
-                    <button class="btn btn-success recall-btn" data-level="3">
+                    <button class="btn btn-success" @click="updateRecallLevel(3)">
                         <i class="fas fa-smile"></i> Nhớ rõ
                     </button>
                 </div>
+
+                <div id="feedback-container" x-ref="feedbackContainer" class="mt-3"></div>
                 {% endif %}
                 {% endif %}
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-4">
         <div class="card mb-4">
             <div class="card-header bg-primary text-white">
@@ -155,7 +212,7 @@
                 <p><strong>Bài học:</strong> <a href="{% url 'lesson_detail' flashcard_set.lesson.topic.subject.slug flashcard_set.lesson.topic.slug flashcard_set.lesson.slug %}">{{ flashcard_set.lesson.title }}</a></p>
                 <p><strong>Số lượng flashcard:</strong> {{ flashcards|length }}</p>
                 <p><strong>Ngày tạo:</strong> {{ flashcard_set.created_at|date:"d/m/Y" }}</p>
-                
+
                 {% if user.is_authenticated %}
                 <div class="mt-3">
                     <h6>Tiến độ ôn tập</h6>
@@ -167,7 +224,7 @@
                 {% endif %}
             </div>
         </div>
-        
+
         <div class="card">
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0">Phương Pháp Học Hiệu Quả</h5>
@@ -175,10 +232,10 @@
             <div class="card-body">
                 <h6><i class="fas fa-brain"></i> Active Recall</h6>
                 <p>Cố gắng nhớ thông tin trước khi lật thẻ để kiểm tra đáp án.</p>
-                
+
                 <h6><i class="fas fa-calendar-alt"></i> Spaced Repetition</h6>
                 <p>Hệ thống sẽ lên lịch ôn tập dựa trên mức độ nhớ của bạn.</p>
-                
+
                 <h6><i class="fas fa-chart-line"></i> Kaizen</h6>
                 <p>Học mỗi ngày một ít, đều đặn sẽ hiệu quả hơn học dồn.</p>
             </div>
@@ -188,98 +245,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const flashcards = document.querySelectorAll('.flashcard');
-        const currentCardEl = document.getElementById('current-card');
-        const totalCardsEl = document.getElementById('total-cards');
-        const prevBtn = document.getElementById('prev-btn');
-        const nextBtn = document.getElementById('next-btn');
-        const flipBtn = document.getElementById('flip-btn');
-        const recallBtns = document.querySelectorAll('.recall-btn');
-        
-        let currentIndex = 0;
-        
-        // Flip card when clicked
-        flashcards.forEach(card => {
-            card.addEventListener('click', function() {
-                this.classList.toggle('flipped');
-            });
-        });
-        
-        // Flip card with button
-        if (flipBtn) {
-            flipBtn.addEventListener('click', function() {
-                const currentCard = flashcards[currentIndex];
-                currentCard.classList.toggle('flipped');
-            });
-        }
-        
-        // Navigate to previous card
-        if (prevBtn) {
-            prevBtn.addEventListener('click', function() {
-                if (currentIndex > 0) {
-                    flashcards[currentIndex].classList.remove('active');
-                    flashcards[currentIndex].classList.add('d-none');
-                    flashcards[currentIndex].classList.remove('flipped');
-                    
-                    currentIndex--;
-                    
-                    flashcards[currentIndex].classList.add('active');
-                    flashcards[currentIndex].classList.remove('d-none');
-                    currentCardEl.textContent = currentIndex + 1;
-                }
-            });
-        }
-        
-        // Navigate to next card
-        if (nextBtn) {
-            nextBtn.addEventListener('click', function() {
-                if (currentIndex < flashcards.length - 1) {
-                    flashcards[currentIndex].classList.remove('active');
-                    flashcards[currentIndex].classList.add('d-none');
-                    flashcards[currentIndex].classList.remove('flipped');
-                    
-                    currentIndex++;
-                    
-                    flashcards[currentIndex].classList.add('active');
-                    flashcards[currentIndex].classList.remove('d-none');
-                    currentCardEl.textContent = currentIndex + 1;
-                }
-            });
-        }
-        
-        // Handle recall level buttons
-        if (recallBtns.length > 0) {
-            recallBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const level = this.dataset.level;
-                    const flashcardId = flashcards[currentIndex].dataset.id;
-                    
-                    // Send recall level to server
-                    fetch('{% url "update_recall_level" %}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': '{{ csrf_token }}'
-                        },
-                        body: JSON.stringify({
-                            flashcard_id: flashcardId,
-                            recall_level: level
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            // Move to next card automatically
-                            if (currentIndex < flashcards.length - 1) {
-                                nextBtn.click();
-                            }
-                        }
-                    });
-                });
-            });
-        }
-    });
-</script>
+<!-- Alpine.js đã xử lý tất cả các tương tác -->
 {% endblock %}

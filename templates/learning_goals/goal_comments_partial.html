@@ -1,0 +1,48 @@
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="fas fa-comments me-2"></i> Bình Luận</h5>
+            </div>
+            <div class="card-body">
+                <div id="comment-section">
+                    {% if comments %}
+                        <div class="comments-list mb-4">
+                            {% for comment in comments %}
+                                <div class="comment-item">
+                                    <div class="comment-header d-flex justify-content-between">
+                                        <div>
+                                            <strong>{{ comment.user.username }}</strong>
+                                            <small class="text-muted ms-2">{{ comment.created_at|date:"d/m/Y H:i" }}</small>
+                                        </div>
+                                    </div>
+                                    <div class="comment-body">
+                                        <p>{{ comment.content|linebreaksbr }}</p>
+                                    </div>
+                                </div>
+                                {% if not forloop.last %}<hr>{% endif %}
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-4">Chưa có bình luận nào.</p>
+                    {% endif %}
+                </div>
+                
+                <form id="comment-form" hx-post="{% url 'learning_goals:goal_detail' goal_id=goal.id %}" hx-target="#comment-section" hx-swap="beforeend" hx-indicator="#comment-indicator">
+                    {% csrf_token %}
+                    <input type="hidden" name="add_comment" value="1">
+                    <div class="mb-3">
+                        <label for="content" class="form-label">Thêm bình luận</label>
+                        <textarea class="form-control" id="content" name="content" rows="3" required></textarea>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <span id="comment-indicator" class="htmx-indicator spinner-border spinner-border-sm me-1"></span>
+                            <i class="fas fa-paper-plane me-1"></i> Gửi Bình Luận
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

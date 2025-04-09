@@ -4,7 +4,7 @@
 {% block title %}Hồ Sơ - {{ user.username }} - Nền Tảng Học Tập{% endblock %}
 
 {% block content %}
-<div class="row">
+<div class="row" x-data="{ activeTab: 'profile' }">
     <div class="col-md-4">
         <div class="card mb-4">
             <div class="card-header bg-primary text-white">
@@ -21,7 +21,7 @@
                 <p>{{ user.profile.bio }}</p>
             </div>
         </div>
-        
+
         <div class="card mb-4">
             <div class="card-header bg-primary text-white">
                 <h4 class="mb-0">Mục Tiêu Học Tập</h4>
@@ -29,62 +29,191 @@
             <div class="card-body">
                 <h5>Mục tiêu hàng ngày: {{ user.profile.daily_goal_minutes }} phút</h5>
                 <div class="progress mb-3">
-                    <div class="progress-bar" role="progressbar" style="width: 75%;" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">75%</div>
+                    <div class="progress-bar" role="progressbar"
+                         :style="{ width: '{{ daily_progress_percent|default:0 }}%' }"
+                         aria-valuenow="{{ daily_progress_percent|default:0 }}"
+                         aria-valuemin="0"
+                         aria-valuemax="100">
+                        {{ daily_progress_percent|default:0 }}%
+                    </div>
                 </div>
-                <p>Hôm nay bạn đã học được 45/60 phút</p>
+                <p>Hôm nay bạn đã học được {{ daily_minutes_studied|default:0 }}/{{ user.profile.daily_goal_minutes }} phút</p>
+
+                <div class="mt-3">
+                    <a href="{% url 'record_study_session' %}" class="btn btn-sm btn-primary w-100"
+                       hx-boost="true">
+                        <i class="fas fa-plus-circle"></i> Ghi lại phiên học tập
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Thanh điều hướng</h4>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    <button class="list-group-item list-group-item-action"
+                            :class="{ 'active': activeTab === 'profile' }"
+                            @click="activeTab = 'profile'">
+                        <i class="fas fa-user me-2"></i> Hồ sơ cá nhân
+                    </button>
+                    <button class="list-group-item list-group-item-action"
+                            :class="{ 'active': activeTab === 'progress' }"
+                            @click="activeTab = 'progress'"
+                            hx-get="{% url 'user_progress' %}?format=partial"
+                            hx-target="#progress-tab-content"
+                            hx-trigger="click once">
+                        <i class="fas fa-chart-line me-2"></i> Tiến độ học tập
+                    </button>
+                    <button class="list-group-item list-group-item-action"
+                            :class="{ 'active': activeTab === 'goals' }"
+                            @click="activeTab = 'goals'"
+                            hx-get="{% url 'learning_goals:goal_list' %}?format=partial&user_only=true"
+                            hx-target="#goals-tab-content"
+                            hx-trigger="click once">
+                        <i class="fas fa-bullseye me-2"></i> Mục tiêu học tập
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-8">
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Cập Nhật Hồ Sơ</h4>
-            </div>
-            <div class="card-body">
-                <form method="post" enctype="multipart/form-data" novalidate>
-                    {% csrf_token %}
-                    <div class="row">
-                        <div class="col-md-6">
-                            {{ user_form|crispy }}
-                        </div>
-                        <div class="col-md-6">
-                            {{ profile_form|crispy }}
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-primary mt-3">Cập Nhật</button>
-                </form>
-            </div>
-        </div>
-        
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Chủ Đề Yêu Thích</h4>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    {% for subject in user.profile.preferred_subjects.all %}
-                    <div class="col-md-4 mb-3">
-                        <div class="card h-100">
-                            {% if subject.icon %}
-                            <img src="{{ subject.icon.url }}" class="card-img-top" alt="{{ subject.name }}">
-                            {% else %}
-                            <img src="https://via.placeholder.com/100?text={{ subject.name }}" class="card-img-top" alt="{{ subject.name }}">
-                            {% endif %}
-                            <div class="card-body">
-                                <h5 class="card-title">{{ subject.name }}</h5>
-                                <a href="{% url 'subject_detail' subject.slug %}" class="btn btn-sm btn-outline-primary">Xem</a>
+        <!-- Tab content -->
+        <div x-show="activeTab === 'profile'">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Cập Nhật Hồ Sơ</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" id="profile-form"
+                          x-data="{ loading: false, success: false }"
+                          x-on:submit="loading = true; success = false"
+                          hx-post="{% url 'profile' %}"
+                          hx-encoding="multipart/form-data"
+                          hx-target="#profile-form"
+                          hx-swap="outerHTML"
+                          hx-indicator="#form-indicator">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ user_form|crispy }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ profile_form|crispy }}
                             </div>
                         </div>
+                        <div class="alert alert-success mt-3" x-show="success" x-transition>
+                            Hồ sơ của bạn đã được cập nhật thành công!
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3" :disabled="loading">
+                            <span id="form-indicator" class="htmx-indicator spinner-border spinner-border-sm me-2" role="status"></span>
+                            <span x-text="loading ? 'Đang xử lý...' : 'Cập Nhật'"></span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Chủ Đề Yêu Thích</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for subject in user.profile.preferred_subjects.all %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                {% if subject.icon %}
+                                <img src="{{ subject.icon.url }}" class="card-img-top" alt="{{ subject.name }}">
+                                {% else %}
+                                <img src="https://via.placeholder.com/100?text={{ subject.name }}" class="card-img-top" alt="{{ subject.name }}">
+                                {% endif %}
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ subject.name }}</h5>
+                                    <a href="{% url 'subject_detail' subject.slug %}" class="btn btn-sm btn-outline-primary"
+                                       hx-boost="true">
+                                        Xem
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12">
+                            <p>Bạn chưa chọn chủ đề yêu thích nào. Hãy cập nhật hồ sơ để chọn chủ đề bạn quan tâm.</p>
+                        </div>
+                        {% endfor %}
                     </div>
-                    {% empty %}
-                    <div class="col-12">
-                        <p>Bạn chưa chọn chủ đề yêu thích nào. Hãy cập nhật hồ sơ để chọn chủ đề bạn quan tâm.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tiến độ học tập tab -->
+        <div x-show="activeTab === 'progress'" x-transition>
+            <div id="progress-tab-content">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">Tiến Độ Học Tập</h4>
                     </div>
-                    {% endfor %}
+                    <div class="card-body text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Đang tải...</span>
+                        </div>
+                        <p class="mt-3">Đang tải dữ liệu tiến độ học tập...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mục tiêu học tập tab -->
+        <div x-show="activeTab === 'goals'" x-transition>
+            <div id="goals-tab-content">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">Mục Tiêu Học Tập</h4>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Đang tải...</span>
+                        </div>
+                        <p class="mt-3">Đang tải dữ liệu mục tiêu học tập...</p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Khởi tạo Alpine.js
+        if (typeof Alpine !== 'undefined') {
+            Alpine.start();
+        }
+
+        // Xử lý sau khi cập nhật hồ sơ thành công
+        document.body.addEventListener('htmx:afterRequest', function(event) {
+            if (event.detail.successful && event.detail.target.id === 'profile-form') {
+                const alpineComponent = Alpine.getComponent(document.querySelector('#profile-form'));
+                if (alpineComponent) {
+                    alpineComponent.loading = false;
+                    alpineComponent.success = true;
+
+                    // Hiển thị thông báo thành công
+                    if (window.Alpine && Alpine.store('alerts')) {
+                        Alpine.store('alerts').add('Hồ sơ của bạn đã được cập nhật thành công', 'success');
+                    }
+
+                    // Tự động tải lại trang sau 2 giây
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 2000);
+                }
+            }
+        });
+    });
+</script>
 {% endblock %}

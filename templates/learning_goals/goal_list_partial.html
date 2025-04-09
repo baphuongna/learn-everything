@@ -1,0 +1,284 @@
+{% load custom_filters %}
+{% if goals %}
+    <div class="goal-list-container">
+        <!-- Bộ lọc và sắp xếp -->
+        <div class="card filter-card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="btn-group w-100" role="group" x-data="{ activeFilter: '{{ selected_status }}' }">
+                            <button class="btn"
+                                    :class="activeFilter === '' ? 'btn-primary' : 'btn-outline-primary'"
+                                    @click="activeFilter = ''"
+                                    hx-get="{% url 'learning_goals:goal_list' %}?format=partial"
+                                    hx-target="#goal-list-container"
+                                    hx-swap="innerHTML"
+                                    hx-push-url="false">
+                                <i class="fas fa-list"></i> Tất Cả
+                            </button>
+                            <button class="btn"
+                                    :class="activeFilter === 'not_started' ? 'btn-primary' : 'btn-outline-primary'"
+                                    @click="activeFilter = 'not_started'"
+                                    hx-get="{% url 'learning_goals:goal_list' %}?status=not_started&format=partial"
+                                    hx-target="#goal-list-container"
+                                    hx-swap="innerHTML"
+                                    hx-push-url="false">
+                                <i class="fas fa-hourglass-start"></i> Chưa Bắt Đầu
+                            </button>
+                            <button class="btn"
+                                    :class="activeFilter === 'in_progress' ? 'btn-primary' : 'btn-outline-primary'"
+                                    @click="activeFilter = 'in_progress'"
+                                    hx-get="{% url 'learning_goals:goal_list' %}?status=in_progress&format=partial"
+                                    hx-target="#goal-list-container"
+                                    hx-swap="innerHTML"
+                                    hx-push-url="false">
+                                <i class="fas fa-spinner"></i> Đang Thực Hiện
+                            </button>
+                            <button class="btn"
+                                    :class="activeFilter === 'completed' ? 'btn-primary' : 'btn-outline-primary'"
+                                    @click="activeFilter = 'completed'"
+                                    hx-get="{% url 'learning_goals:goal_list' %}?status=completed&format=partial"
+                                    hx-target="#goal-list-container"
+                                    hx-swap="innerHTML"
+                                    hx-push-url="false">
+                                <i class="fas fa-check-circle"></i> Đã Hoàn Thành
+                            </button>
+                            <button class="btn"
+                                    :class="activeFilter === 'overdue' ? 'btn-primary' : 'btn-outline-primary'"
+                                    @click="activeFilter = 'overdue'"
+                                    hx-get="{% url 'learning_goals:goal_list' %}?status=overdue&format=partial"
+                                    hx-target="#goal-list-container"
+                                    hx-swap="innerHTML"
+                                    hx-push-url="false">
+                                <i class="fas fa-exclamation-circle"></i> Quá Hạn
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="btn-group w-100" role="group" x-data="{ activeType: '{{ selected_type }}' }">
+                            <button class="btn"
+                                    :class="activeType === '' ? 'btn-success' : 'btn-outline-success'"
+                                    @click="activeType = ''"
+                                    hx-get="{% url 'learning_goals:goal_list' %}?status={{ selected_status }}&format=partial"
+                                    hx-target="#goal-list-container"
+                                    hx-swap="innerHTML"
+                                    hx-push-url="false">
+                                <i class="fas fa-calendar"></i> Tất Cả
+                            </button>
+                            <button class="btn"
+                                    :class="activeType === 'daily' ? 'btn-success' : 'btn-outline-success'"
+                                    @click="activeType = 'daily'"
+                                    hx-get="{% url 'learning_goals:goal_list' %}?type=daily&status={{ selected_status }}&format=partial"
+                                    hx-target="#goal-list-container"
+                                    hx-swap="innerHTML"
+                                    hx-push-url="false">
+                                <i class="fas fa-calendar-day"></i> Hàng Ngày
+                            </button>
+                            <button class="btn"
+                                    :class="activeType === 'weekly' ? 'btn-success' : 'btn-outline-success'"
+                                    @click="activeType = 'weekly'"
+                                    hx-get="{% url 'learning_goals:goal_list' %}?type=weekly&status={{ selected_status }}&format=partial"
+                                    hx-target="#goal-list-container"
+                                    hx-swap="innerHTML"
+                                    hx-push-url="false">
+                                <i class="fas fa-calendar-week"></i> Hàng Tuần
+                            </button>
+                            <button class="btn"
+                                    :class="activeType === 'monthly' ? 'btn-success' : 'btn-outline-success'"
+                                    @click="activeType = 'monthly'"
+                                    hx-get="{% url 'learning_goals:goal_list' %}?type=monthly&status={{ selected_status }}&format=partial"
+                                    hx-target="#goal-list-container"
+                                    hx-swap="innerHTML"
+                                    hx-push-url="false">
+                                <i class="fas fa-calendar-alt"></i> Hàng Tháng
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="dropdown w-100">
+                            <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-sort"></i> Sắp Xếp
+                            </button>
+                            <ul class="dropdown-menu w-100" aria-labelledby="sortDropdown">
+                                <li>
+                                    <a class="dropdown-item {% if sort_by == 'end_date' %}active{% endif %}"
+                                       hx-get="{% url 'learning_goals:goal_list' %}?type={{ selected_type }}&status={{ selected_status }}&sort=end_date&format=partial"
+                                       hx-target="#goal-list-container"
+                                       hx-swap="innerHTML">
+                                        <i class="fas fa-calendar-day"></i> Theo Ngày Kết Thúc
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {% if sort_by == 'priority' %}active{% endif %}"
+                                       hx-get="{% url 'learning_goals:goal_list' %}?type={{ selected_type }}&status={{ selected_status }}&sort=priority&format=partial"
+                                       hx-target="#goal-list-container"
+                                       hx-swap="innerHTML">
+                                        <i class="fas fa-star"></i> Theo Độ Ưu Tiên
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {% if sort_by == 'progress' %}active{% endif %}"
+                                       hx-get="{% url 'learning_goals:goal_list' %}?type={{ selected_type }}&status={{ selected_status }}&sort=progress&format=partial"
+                                       hx-target="#goal-list-container"
+                                       hx-swap="innerHTML">
+                                        <i class="fas fa-tasks"></i> Theo Tiến Độ
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {% if sort_by == 'created' %}active{% endif %}"
+                                       hx-get="{% url 'learning_goals:goal_list' %}?type={{ selected_type }}&status={{ selected_status }}&sort=created&format=partial"
+                                       hx-target="#goal-list-container"
+                                       hx-swap="innerHTML">
+                                        <i class="fas fa-clock"></i> Theo Ngày Tạo
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danh sách mục tiêu -->
+        {% for goal in goals %}
+            <div class="goal-card" x-data="{ showDetails: false }">
+                <div class="goal-header">
+                    <div class="goal-title-container">
+                        <div class="goal-title">{{ goal.title }}</div>
+                        <div class="goal-badges">
+                            {% if goal.status == 'completed' %}
+                                <span class="badge bg-success">Đã hoàn thành</span>
+                            {% elif goal.status == 'not_started' %}
+                                <span class="badge bg-secondary">Chưa bắt đầu</span>
+                            {% elif goal.status == 'in_progress' %}
+                                <span class="badge bg-primary">Đang thực hiện</span>
+                            {% elif goal.status == 'overdue' %}
+                                <span class="badge bg-danger">Quá hạn</span>
+                            {% endif %}
+
+                            {% if goal.goal_type == 'daily' %}
+                                <span class="badge bg-info">Hàng ngày</span>
+                            {% elif goal.goal_type == 'weekly' %}
+                                <span class="badge bg-info">Hàng tuần</span>
+                            {% elif goal.goal_type == 'monthly' %}
+                                <span class="badge bg-info">Hàng tháng</span>
+                            {% endif %}
+
+                            {% if goal.priority == 'high' %}
+                                <span class="badge bg-danger">Ưu tiên cao</span>
+                            {% elif goal.priority == 'medium' %}
+                                <span class="badge bg-warning text-dark">Ưu tiên trung bình</span>
+                            {% elif goal.priority == 'low' %}
+                                <span class="badge bg-success">Ưu tiên thấp</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="goal-progress-container">
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar {% if goal.is_behind_schedule %}bg-danger{% elif goal.status == 'completed' %}bg-success{% else %}bg-primary{% endif %}"
+                                 role="progressbar"
+                                 style="width: {{ goal.progress_percentage }}%;"
+                                 aria-valuenow="{{ goal.progress_percentage }}"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100">
+                                {{ goal.progress_percentage }}%
+                            </div>
+                        </div>
+                        <div class="goal-dates">
+                            <small>
+                                {% if goal.start_date and goal.end_date %}
+                                    {{ goal.start_date|date:"d/m/Y" }} - {{ goal.end_date|date:"d/m/Y" }}
+                                {% elif goal.end_date %}
+                                    Đến {{ goal.end_date|date:"d/m/Y" }}
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="goal-body" x-show="showDetails" x-transition>
+                    <div class="goal-description">
+                        <p>{{ goal.description|linebreaksbr }}</p>
+                    </div>
+                    <div class="goal-details">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="goal-detail-item">
+                                    <i class="fas fa-bullseye"></i> Mục tiêu: {{ goal.target_value }} {{ goal.unit }}
+                                </div>
+                                <div class="goal-detail-item">
+                                    <i class="fas fa-tasks"></i> Hiện tại: {{ goal.current_value }} {{ goal.unit }}
+                                </div>
+                                {% if goal.category %}
+                                    <div class="goal-detail-item">
+                                        <i class="fas fa-tag"></i> Danh mục: {{ goal.category }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                {% if not goal.status == 'completed' and goal.end_date %}
+                                    <div class="goal-detail-item">
+                                        <i class="fas fa-hourglass-half"></i>
+                                        {% if goal.days_remaining > 0 %}
+                                            Còn {{ goal.days_remaining }} ngày
+                                        {% elif goal.days_remaining == 0 %}
+                                            Đến hạn hôm nay
+                                        {% else %}
+                                            Quá hạn {{ goal.days_remaining|abs }} ngày
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                                {% if goal.collaborators.count > 0 %}
+                                    <div class="goal-detail-item">
+                                        <i class="fas fa-users"></i> {{ goal.collaborators.count }} người cộng tác
+                                    </div>
+                                {% endif %}
+                                <div class="goal-detail-item">
+                                    <i class="fas fa-clock"></i> Cập nhật: {{ goal.updated_at|date:"d/m/Y H:i" }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="goal-actions mt-3">
+                        <a href="{% url 'learning_goals:goal_detail' goal_id=goal.id %}" class="btn btn-primary">
+                            <i class="fas fa-eye"></i> Xem Chi Tiết
+                        </a>
+                        <a href="{% url 'learning_goals:goal_edit' goal_id=goal.id %}" class="btn btn-outline-primary">
+                            <i class="fas fa-edit"></i> Chỉnh Sửa
+                        </a>
+                        <button class="btn btn-outline-success"
+                                hx-post="{% url 'learning_goals:update_progress' goal_id=goal.id %}"
+                                hx-vals='{"value": "{{ goal.current_value }}", "notes": "Cập nhật nhanh từ danh sách"}'
+                                hx-target="#goal-{{ goal.id }}-progress"
+                                hx-swap="outerHTML"
+                                hx-indicator="#goal-{{ goal.id }}-indicator">
+                            <span id="goal-{{ goal.id }}-indicator" class="htmx-indicator spinner-border spinner-border-sm me-1"></span>
+                            <i class="fas fa-sync-alt"></i> Cập Nhật Tiến Độ
+                        </button>
+                        <form method="post" action="{% url 'learning_goals:goal_delete' goal_id=goal.id %}" class="d-inline"
+                              onsubmit="return confirm('Bạn có chắc chắn muốn xóa mục tiêu này?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger">
+                                <i class="fas fa-trash"></i> Xóa
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <div class="goal-footer">
+                    <button class="btn btn-sm btn-link" @click="showDetails = !showDetails">
+                        <span x-show="!showDetails"><i class="fas fa-chevron-down"></i> Xem thêm</span>
+                        <span x-show="showDetails"><i class="fas fa-chevron-up"></i> Thu gọn</span>
+                    </button>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty-state">
+        <i class="fas fa-bullseye"></i>
+        <h3>Không có mục tiêu nào</h3>
+        <p>Hãy tạo mục tiêu học tập đầu tiên của bạn!</p>
+        <a href="{% url 'learning_goals:goal_create' %}" class="btn btn-primary mt-3">
+            <i class="fas fa-plus"></i> Tạo Mục Tiêu Mới
+        </a>
+    </div>
+{% endif %}

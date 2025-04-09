@@ -2,17 +2,60 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
-from django.db.models import Count
+from django.db.models import Count, Q
+from django.urls import reverse
 from .models import Quiz, Question, Answer, QuizAttempt, UserAnswer
 
 def quiz_list(request):
     """Hiển thị danh sách các bài kiểm tra"""
+    # Tìm kiếm và lọc
+    search_query = request.GET.get('search', '')
+    subject_id = request.GET.get('subject', '')
+    difficulty = request.GET.get('difficulty', '')
+    format_type = request.GET.get('format', '')
+
+    # Lấy danh sách quiz
     quizzes = Quiz.objects.all().select_related('lesson__topic__subject')
-    return render(request, 'quizzes/quiz_list.html', {'quizzes': quizzes})
+
+    # Áp dụng bộ lọc
+    if search_query:
+        quizzes = quizzes.filter(
+            Q(title__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(lesson__title__icontains=search_query) |
+            Q(lesson__topic__name__icontains=search_query) |
+            Q(lesson__topic__subject__name__icontains=search_query)
+        )
+
+    if subject_id:
+        quizzes = quizzes.filter(lesson__topic__subject_id=subject_id)
+
+    if difficulty:
+        quizzes = quizzes.filter(difficulty_level=difficulty)
+
+    # Lấy danh sách các chủ đề cho bộ lọc
+    from content.models import Subject
+    subjects = Subject.objects.all()
+
+    context = {
+        'quizzes': quizzes,
+        'subjects': subjects,
+        'search_query': search_query,
+        'selected_subject': subject_id,
+        'selected_difficulty': difficulty,
+        'difficulty_levels': Quiz.DIFFICULTY_LEVELS,
+    }
+
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'quizzes/quiz_list_partial.html', context)
+
+    return render(request, 'quizzes/quiz_list.html', context)
 
 def quiz_detail(request, quiz_id):
     """Hiển thị chi tiết bài kiểm tra"""
     quiz = get_object_or_404(Quiz, id=quiz_id)
+    format_type = request.GET.get('format', '')
 
     # Kiểm tra xem người dùng đã bắt đầu làm bài chưa
     quiz_started = False
@@ -40,6 +83,10 @@ def quiz_detail(request, quiz_id):
         'previous_attempts': previous_attempts
     }
 
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'quizzes/quiz_detail_partial.html', context)
+
     return render(request, 'quizzes/quiz_detail.html', context)
 
 @login_required
@@ -50,6 +97,13 @@ def start_quiz(request, quiz_id):
     # Lưu trạng thái bắt đầu làm bài vào session
     request.session['quiz_started'] = quiz_id
     request.session['quiz_start_time'] = timezone.now().isoformat()
+
+    # Kiểm tra nếu là request HTMX
+    if request.htmx:
+        # Trả về redirect thông qua header HX-Redirect
+        response = render(request, 'quizzes/empty.html')
+        response['HX-Redirect'] = request.build_absolute_uri(reverse('quiz_detail', args=[quiz_id]))
+        return response
 
     return redirect('quiz_detail', quiz_id=quiz_id)
 
@@ -143,6 +197,13 @@ def submit_quiz(request, quiz_id):
         if 'quiz_start_time' in request.session:
             del request.session['quiz_start_time']
 
+        # Kiểm tra nếu là request HTMX
+        if request.htmx:
+            # Trả về redirect thông qua header HX-Redirect
+            response = render(request, 'quizzes/empty.html')
+            response['HX-Redirect'] = request.build_absolute_uri(reverse('quiz_result', args=[quiz_attempt.id]))
+            return response
+
         return redirect('quiz_result', attempt_id=quiz_attempt.id)
 
     return redirect('quiz_detail', quiz_id=quiz_id)
@@ -152,6 +213,7 @@ def quiz_result(request, attempt_id):
     """Hiển thị kết quả bài kiểm tra"""
     quiz_attempt = get_object_or_404(QuizAttempt, id=attempt_id, user=request.user)
     user_answers = UserAnswer.objects.filter(quiz_attempt=quiz_attempt).select_related('question').prefetch_related('selected_answers')
+    format_type = request.GET.get('format', '')
 
     # Tính thời gian làm bài
     duration = (quiz_attempt.end_time - quiz_attempt.start_time).total_seconds() / 60
@@ -167,5 +229,9 @@ def quiz_result(request, attempt_id):
         'correct_count': correct_count,
         'incorrect_count': incorrect_count
     }
+
+    # Kiểm tra nếu là request HTMX partial
+    if format_type == 'partial' or request.htmx:
+        return render(request, 'quizzes/quiz_result_partial.html', context)
 
     return render(request, 'quizzes/quiz_result.html', context)

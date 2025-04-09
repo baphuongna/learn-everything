@@ -1,0 +1,29 @@
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="fas fa-check-circle me-2"></i> {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+
+<div class="alert alert-info">
+    <i class="fas fa-info-circle me-2"></i> Bạn chưa có thông báo nào.
+</div>
+
+<script>
+    // Cập nhật số lượng thông báo chưa đọc
+    document.dispatchEvent(new CustomEvent('update-unread-count', { 
+        detail: { count: 0 } 
+    }));
+    
+    // Xóa tất cả thông báo khỏi danh sách
+    document.querySelectorAll('.notification-list .list-group-item').forEach(item => {
+        item.remove();
+    });
+    
+    // Tự động đóng thông báo sau 3 giây
+    setTimeout(() => {
+        const alert = document.querySelector('.alert-success');
+        if (alert) {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        }
+    }, 3000);
+</script>

@@ -1,0 +1,50 @@
+<div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+    <h5 class="mb-0"><i class="fas fa-star"></i> Ghi Nhớ Yêu Thích</h5>
+    <button class="btn btn-sm btn-light" 
+            hx-get="{% url 'memory_home' %}?section=favorite" 
+            hx-target="#favorite-items-section" 
+            hx-swap="outerHTML"
+            hx-indicator="#favorite-items-indicator">
+        <i class="fas fa-sync-alt"></i>
+        <span id="favorite-items-indicator" class="htmx-indicator spinner-border spinner-border-sm"></span>
+    </button>
+</div>
+<div class="card-body p-0">
+    <div class="list-group list-group-flush">
+        {% for item in favorite_items %}
+        <div class="list-group-item" x-data="{ showActions: false }">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <a href="{% url 'memory_item_detail' item.pk %}" class="text-decoration-none">
+                        <h5 class="mb-1">{{ item.title }}</h5>
+                    </a>
+                    <p class="mb-1 text-truncate">{{ item.content|striptags|truncatechars:100 }}</p>
+                    <small>
+                        <span class="badge bg-primary">{{ item.category.name }}</span>
+                        <span class="text-muted">Cập nhật: {{ item.updated_at|date:"d/m/Y H:i" }}</span>
+                    </small>
+                </div>
+                <div class="d-flex">
+                    <button class="btn btn-sm btn-outline-warning favorite-toggle" 
+                            data-item-id="{{ item.id }}"
+                            hx-post="{% url 'memory_item_toggle_favorite' item.pk %}"
+                            hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                            hx-swap="none"
+                            hx-trigger="click"
+                            @mouseenter="showActions = true" 
+                            @mouseleave="showActions = false">
+                        <i class="fas fa-star text-warning"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="list-group-item">
+            <p class="mb-0 text-center">Bạn chưa có ghi nhớ yêu thích nào. Hãy đánh dấu yêu thích các ghi nhớ quan trọng!</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+<div class="card-footer">
+    <a href="{% url 'memory_search' %}?is_favorite=on" class="btn btn-warning">Xem tất cả</a>
+</div>

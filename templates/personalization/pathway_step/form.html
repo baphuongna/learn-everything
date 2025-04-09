@@ -1,0 +1,111 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'personalization_dashboard' %}">Bảng Điều Khiển</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'learning_pathway_list' %}">Lộ Trình Học Tập</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'learning_pathway_detail' pathway_id=pathway.id %}">{{ pathway.title }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">{{ title }}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                {{ form.title|as_crispy_field }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                {{ form.order|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                {{ form.description|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.step_type|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.estimated_duration_minutes|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                {{ form.lesson|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                {{ form.external_content_url|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="{% url 'learning_pathway_detail' pathway_id=pathway.id %}" class="btn btn-secondary me-md-2">Hủy</a>
+                            <button type="submit" class="btn btn-primary">Lưu Bước</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Cập nhật danh sách bài học khi thay đổi loại bước
+    document.addEventListener('DOMContentLoaded', function() {
+        const stepTypeSelect = document.getElementById('id_step_type');
+        const lessonField = document.getElementById('div_id_lesson');
+        const externalUrlField = document.getElementById('div_id_external_content_url');
+        
+        function updateFieldsVisibility() {
+            const stepType = stepTypeSelect.value;
+            
+            // Hiển thị/ẩn trường bài học dựa trên loại bước
+            if (stepType === 'lesson') {
+                lessonField.style.display = 'block';
+                externalUrlField.style.display = 'none';
+            } else if (stepType === 'exercise' || stepType === 'project' || stepType === 'assessment') {
+                lessonField.style.display = 'none';
+                externalUrlField.style.display = 'block';
+            } else {
+                lessonField.style.display = 'block';
+                externalUrlField.style.display = 'block';
+            }
+        }
+        
+        // Cập nhật ban đầu
+        updateFieldsVisibility();
+        
+        // Cập nhật khi thay đổi
+        stepTypeSelect.addEventListener('change', updateFieldsVisibility);
+    });
+</script>
+{% endblock %}

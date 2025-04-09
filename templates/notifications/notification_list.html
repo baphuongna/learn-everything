@@ -4,112 +4,170 @@
 {% block title %}Thông Báo{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container mt-4" x-data="{
+    unreadCount: {{ unread_count }},
+    totalCount: {{ total_count|default:0 }},
+    filterType: '{{ filter_type|default:"all" }}'
+}">
     <div class="row mb-4">
         <div class="col-md-8">
-            <h1 class="mb-3">Thông Báo</h1>
+            <h1 class="mb-3">
+                Thông Báo
+                <span class="badge bg-danger" x-show="unreadCount > 0" x-text="unreadCount"></span>
+            </h1>
         </div>
         <div class="col-md-4 text-end">
             <div class="btn-group">
-                <a href="{% url 'notifications:preferences' %}" class="btn btn-outline-primary">
+                <a href="{% url 'notifications:preferences' %}" class="btn btn-outline-primary"
+                   hx-boost="true">
                     <i class="fas fa-cog"></i> Tùy Chọn Thông Báo
                 </a>
-                {% if unread_count > 0 %}
-                <form action="{% url 'notifications:mark_all_read' %}" method="post" class="d-inline">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-outline-success ms-2">
-                        <i class="fas fa-check-double"></i> Đánh Dấu Tất Cả Đã Đọc
-                    </button>
-                </form>
-                {% endif %}
-                {% if page_obj %}
-                <form action="{% url 'notifications:delete_all' %}" method="post" class="d-inline">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-outline-danger ms-2" onclick="return confirm('Bạn có chắc chắn muốn xóa tất cả thông báo?')">
-                        <i class="fas fa-trash"></i> Xóa Tất Cả
-                    </button>
-                </form>
-                {% endif %}
+                <button class="btn btn-outline-success ms-2"
+                        x-show="unreadCount > 0"
+                        hx-post="{% url 'notifications:mark_all_read' %}"
+                        hx-target="#notification-list-container"
+                        hx-swap="innerHTML"
+                        hx-indicator="#mark-all-read-indicator">
+                    <span id="mark-all-read-indicator" class="htmx-indicator spinner-border spinner-border-sm me-1"></span>
+                    <i class="fas fa-check-double"></i> Đánh Dấu Tất Cả Đã Đọc
+                </button>
+                <button class="btn btn-outline-danger ms-2"
+                        x-show="totalCount > 0"
+                        hx-post="{% url 'notifications:delete_all' %}"
+                        hx-target="#notification-list-container"
+                        hx-swap="innerHTML"
+                        hx-confirm="Bạn có chắc chắn muốn xóa tất cả thông báo?"
+                        hx-indicator="#delete-all-indicator">
+                    <span id="delete-all-indicator" class="htmx-indicator spinner-border spinner-border-sm me-1"></span>
+                    <i class="fas fa-trash"></i> Xóa Tất Cả
+                </button>
             </div>
         </div>
     </div>
 
-    {% if page_obj %}
-        <div class="row">
-            <div class="col-12">
-                <div class="list-group notification-list">
-                    {% for notification in page_obj %}
-                        <div class="list-group-item list-group-item-action {% if not notification.is_read %}unread{% endif %}">
-                            <div class="d-flex w-100 justify-content-between align-items-center">
-                                <div class="notification-content">
-                                    <div class="d-flex align-items-center">
-                                        <div class="notification-icon me-3">
-                                            {% if notification.notification_type == 'info' %}
-                                                <i class="fas fa-info-circle text-info fa-2x"></i>
-                                            {% elif notification.notification_type == 'success' %}
-                                                <i class="fas fa-check-circle text-success fa-2x"></i>
-                                            {% elif notification.notification_type == 'warning' %}
-                                                <i class="fas fa-exclamation-triangle text-warning fa-2x"></i>
-                                            {% elif notification.notification_type == 'danger' %}
-                                                <i class="fas fa-exclamation-circle text-danger fa-2x"></i>
-                                            {% endif %}
-                                        </div>
-                                        <div>
-                                            <h5 class="mb-1">{{ notification.title }}</h5>
-                                            <p class="mb-1">{{ notification.message }}</p>
-                                            <small class="text-muted">
-                                                {{ notification.created_at|date:"d/m/Y H:i" }}
-                                                {% if notification.related_feature != 'system' %}
-                                                    •
-                                                    {% if notification.related_feature == 'pomodoro' %}
-                                                        <span class="badge bg-primary">Pomodoro Timer</span>
-                                                    {% elif notification.related_feature == 'cornell' %}
-                                                        <span class="badge bg-success">Cornell Notes</span>
-                                                    {% elif notification.related_feature == 'mindmap' %}
-                                                        <span class="badge bg-info">Mind Mapping</span>
-                                                    {% elif notification.related_feature == 'feynman' %}
-                                                        <span class="badge bg-warning">Feynman Technique</span>
-                                                    {% elif notification.related_feature == 'project' %}
-                                                        <span class="badge bg-secondary">Project-Based Learning</span>
-                                                    {% elif notification.related_feature == 'exercise' %}
-                                                        <span class="badge bg-dark">Interactive Exercises</span>
-                                                    {% elif notification.related_feature == 'competition' %}
-                                                        <span class="badge bg-danger">Competition Mode</span>
-                                                    {% endif %}
+    <!-- Bộ lọc thông báo -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="btn-group w-100" role="group">
+                <button class="btn"
+                        :class="filterType === 'all' ? 'btn-primary' : 'btn-outline-primary'"
+                        @click="filterType = 'all'"
+                        hx-get="{% url 'notifications:list' %}?filter=all&format=partial"
+                        hx-target="#notification-list-container"
+                        hx-swap="innerHTML"
+                        hx-push-url="false"
+                        hx-indicator="#filter-indicator">
+                    <i class="fas fa-list"></i> Tất Cả
+                </button>
+                <button class="btn"
+                        :class="filterType === 'unread' ? 'btn-primary' : 'btn-outline-primary'"
+                        @click="filterType = 'unread'"
+                        hx-get="{% url 'notifications:list' %}?filter=unread&format=partial"
+                        hx-target="#notification-list-container"
+                        hx-swap="innerHTML"
+                        hx-push-url="false"
+                        hx-indicator="#filter-indicator">
+                    <i class="fas fa-envelope"></i> Chưa Đọc
+                </button>
+                <button class="btn"
+                        :class="filterType === 'read' ? 'btn-primary' : 'btn-outline-primary'"
+                        @click="filterType = 'read'"
+                        hx-get="{% url 'notifications:list' %}?filter=read&format=partial"
+                        hx-target="#notification-list-container"
+                        hx-swap="innerHTML"
+                        hx-push-url="false"
+                        hx-indicator="#filter-indicator">
+                    <i class="fas fa-envelope-open"></i> Đã Đọc
+                </button>
+            </div>
+            <span id="filter-indicator" class="htmx-indicator spinner-border spinner-border-sm ms-2" role="status"></span>
+        </div>
+    </div>
+
+    <div id="notification-list-container">
+        {% if page_obj %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="list-group notification-list">
+                        {% for notification in page_obj %}
+                            <div class="list-group-item list-group-item-action {% if not notification.is_read %}unread{% endif %}"
+                                 id="notification-{{ notification.id }}"
+                                 x-data="{ isRead: {% if notification.is_read %}true{% else %}false{% endif %} }">
+                                <div class="d-flex w-100 justify-content-between align-items-center">
+                                    <div class="notification-content">
+                                        <div class="d-flex align-items-center">
+                                            <div class="notification-icon me-3">
+                                                {% if notification.notification_type == 'info' %}
+                                                    <i class="fas fa-info-circle text-info fa-2x"></i>
+                                                {% elif notification.notification_type == 'success' %}
+                                                    <i class="fas fa-check-circle text-success fa-2x"></i>
+                                                {% elif notification.notification_type == 'warning' %}
+                                                    <i class="fas fa-exclamation-triangle text-warning fa-2x"></i>
+                                                {% elif notification.notification_type == 'danger' %}
+                                                    <i class="fas fa-exclamation-circle text-danger fa-2x"></i>
                                                 {% endif %}
-                                            </small>
+                                            </div>
+                                            <div>
+                                                <h5 class="mb-1">{{ notification.title }}</h5>
+                                                <p class="mb-1">{{ notification.message }}</p>
+                                                <small class="text-muted">
+                                                    {{ notification.created_at|date:"d/m/Y H:i" }}
+                                                    {% if notification.related_feature != 'system' %}
+                                                        •
+                                                        {% if notification.related_feature == 'pomodoro' %}
+                                                            <span class="badge bg-primary">Pomodoro Timer</span>
+                                                        {% elif notification.related_feature == 'cornell' %}
+                                                            <span class="badge bg-success">Cornell Notes</span>
+                                                        {% elif notification.related_feature == 'mindmap' %}
+                                                            <span class="badge bg-info">Mind Mapping</span>
+                                                        {% elif notification.related_feature == 'feynman' %}
+                                                            <span class="badge bg-warning">Feynman Technique</span>
+                                                        {% elif notification.related_feature == 'project' %}
+                                                            <span class="badge bg-secondary">Project-Based Learning</span>
+                                                        {% elif notification.related_feature == 'exercise' %}
+                                                            <span class="badge bg-dark">Interactive Exercises</span>
+                                                        {% elif notification.related_feature == 'competition' %}
+                                                            <span class="badge bg-danger">Competition Mode</span>
+                                                        {% endif %}
+                                                    {% endif %}
+                                                </small>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="notification-actions">
-                                    <div class="btn-group">
-                                        {% if notification.url %}
-                                            <a href="{{ notification.url }}" class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-external-link-alt"></i>
-                                            </a>
-                                        {% endif %}
+                                    <div class="notification-actions">
+                                        <div class="btn-group">
+                                            {% if notification.url %}
+                                                <a href="{{ notification.url }}" class="btn btn-sm btn-outline-primary"
+                                                   hx-boost="true">
+                                                    <i class="fas fa-external-link-alt"></i>
+                                                </a>
+                                            {% endif %}
 
-                                        {% if not notification.is_read %}
-                                            <form action="{% url 'notifications:mark_read' notification_id=notification.id %}" method="post" class="d-inline">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-sm btn-outline-success">
-                                                    <i class="fas fa-check"></i>
-                                                </button>
-                                            </form>
-                                        {% endif %}
+                                            <button x-show="!isRead"
+                                                    class="btn btn-sm btn-outline-success"
+                                                    hx-post="{% url 'notifications:mark_read' notification_id=notification.id %}"
+                                                    hx-target="#notification-{{ notification.id }}"
+                                                    hx-swap="outerHTML"
+                                                    hx-indicator="#mark-read-indicator-{{ notification.id }}">
+                                                <span id="mark-read-indicator-{{ notification.id }}" class="htmx-indicator spinner-border spinner-border-sm" style="width: 0.5rem; height: 0.5rem;"></span>
+                                                <i class="fas fa-check"></i>
+                                            </button>
 
-                                        <form action="{% url 'notifications:delete' notification_id=notification.id %}" method="post" class="d-inline">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <button class="btn btn-sm btn-outline-danger"
+                                                    hx-post="{% url 'notifications:delete' notification_id=notification.id %}"
+                                                    hx-target="#notification-{{ notification.id }}"
+                                                    hx-swap="outerHTML"
+                                                    hx-confirm="Bạn có chắc chắn muốn xóa thông báo này?"
+                                                    hx-indicator="#delete-indicator-{{ notification.id }}">
+                                                <span id="delete-indicator-{{ notification.id }}" class="htmx-indicator spinner-border spinner-border-sm" style="width: 0.5rem; height: 0.5rem;"></span>
                                                 <i class="fas fa-trash"></i>
                                             </button>
-                                        </form>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    {% endfor %}
-                </div>
+                        {% endfor %}
+                    </div>
 
                 <!-- Phân trang -->
                 {% if page_obj.has_other_pages %}
@@ -117,25 +175,35 @@
                         <ul class="pagination justify-content-center">
                             {% if page_obj.has_previous %}
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=1" aria-label="Đầu tiên">
+                                    <button class="page-link"
+                                            hx-get="{% url 'notifications:list' %}?filter={{ filter_type }}&page=1&format=partial"
+                                            hx-target="#notification-list-container"
+                                            hx-swap="innerHTML"
+                                            hx-indicator="#pagination-indicator"
+                                            aria-label="Đầu tiên">
                                         <span aria-hidden="true">&laquo;&laquo;</span>
-                                    </a>
+                                    </button>
                                 </li>
                                 <li class="page-item">
-                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Trước">
+                                    <button class="page-link"
+                                            hx-get="{% url 'notifications:list' %}?filter={{ filter_type }}&page={{ page_obj.previous_page_number }}&format=partial"
+                                            hx-target="#notification-list-container"
+                                            hx-swap="innerHTML"
+                                            hx-indicator="#pagination-indicator"
+                                            aria-label="Trước">
                                         <span aria-hidden="true">&laquo;</span>
-                                    </a>
+                                    </button>
                                 </li>
                             {% else %}
                                 <li class="page-item disabled">
-                                    <a class="page-link" href="#" aria-label="Đầu tiên">
+                                    <button class="page-link" disabled aria-label="Đầu tiên">
                                         <span aria-hidden="true">&laquo;&laquo;</span>
-                                    </a>
+                                    </button>
                                 </li>
                                 <li class="page-item disabled">
-                                    <a class="page-link" href="#" aria-label="Trước">
+                                    <button class="page-link" disabled aria-label="Trước">
                                         <span aria-hidden="true">&laquo;</span>
-                                    </a>
+                                    </button>
                                 </li>
                             {% endif %}
 
@@ -146,35 +214,56 @@
                                     </li>
                                 {% elif i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %}
                                     <li class="page-item">
-                                        <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                                        <button class="page-link"
+                                                hx-get="{% url 'notifications:list' %}?filter={{ filter_type }}&page={{ i }}&format=partial"
+                                                hx-target="#notification-list-container"
+                                                hx-swap="innerHTML"
+                                                hx-indicator="#pagination-indicator">
+                                            {{ i }}
+                                        </button>
                                     </li>
                                 {% endif %}
                             {% endfor %}
 
                             {% if page_obj.has_next %}
                                 <li class="page-item">
-                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Tiếp">
+                                    <button class="page-link"
+                                            hx-get="{% url 'notifications:list' %}?filter={{ filter_type }}&page={{ page_obj.next_page_number }}&format=partial"
+                                            hx-target="#notification-list-container"
+                                            hx-swap="innerHTML"
+                                            hx-indicator="#pagination-indicator"
+                                            aria-label="Tiếp">
                                         <span aria-hidden="true">&raquo;</span>
-                                    </a>
+                                    </button>
                                 </li>
                                 <li class="page-item">
-                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Cuối cùng">
+                                    <button class="page-link"
+                                            hx-get="{% url 'notifications:list' %}?filter={{ filter_type }}&page={{ page_obj.paginator.num_pages }}&format=partial"
+                                            hx-target="#notification-list-container"
+                                            hx-swap="innerHTML"
+                                            hx-indicator="#pagination-indicator"
+                                            aria-label="Cuối cùng">
                                         <span aria-hidden="true">&raquo;&raquo;</span>
-                                    </a>
+                                    </button>
                                 </li>
                             {% else %}
                                 <li class="page-item disabled">
-                                    <a class="page-link" href="#" aria-label="Tiếp">
+                                    <button class="page-link" disabled aria-label="Tiếp">
                                         <span aria-hidden="true">&raquo;</span>
-                                    </a>
+                                    </button>
                                 </li>
                                 <li class="page-item disabled">
-                                    <a class="page-link" href="#" aria-label="Cuối cùng">
+                                    <button class="page-link" disabled aria-label="Cuối cùng">
                                         <span aria-hidden="true">&raquo;&raquo;</span>
-                                    </a>
+                                    </button>
                                 </li>
                             {% endif %}
                         </ul>
+                        <span id="pagination-indicator" class="htmx-indicator d-flex justify-content-center mt-2">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </span>
                     </nav>
                 {% endif %}
             </div>
@@ -188,6 +277,7 @@
             </div>
         </div>
     {% endif %}
+    </div>
 </div>
 {% endblock %}
 
@@ -214,5 +304,85 @@
     .notification-actions {
         white-space: nowrap;
     }
+
+    /* HTMX animations */
+    .htmx-swapping {
+        opacity: 0.5;
+    }
+
+    /* Alpine.js animations */
+    [x-cloak] {
+        display: none !important;
+    }
+
+    .notification-enter-active, .notification-leave-active {
+        transition: all 0.3s ease;
+    }
+
+    .notification-enter-from, .notification-leave-to {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Khởi tạo Alpine.js
+        if (typeof Alpine !== 'undefined') {
+            Alpine.start();
+        }
+
+        // Xử lý sự kiện HTMX sau khi swap
+        document.body.addEventListener('htmx:afterSwap', function(event) {
+            if (event.detail.target.id === 'notification-list-container') {
+                // Cập nhật số lượng thông báo chưa đọc
+                const unreadBadges = document.querySelectorAll('.notification-list .list-group-item.unread');
+                const unreadCount = unreadBadges.length;
+
+                // Cập nhật Alpine.js store
+                const alpineComponent = Alpine.getComponent(document.querySelector('[x-data]'));
+                if (alpineComponent) {
+                    alpineComponent.unreadCount = unreadCount;
+                    alpineComponent.totalCount = document.querySelectorAll('.notification-list .list-group-item').length;
+                }
+
+                // Cập nhật badge trên thanh điều hướng
+                const navBadge = document.querySelector('#notification-nav-badge');
+                if (navBadge) {
+                    if (unreadCount > 0) {
+                        navBadge.textContent = unreadCount;
+                        navBadge.classList.remove('d-none');
+                    } else {
+                        navBadge.classList.add('d-none');
+                    }
+                }
+
+                // Khởi tạo lại Alpine.js cho các phần tử mới
+                if (window.Alpine) {
+                    window.Alpine.initTree(document.body);
+                }
+            }
+        });
+
+        // Xử lý sự kiện đánh dấu đã đọc
+        document.body.addEventListener('htmx:afterRequest', function(event) {
+            if (event.detail.pathInfo.requestPath.includes('mark_read')) {
+                // Hiển thị thông báo thành công
+                if (window.Alpine && Alpine.store('alerts')) {
+                    Alpine.store('alerts').add('Thông báo đã được đánh dấu là đã đọc', 'success');
+                }
+            } else if (event.detail.pathInfo.requestPath.includes('mark_all_read')) {
+                if (window.Alpine && Alpine.store('alerts')) {
+                    Alpine.store('alerts').add('Tất cả thông báo đã được đánh dấu là đã đọc', 'success');
+                }
+            } else if (event.detail.pathInfo.requestPath.includes('delete')) {
+                if (window.Alpine && Alpine.store('alerts')) {
+                    Alpine.store('alerts').add('Thông báo đã được xóa thành công', 'info');
+                }
+            }
+        });
+    });
+</script>
 {% endblock %}

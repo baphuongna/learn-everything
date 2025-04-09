@@ -1,0 +1,175 @@
+{% if notes %}
+    {% if view == 'list' %}
+        <!-- Chế độ xem danh sách -->
+        {% for note in notes %}
+        <div class="card note-card" x-data="{ showDetails: false }">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h5 class="note-title">{{ note.title }}</h5>
+                        <p class="note-meta">
+                            {% if note.subject %}
+                            <span class="badge bg-primary">{{ note.subject.name }}</span>
+                            {% endif %}
+                            {% if note.topic %}
+                            <span class="badge bg-secondary">{{ note.topic.name }}</span>
+                            {% endif %}
+                            {% if note.lesson %}
+                            <span class="badge bg-info">{{ note.lesson.title }}</span>
+                            {% endif %}
+                            <span class="ms-2"><i class="far fa-calendar-alt"></i> {{ note.created_at|date:"d/m/Y H:i" }}</span>
+                            {% if note.next_review_date and note.next_review_date <= now %}
+                            <span class="badge bg-warning ms-2">Cần ôn tập</span>
+                            {% endif %}
+                        </p>
+                        <div class="note-content">
+                            {{ note.main_notes|truncatechars:200 }}
+                        </div>
+                        <div class="mt-2">
+                            <button class="btn btn-sm btn-link p-0" @click="showDetails = !showDetails">
+                                <span x-show="!showDetails"><i class="fas fa-chevron-down"></i> Xem thêm</span>
+                                <span x-show="showDetails"><i class="fas fa-chevron-up"></i> Thu gọn</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-end d-flex align-items-center justify-content-end">
+                        <a href="{% url 'advanced_learning:cornell_note_detail' note_id=note.id %}" class="btn btn-outline-primary me-2"
+                           hx-get="{% url 'advanced_learning:cornell_note_detail' note_id=note.id %}?format=partial"
+                           hx-target="#notes-container"
+                           hx-swap="innerHTML"
+                           hx-push-url="true">
+                            <i class="fas fa-eye"></i> Xem
+                        </a>
+                        <a href="{% url 'advanced_learning:cornell_note_edit' note_id=note.id %}" class="btn btn-outline-secondary me-2">
+                            <i class="fas fa-edit"></i> Sửa
+                        </a>
+                        <button class="btn btn-outline-danger" 
+                                hx-delete="{% url 'advanced_learning:cornell_note_delete' note_id=note.id %}"
+                                hx-confirm="Bạn có chắc chắn muốn xóa ghi chú này không?"
+                                hx-target="#notes-container"
+                                hx-swap="innerHTML">
+                            <i class="fas fa-trash"></i> Xóa
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Chi tiết mở rộng -->
+                <div x-show="showDetails" x-transition class="mt-3">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">Cột Gợi Ý</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="note-content">
+                                        {{ note.cue_column|linebreaks|truncatechars:150 }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">Tóm Tắt</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="note-content">
+                                        {{ note.summary|linebreaks|truncatechars:300 }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <div class="d-flex justify-content-end">
+                                <a href="{% url 'advanced_learning:cornell_note_review' note_id=note.id %}" class="btn btn-info me-2">
+                                    <i class="fas fa-sync-alt"></i> Ôn Tập
+                                </a>
+                                <a href="{% url 'advanced_learning:cornell_note_export_pdf' note_id=note.id %}" class="btn btn-danger me-2">
+                                    <i class="fas fa-file-pdf"></i> Xuất PDF
+                                </a>
+                                <a href="{% url 'advanced_learning:cornell_note_share' note_id=note.id %}" class="btn btn-success">
+                                    <i class="fas fa-share-alt"></i> Chia Sẻ
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <!-- Chế độ xem lưới (mặc định) -->
+        <div class="cornell-grid">
+            {% for note in notes %}
+            <div class="card cornell-card h-100 {% if note.next_review_date and note.next_review_date <= now %}border-warning{% endif %}" x-data="{ showActions: false }">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0 text-truncate" title="{{ note.title }}">{{ note.title }}</h5>
+                    {% if note.next_review_date and note.next_review_date <= now %}
+                        <span class="badge bg-warning">Cần ôn tập</span>
+                    {% endif %}
+                </div>
+                <div class="card-body" @mouseenter="showActions = true" @mouseleave="showActions = false">
+                    <p class="card-text note-content">{{ note.main_notes|truncatechars:150 }}</p>
+                    <p class="text-muted">
+                        {% if note.subject %}<span class="badge bg-primary">{{ note.subject.name }}</span>{% endif %}
+                        {% if note.topic %}<span class="badge bg-secondary ms-1">{{ note.topic.name }}</span>{% endif %}
+                        <br>
+                        <small><i class="far fa-calendar-alt"></i> {{ note.created_at|date:"d/m/Y" }}</small>
+                    </p>
+                    
+                    <div x-show="showActions" x-transition class="action-overlay position-absolute top-50 start-50 translate-middle bg-white bg-opacity-90 p-3 rounded shadow text-center" style="min-width: 80%;">
+                        <div class="btn-group-vertical w-100">
+                            <a href="{% url 'advanced_learning:cornell_note_detail' note_id=note.id %}" class="btn btn-sm btn-primary mb-2"
+                               hx-get="{% url 'advanced_learning:cornell_note_detail' note_id=note.id %}?format=partial"
+                               hx-target="#notes-container"
+                               hx-swap="innerHTML"
+                               hx-push-url="true">
+                                <i class="fas fa-eye"></i> Xem
+                            </a>
+                            <a href="{% url 'advanced_learning:cornell_note_edit' note_id=note.id %}" class="btn btn-sm btn-warning mb-2">
+                                <i class="fas fa-edit"></i> Sửa
+                            </a>
+                            <a href="{% url 'advanced_learning:cornell_note_review' note_id=note.id %}" class="btn btn-sm btn-info mb-2">
+                                <i class="fas fa-sync-alt"></i> Ôn Tập
+                            </a>
+                            <button class="btn btn-sm btn-danger"
+                                    hx-delete="{% url 'advanced_learning:cornell_note_delete' note_id=note.id %}"
+                                    hx-confirm="Bạn có chắc chắn muốn xóa ghi chú này không?"
+                                    hx-target="#notes-container"
+                                    hx-swap="innerHTML">
+                                <i class="fas fa-trash"></i> Xóa
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">{{ note.summary|truncatechars:30 }}</small>
+                        <a href="{% url 'advanced_learning:cornell_note_detail' note_id=note.id %}" class="btn btn-sm btn-link p-0"
+                           hx-get="{% url 'advanced_learning:cornell_note_detail' note_id=note.id %}?format=partial"
+                           hx-target="#notes-container"
+                           hx-swap="innerHTML"
+                           hx-push-url="true">
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% else %}
+    <div class="alert alert-info">
+        <div class="empty-state">
+            <i class="fas fa-edit"></i>
+            <h4>Không có ghi chú nào</h4>
+            <p>Bạn chưa có ghi chú Cornell nào. Hãy tạo ghi chú mới để bắt đầu!</p>
+            <a href="{% url 'advanced_learning:cornell_note_create' %}" class="btn btn-primary mt-3">
+                <i class="fas fa-plus"></i> Tạo Ghi Chú Mới
+            </a>
+        </div>
+    </div>
+{% endif %}

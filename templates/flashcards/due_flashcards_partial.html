@@ -1,0 +1,62 @@
+{% if flashcard_sets %}
+    <div class="row">
+        {% for flashcard_set_info in flashcard_sets %}
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">{{ flashcard_set_info.set.title }}</h5>
+                    <span class="badge bg-light text-dark">{{ flashcard_set_info.count }} thẻ</span>
+                </div>
+                <div class="card-body">
+                    <p><strong>Bài học:</strong> {{ flashcard_set_info.set.lesson.title }}</p>
+                    <p><strong>Chủ đề:</strong> {{ flashcard_set_info.set.lesson.topic.subject.name }}</p>
+                    
+                    <h6 class="mt-3">Flashcards cần ôn tập:</h6>
+                    <div class="flashcard-list" x-data="{ expanded: false }">
+                        <ul class="list-group">
+                            {% for flashcard in flashcard_set_info.flashcards|slice:":3" %}
+                            <li class="list-group-item">{{ flashcard.front|truncatechars:50 }}</li>
+                            {% endfor %}
+                            
+                            <template x-if="expanded">
+                                {% for flashcard in flashcard_set_info.flashcards|slice:"3:" %}
+                                <li class="list-group-item">{{ flashcard.front|truncatechars:50 }}</li>
+                                {% endfor %}
+                            </template>
+                        </ul>
+                        
+                        {% if flashcard_set_info.flashcards|length > 3 %}
+                        <button class="btn btn-sm btn-link mt-2" @click="expanded = !expanded">
+                            <span x-text="expanded ? 'Thu gọn' : 'Xem thêm ' + ({{ flashcard_set_info.flashcards|length }} - 3) + ' flashcard'"></span>
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-between align-items-center">
+                    <a href="{% url 'flashcard_set_detail' flashcard_set_info.set.id %}" 
+                       class="btn btn-primary"
+                       hx-get="{% url 'flashcard_set_detail' flashcard_set_info.set.id %}?format=partial"
+                       hx-target="#flashcard-preview"
+                       hx-swap="innerHTML"
+                       hx-push-url="false">
+                        <i class="fas fa-eye"></i> Xem
+                    </a>
+                    <a href="{% url 'flashcard_set_detail' flashcard_set_info.set.id %}?mode=study" class="btn btn-success">
+                        <i class="fas fa-play"></i> Ôn Tập Ngay
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="alert alert-success">
+        <h4 class="alert-heading">Chúc mừng!</h4>
+        <p>Bạn đã ôn tập tất cả flashcard cần thiết cho hôm nay. Hãy quay lại vào ngày mai để tiếp tục ôn tập.</p>
+        <hr>
+        <p class="mb-0">Việc ôn tập đều đặn sẽ giúp bạn ghi nhớ thông tin lâu hơn và hiệu quả hơn.</p>
+    </div>
+{% endif %}
+
+<!-- Khu vực xem trước flashcard -->
+<div id="flashcard-preview" class="mt-4"></div>

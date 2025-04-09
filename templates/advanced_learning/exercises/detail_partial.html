@@ -1,0 +1,494 @@
+{% load static %}
+
+<div class="exercise-detail" x-data="{ 
+    activeTab: 'content',
+    showHint: false,
+    currentHintIndex: 0,
+    totalHints: {{ exercise.hints|length }},
+    isSubmitting: false,
+    showSolution: {% if show_solution %}true{% else %}false{% endif %},
+    feedback: '',
+    isCorrect: false,
+    executionResult: '',
+    testResults: []
+}">
+    <div class="exercise-header">
+        <h2 class="exercise-title">{{ exercise.title }}</h2>
+        <div class="exercise-meta">
+            {% if exercise.lesson.topic.subject %}
+            <span class="badge bg-primary">{{ exercise.lesson.topic.subject.name }}</span>
+            {% endif %}
+            <span class="badge bg-secondary">{{ exercise.lesson.title }}</span>
+            <span class="badge
+                {% if exercise.exercise_type == 'code' %}type-code
+                {% elif exercise.exercise_type == 'quiz' %}type-quiz
+                {% elif exercise.exercise_type == 'simulation' %}type-simulation
+                {% else %}type-game{% endif %}
+                exercise-type-badge">
+                {% if exercise.exercise_type == 'code' %}
+                    Bài tập lập trình
+                {% elif exercise.exercise_type == 'quiz' %}
+                    Câu đố tương tác
+                {% elif exercise.exercise_type == 'simulation' %}
+                    Mô phỏng
+                {% else %}
+                    Trò chơi học tập
+                {% endif %}
+            </span>
+            <span class="badge
+                {% if exercise.difficulty_level == 1 %}bg-success
+                {% elif exercise.difficulty_level == 2 %}bg-warning
+                {% else %}bg-danger{% endif %}">
+                {% if exercise.difficulty_level == 1 %}
+                    Dễ
+                {% elif exercise.difficulty_level == 2 %}
+                    Trung bình
+                {% else %}
+                    Khó
+                {% endif %}
+            </span>
+        </div>
+
+        <div class="exercise-description">
+            {{ exercise.description|linebreaks }}
+        </div>
+        
+        <div class="row">
+            <div class="col-md-4">
+                <div class="exercise-stat">
+                    <i class="fas fa-clock text-purple"></i> Thời gian ước tính: {{ exercise.estimated_time }} phút
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="exercise-stat">
+                    <i class="fas fa-star text-purple"></i> Điểm tối đa: {{ exercise.max_points }}
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="exercise-stat">
+                    <i class="fas fa-lightbulb text-purple"></i> Gợi ý: {{ exercise.hints|length }}
+                </div>
+            </div>
+        </div>
+        
+        <div class="exercise-actions mt-4">
+            <div class="btn-group">
+                <a href="{% url 'advanced_learning:create_cornell_from_exercise' exercise_id=exercise.id %}" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-edit"></i> Tạo Ghi Chú Cornell
+                </a>
+                <a href="{% url 'advanced_learning:exercise_submissions' exercise_id=exercise.id %}" class="btn btn-sm btn-outline-info">
+                    <i class="fas fa-history"></i> Lịch Sử Nộp Bài
+                </a>
+                {% if user.is_staff %}
+                <a href="{% url 'advanced_learning:edit_exercise' exercise_id=exercise.id %}" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-edit"></i> Chỉnh Sửa
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tab Navigation -->
+    <ul class="nav nav-tabs mb-4" id="exerciseDetailTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" :class="{ 'active': activeTab === 'content' }" id="content-tab" 
+                    @click="activeTab = 'content'">
+                <i class="fas fa-tasks"></i> Nội Dung Bài Tập
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" :class="{ 'active': activeTab === 'requirements' }" id="requirements-tab" 
+                    @click="activeTab = 'requirements'">
+                <i class="fas fa-clipboard-list"></i> Yêu Cầu
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" :class="{ 'active': activeTab === 'resources' }" id="resources-tab" 
+                    @click="activeTab = 'resources'">
+                <i class="fas fa-book"></i> Tài Liệu Tham Khảo
+            </button>
+        </li>
+    </ul>
+    
+    <!-- Tab Content -->
+    <div class="tab-content" id="exerciseDetailTabContent">
+        <!-- Nội dung bài tập tab -->
+        <div class="tab-pane fade" :class="{ 'show active': activeTab === 'content' }" id="content-content" role="tabpanel">
+            <div class="exercise-content">
+                <h4><i class="fas fa-tasks text-purple"></i> Nội Dung Bài Tập</h4>
+
+                {% if exercise.exercise_type == 'code' %}
+                    <!-- Bài tập lập trình -->
+                    <div id="code-exercise">
+                        <div class="mb-3">
+                            {{ exercise.content|safe }}
+                        </div>
+
+                        <div class="code-editor mb-3">
+                            <textarea id="code-textarea" class="form-control" rows="10" placeholder="Viết mã của bạn ở đây..."></textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <button id="submit-code" class="btn btn-purple" @click="submitExercise">
+                                    <i class="fas fa-check"></i> Nộp Bài
+                                </button>
+                                <button id="run-code" class="btn btn-outline-secondary ms-2" @click="runCode">
+                                    <i class="fas fa-play"></i> Chạy Mã
+                                </button>
+                            </div>
+                            <button class="btn btn-outline-warning" @click="showHint = !showHint">
+                                <i class="fas fa-lightbulb"></i> Gợi Ý
+                            </button>
+                        </div>
+
+                        <!-- Kết quả thực thi -->
+                        <div id="execution-result" class="execution-result" x-show="executionResult !== ''">
+                            <h5><i class="fas fa-terminal text-secondary"></i> Kết quả thực thi</h5>
+                            <pre x-text="executionResult"></pre>
+                        </div>
+
+                        <!-- Kết quả kiểm tra -->
+                        <div id="test-results" class="mt-4" x-show="testResults.length > 0">
+                            <h5><i class="fas fa-vial text-info"></i> Kết quả kiểm tra</h5>
+                            <div id="test-cases-container">
+                                <template x-for="(test, index) in testResults" :key="index">
+                                    <div :class="{'test-case': true, 'test-case-success': test.passed, 'test-case-error': !test.passed}">
+                                        <div class="d-flex justify-content-between">
+                                            <span x-text="'Test case ' + (index + 1)"></span>
+                                            <span x-text="test.passed ? 'Passed' : 'Failed'"></span>
+                                        </div>
+                                        <div x-show="!test.passed">
+                                            <small x-text="'Expected: ' + test.expected"></small><br>
+                                            <small x-text="'Actual: ' + test.actual"></small>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                {% elif exercise.exercise_type == 'quiz' %}
+                    <!-- Câu đố tương tác -->
+                    <div id="quiz-exercise">
+                        <div class="mb-3">
+                            {{ exercise.content|safe }}
+                        </div>
+
+                        <div class="quiz-form">
+                            <div class="mb-3">
+                                <label for="quiz-answer" class="form-label">Đáp án của bạn:</label>
+                                <input type="text" class="form-control" id="quiz-answer" placeholder="Nhập đáp án của bạn...">
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <button id="submit-quiz" class="btn btn-purple" @click="submitQuiz">
+                                    <i class="fas fa-check"></i> Kiểm Tra Đáp Án
+                                </button>
+                                <button class="btn btn-outline-warning" @click="showHint = !showHint">
+                                    <i class="fas fa-lightbulb"></i> Gợi Ý
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                {% elif exercise.exercise_type == 'simulation' %}
+                    <!-- Mô phỏng -->
+                    <div id="simulation-exercise">
+                        <div class="mb-3">
+                            {{ exercise.content|safe }}
+                        </div>
+
+                        <div class="simulation-container" id="simulation-container">
+                            <!-- Nội dung mô phỏng sẽ được tải ở đây -->
+                            <div class="text-center">
+                                <p>Đang tải mô phỏng...</p>
+                                <div class="spinner-border text-purple" role="status">
+                                    <span class="visually-hidden">Đang tải...</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 d-flex justify-content-between">
+                            <button id="submit-simulation" class="btn btn-purple">
+                                <i class="fas fa-check"></i> Nộp Kết Quả
+                            </button>
+                            <button class="btn btn-outline-warning" @click="showHint = !showHint">
+                                <i class="fas fa-lightbulb"></i> Gợi Ý
+                            </button>
+                        </div>
+                    </div>
+
+                {% else %}
+                    <!-- Trò chơi học tập -->
+                    <div id="game-exercise">
+                        <div class="mb-3">
+                            {{ exercise.content|safe }}
+                        </div>
+
+                        <div class="game-container" id="game-container">
+                            <!-- Nội dung trò chơi sẽ được tải ở đây -->
+                            <div class="text-center">
+                                <p>Đang tải trò chơi...</p>
+                                <div class="spinner-border text-purple" role="status">
+                                    <span class="visually-hidden">Đang tải...</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 d-flex justify-content-between">
+                            <button id="submit-game" class="btn btn-purple">
+                                <i class="fas fa-check"></i> Nộp Điểm Số
+                            </button>
+                            <button class="btn btn-outline-warning" @click="showHint = !showHint">
+                                <i class="fas fa-lightbulb"></i> Gợi Ý
+                            </button>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Phản hồi -->
+                <div id="feedback-container" class="feedback-container" :class="{ 'feedback-success': isCorrect, 'feedback-error': !isCorrect }" x-show="feedback !== ''">
+                    <p id="feedback-message" x-text="feedback"></p>
+                </div>
+
+                <!-- Giải pháp -->
+                <div id="solution-container" class="solution-container" x-show="showSolution">
+                    <h5>Giải pháp:</h5>
+                    <div id="solution-content">
+                        {{ exercise.solution|linebreaks }}
+                    </div>
+                </div>
+
+                <!-- Gợi ý -->
+                <div id="hint-container" class="hint-container" x-show="showHint">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="mb-0"><i class="fas fa-lightbulb text-warning"></i> Gợi ý</h5>
+                        <button type="button" class="btn-close" @click="showHint = false"></button>
+                    </div>
+                    
+                    <div id="hint-content">
+                        <p x-text="'Gợi ý ' + (currentHintIndex + 1) + '/' + totalHints"></p>
+                        <div id="hint-text">
+                            {% if exercise.hints %}
+                                {{ exercise.hints.0.content }}
+                            {% else %}
+                                Không có gợi ý nào cho bài tập này.
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-3">
+                        <button class="btn btn-sm btn-outline-secondary" @click="previousHint" :disabled="currentHintIndex === 0">
+                            <i class="fas fa-chevron-left"></i> Trước
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" @click="nextHint" :disabled="currentHintIndex === totalHints - 1">
+                            Tiếp <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Yêu cầu tab -->
+        <div class="tab-pane fade" :class="{ 'show active': activeTab === 'requirements' }" id="requirements-content" role="tabpanel">
+            <div class="exercise-content">
+                <h4><i class="fas fa-clipboard-list text-purple"></i> Yêu Cầu Bài Tập</h4>
+                <div class="mb-4">
+                    {{ exercise.requirements|linebreaks }}
+                </div>
+                
+                <h5><i class="fas fa-check-circle text-success"></i> Tiêu Chí Đánh Giá</h5>
+                <ul class="list-group mb-4">
+                    {% for criterion in exercise.evaluation_criteria %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ criterion.description }}
+                        <span class="badge bg-primary">{{ criterion.points }} điểm</span>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item">Không có tiêu chí đánh giá cụ thể.</li>
+                    {% endfor %}
+                </ul>
+                
+                <h5><i class="fas fa-exclamation-triangle text-warning"></i> Lưu Ý</h5>
+                <div class="alert alert-warning">
+                    {{ exercise.notes|default:"Không có lưu ý đặc biệt cho bài tập này."|linebreaks }}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tài liệu tham khảo tab -->
+        <div class="tab-pane fade" :class="{ 'show active': activeTab === 'resources' }" id="resources-content" role="tabpanel">
+            <div class="exercise-content">
+                <h4><i class="fas fa-book text-purple"></i> Tài Liệu Tham Khảo</h4>
+                
+                {% if exercise.resources %}
+                <div class="list-group">
+                    {% for resource in exercise.resources %}
+                    <a href="{{ resource.url }}" class="list-group-item list-group-item-action" target="_blank">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ resource.title }}</h5>
+                            <small>{{ resource.type }}</small>
+                        </div>
+                        <p class="mb-1">{{ resource.description }}</p>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    Không có tài liệu tham khảo cụ thể cho bài tập này.
+                </div>
+                {% endif %}
+                
+                <h5 class="mt-4"><i class="fas fa-link text-purple"></i> Liên Kết Hữu Ích</h5>
+                <ul class="list-group">
+                    <li class="list-group-item">
+                        <a href="{{ exercise.lesson.get_absolute_url }}" class="text-decoration-none">
+                            <i class="fas fa-book-open text-primary"></i> Bài học: {{ exercise.lesson.title }}
+                        </a>
+                    </li>
+                    <li class="list-group-item">
+                        <a href="{{ exercise.lesson.topic.get_absolute_url }}" class="text-decoration-none">
+                            <i class="fas fa-folder text-primary"></i> Chủ đề: {{ exercise.lesson.topic.title }}
+                        </a>
+                    </li>
+                    <li class="list-group-item">
+                        <a href="{{ exercise.lesson.topic.subject.get_absolute_url }}" class="text-decoration-none">
+                            <i class="fas fa-graduation-cap text-primary"></i> Môn học: {{ exercise.lesson.topic.subject.name }}
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('exerciseDetail', () => ({
+            submitExercise() {
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                const exerciseId = {{ exercise.id }};
+                const exerciseType = '{{ exercise.exercise_type }}';
+                
+                this.isSubmitting = true;
+                this.feedback = 'Đang xử lý bài nộp của bạn...';
+                
+                let submission = '';
+                if (exerciseType === 'code') {
+                    submission = document.getElementById('code-textarea').value;
+                } else if (exerciseType === 'quiz') {
+                    submission = document.getElementById('quiz-answer').value;
+                }
+                
+                fetch(`/advanced_learning/exercises/${exerciseId}/submit/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: `submission=${encodeURIComponent(submission)}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    this.isSubmitting = false;
+                    
+                    if (data.success) {
+                        this.feedback = data.feedback;
+                        this.isCorrect = data.is_correct;
+                        
+                        if (data.is_correct) {
+                            this.showSolution = true;
+                        }
+                        
+                        if (data.execution_result) {
+                            this.executionResult = data.execution_result.output || data.execution_result.error || '';
+                        }
+                        
+                        if (data.test_results) {
+                            this.testResults = data.test_results;
+                        }
+                    } else {
+                        this.feedback = data.error || 'Đã xảy ra lỗi khi nộp bài tập. Vui lòng thử lại.';
+                        this.isCorrect = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Lỗi:', error);
+                    this.isSubmitting = false;
+                    this.feedback = 'Đã xảy ra lỗi khi nộp bài tập. Vui lòng thử lại.';
+                    this.isCorrect = false;
+                });
+            },
+            
+            runCode() {
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                const exerciseId = {{ exercise.id }};
+                const code = document.getElementById('code-textarea').value;
+                
+                fetch(`/advanced_learning/exercises/${exerciseId}/run-code/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: `code=${encodeURIComponent(code)}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        this.executionResult = data.output || 'Không có kết quả đầu ra.';
+                    } else {
+                        this.executionResult = `Lỗi: ${data.error}`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Lỗi:', error);
+                    this.executionResult = 'Đã xảy ra lỗi khi chạy mã. Vui lòng thử lại.';
+                });
+            },
+            
+            submitQuiz() {
+                const answer = document.getElementById('quiz-answer').value;
+                this.submitExercise(answer);
+            },
+            
+            nextHint() {
+                if (this.currentHintIndex < this.totalHints - 1) {
+                    this.currentHintIndex++;
+                    this.getHint();
+                }
+            },
+            
+            previousHint() {
+                if (this.currentHintIndex > 0) {
+                    this.currentHintIndex--;
+                    this.getHint();
+                }
+            },
+            
+            getHint() {
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                const exerciseId = {{ exercise.id }};
+                
+                fetch(`/advanced_learning/exercises/${exerciseId}/hint/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: `hint_index=${this.currentHintIndex}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('hint-text').textContent = data.hint;
+                    }
+                })
+                .catch(error => {
+                    console.error('Lỗi:', error);
+                });
+            }
+        }));
+    });
+</script>

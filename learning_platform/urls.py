@@ -92,6 +92,9 @@ urlpatterns = [
 
     # Achievements
     path('achievements/', include('achievements.urls')),
+
+    # Personalization
+    path('personalization/', include('personalization.urls')),
 ]
 
 # Serve media files in development

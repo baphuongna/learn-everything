@@ -1,0 +1,65 @@
+{% comment %}
+Component Progress - Hiển thị thanh tiến độ với HTMX và Alpine.js
+
+Cách sử dụng:
+1. Trong template:
+   {% include 'components/progress.html' with value=75 %}
+
+2. Với Alpine.js (animated):
+   {% include 'components/progress.html' with value=75 animated=True %}
+
+3. Với HTMX (real-time updates):
+   {% include 'components/progress.html' with value=0 id="upload-progress" %}
+   <button hx-post="/upload" hx-target="#result" hx-trigger="click" hx-indicator="#upload-progress">
+     Tải lên
+   </button>
+{% endcomment %}
+
+{% with 
+  value=value|default:0 
+  min=min|default:0 
+  max=max|default:100 
+  id=id|default:"progress" 
+  height=height|default:"" 
+  animated=animated|default:False 
+  striped=striped|default:False 
+  color=color|default:"primary" 
+  show_text=show_text|default:True 
+  text=text|default:""
+%}
+<div class="progress {% if height %}progress-{{ height }}{% endif %} mb-2" 
+     {% if id %}id="{{ id }}-container"{% endif %}
+     {% if animated %}
+     x-data="{ progress: 0 }"
+     x-init="
+       $nextTick(() => {
+         setTimeout(() => { progress = {{ value }} }, 100);
+       })
+     "
+     {% endif %}>
+  <div class="progress-bar bg-{{ color }} {% if striped %}progress-bar-striped{% endif %} {% if animated and striped %}progress-bar-animated{% endif %}" 
+       role="progressbar" 
+       {% if animated %}
+       :style="'width: ' + progress + '%'"
+       :aria-valuenow="progress"
+       {% else %}
+       style="width: {{ value }}%" 
+       aria-valuenow="{{ value }}"
+       {% endif %}
+       aria-valuemin="{{ min }}" 
+       aria-valuemax="{{ max }}"
+       {% if id %}id="{{ id }}"{% endif %}>
+    {% if show_text %}
+      {% if text %}
+        {{ text }}
+      {% else %}
+        {% if animated %}
+          <span x-text="progress + '%'"></span>
+        {% else %}
+          {{ value }}%
+        {% endif %}
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
+{% endwith %}

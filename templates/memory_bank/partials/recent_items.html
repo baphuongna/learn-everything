@@ -1,0 +1,57 @@
+<div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+    <h5 class="mb-0"><i class="fas fa-clock"></i> Ghi Nhớ Gần Đây</h5>
+    <button class="btn btn-sm btn-light" 
+            hx-get="{% url 'memory_home' %}?section=recent" 
+            hx-target="#recent-items-section" 
+            hx-swap="outerHTML"
+            hx-indicator="#recent-items-indicator">
+        <i class="fas fa-sync-alt"></i>
+        <span id="recent-items-indicator" class="htmx-indicator spinner-border spinner-border-sm"></span>
+    </button>
+</div>
+<div class="card-body p-0">
+    <div class="list-group list-group-flush">
+        {% for item in recent_items %}
+        <div class="list-group-item" x-data="{ showActions: false }">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <a href="{% url 'memory_item_detail' item.pk %}" class="text-decoration-none">
+                        <h5 class="mb-1">{{ item.title }}</h5>
+                    </a>
+                    <p class="mb-1 text-truncate">{{ item.content|striptags|truncatechars:100 }}</p>
+                    <small>
+                        <span class="badge bg-primary">{{ item.category.name }}</span>
+                        {% if item.is_favorite %}
+                        <span class="badge bg-warning"><i class="fas fa-star"></i> Yêu thích</span>
+                        {% endif %}
+                        <span class="text-muted">Cập nhật: {{ item.updated_at|date:"d/m/Y H:i" }}</span>
+                    </small>
+                </div>
+                <div class="d-flex">
+                    <button class="btn btn-sm btn-outline-secondary favorite-toggle" 
+                            data-item-id="{{ item.id }}"
+                            hx-post="{% url 'memory_item_toggle_favorite' item.pk %}"
+                            hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                            hx-swap="none"
+                            hx-trigger="click"
+                            @mouseenter="showActions = true" 
+                            @mouseleave="showActions = false">
+                        {% if item.is_favorite %}
+                        <i class="fas fa-star text-warning"></i>
+                        {% else %}
+                        <i class="far fa-star"></i>
+                        {% endif %}
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="list-group-item">
+            <p class="mb-0 text-center">Bạn chưa có ghi nhớ nào. Hãy tạo ghi nhớ đầu tiên!</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+<div class="card-footer">
+    <a href="{% url 'memory_search' %}" class="btn btn-primary">Xem tất cả</a>
+</div>

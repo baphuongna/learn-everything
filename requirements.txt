@@ -53,3 +53,13 @@ django-storages==1.14.2
 pytest==7.4.3
 pytest-django==4.7.0
 coverage==7.3.2
+
+# Frontend
+django-htmx==1.17.2  # Hỗ trợ HTMX trong Django
+django-compressor==4.4  # Tối ưu hóa tài nguyên tĩnh
+django-browser-reload==1.12.1  # Tự động tải lại trang khi có thay đổi
+
+# HTMX và Alpine.js
+django-alpine==0.1.5  # Hỗ trợ Alpine.js trong Django
+django-htmx-refresh==0.1.0  # Tự động làm mới nội dung HTMX
+django-template-partials==23.11  # Hỗ trợ partial templates cho HTMX

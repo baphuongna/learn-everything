@@ -1,0 +1,154 @@
+{% if mind_maps %}
+    {% if view == 'list' %}
+        <!-- Chế độ xem danh sách -->
+        {% for mind_map in mind_maps %}
+        <div class="card mindmap-card" x-data="{ showDetails: false }">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h5 class="mindmap-title">{{ mind_map.title }}</h5>
+                        <p class="mindmap-meta">
+                            {% if mind_map.subject %}
+                            <span class="badge bg-primary">{{ mind_map.subject.name }}</span>
+                            {% endif %}
+                            <span class="ms-2"><i class="far fa-calendar-alt"></i> {{ mind_map.created_at|date:"d/m/Y H:i" }}</span>
+                        </p>
+                        <p class="card-text">
+                            <strong>Chủ đề trung tâm:</strong> {{ mind_map.central_topic }}
+                        </p>
+                        <div class="mt-2">
+                            <button class="btn btn-sm btn-link p-0" @click="showDetails = !showDetails">
+                                <span x-show="!showDetails"><i class="fas fa-chevron-down"></i> Xem thêm</span>
+                                <span x-show="showDetails"><i class="fas fa-chevron-up"></i> Thu gọn</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-end d-flex align-items-center justify-content-end">
+                        <a href="{% url 'advanced_learning:mind_map_detail' map_id=mind_map.id %}" class="btn btn-outline-success me-2"
+                           hx-get="{% url 'advanced_learning:mind_map_detail' map_id=mind_map.id %}?format=partial"
+                           hx-target="#mindmaps-container"
+                           hx-swap="innerHTML"
+                           hx-push-url="true">
+                            <i class="fas fa-eye"></i> Xem
+                        </a>
+                        <a href="{% url 'advanced_learning:mind_map_edit' map_id=mind_map.id %}" class="btn btn-outline-secondary me-2">
+                            <i class="fas fa-edit"></i> Sửa
+                        </a>
+                        <button class="btn btn-outline-danger" 
+                                hx-delete="{% url 'advanced_learning:mind_map_delete' map_id=mind_map.id %}"
+                                hx-confirm="Bạn có chắc chắn muốn xóa sơ đồ tư duy này không?"
+                                hx-target="#mindmaps-container"
+                                hx-swap="innerHTML">
+                            <i class="fas fa-trash"></i> Xóa
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Chi tiết mở rộng -->
+                <div x-show="showDetails" x-transition class="mt-3">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mindmap-preview text-center py-4">
+                                <div>
+                                    <i class="fas fa-project-diagram fa-3x text-success mb-2"></i>
+                                    <p class="mb-0">Sơ đồ tư duy: {{ mind_map.title }}</p>
+                                    <p class="text-muted small mb-0">Chủ đề trung tâm: {{ mind_map.central_topic }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <div class="d-flex justify-content-end">
+                                <a href="{% url 'advanced_learning:mind_map_export_image' map_id=mind_map.id %}" class="btn btn-outline-primary me-2">
+                                    <i class="fas fa-image"></i> Xuất Ảnh
+                                </a>
+                                <a href="{% url 'advanced_learning:mind_map_export_pdf' map_id=mind_map.id %}" class="btn btn-outline-danger me-2">
+                                    <i class="fas fa-file-pdf"></i> Xuất PDF
+                                </a>
+                                <a href="{% url 'advanced_learning:mind_map_create_cornell_note' map_id=mind_map.id %}" class="btn btn-outline-info me-2">
+                                    <i class="fas fa-edit"></i> Tạo Ghi Chú
+                                </a>
+                                <a href="{% url 'advanced_learning:mind_map_create_flashcards' map_id=mind_map.id %}" class="btn btn-outline-warning">
+                                    <i class="fas fa-layer-group"></i> Tạo Flashcards
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <!-- Chế độ xem lưới (mặc định) -->
+        <div class="mindmap-grid">
+            {% for mind_map in mind_maps %}
+            <div class="card mindmap-grid-card h-100" x-data="{ showActions: false }">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0 text-truncate" title="{{ mind_map.title }}">{{ mind_map.title }}</h5>
+                    {% if mind_map.subject %}
+                        <span class="badge bg-primary">{{ mind_map.subject.name }}</span>
+                    {% endif %}
+                </div>
+                <div class="card-body position-relative" @mouseenter="showActions = true" @mouseleave="showActions = false">
+                    <div class="mindmap-preview text-center">
+                        <i class="fas fa-project-diagram fa-2x text-success"></i>
+                    </div>
+                    <p class="card-text"><strong>Chủ đề trung tâm:</strong> {{ mind_map.central_topic }}</p>
+                    <p class="text-muted small">
+                        <i class="far fa-calendar-alt"></i> {{ mind_map.created_at|date:"d/m/Y" }}
+                    </p>
+                    
+                    <div x-show="showActions" x-transition class="action-overlay">
+                        <div class="btn-group-vertical w-100">
+                            <a href="{% url 'advanced_learning:mind_map_detail' map_id=mind_map.id %}" class="btn btn-sm btn-success mb-2"
+                               hx-get="{% url 'advanced_learning:mind_map_detail' map_id=mind_map.id %}?format=partial"
+                               hx-target="#mindmaps-container"
+                               hx-swap="innerHTML"
+                               hx-push-url="true">
+                                <i class="fas fa-eye"></i> Xem
+                            </a>
+                            <a href="{% url 'advanced_learning:mind_map_edit' map_id=mind_map.id %}" class="btn btn-sm btn-warning mb-2">
+                                <i class="fas fa-edit"></i> Sửa
+                            </a>
+                            <a href="{% url 'advanced_learning:mind_map_export_pdf' map_id=mind_map.id %}" class="btn btn-sm btn-danger mb-2">
+                                <i class="fas fa-file-pdf"></i> Xuất PDF
+                            </a>
+                            <button class="btn btn-sm btn-outline-danger"
+                                    hx-delete="{% url 'advanced_learning:mind_map_delete' map_id=mind_map.id %}"
+                                    hx-confirm="Bạn có chắc chắn muốn xóa sơ đồ tư duy này không?"
+                                    hx-target="#mindmaps-container"
+                                    hx-swap="innerHTML">
+                                <i class="fas fa-trash"></i> Xóa
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">{{ mind_map.updated_at|date:"d/m/Y H:i" }}</small>
+                        <a href="{% url 'advanced_learning:mind_map_detail' map_id=mind_map.id %}" class="btn btn-sm btn-link p-0"
+                           hx-get="{% url 'advanced_learning:mind_map_detail' map_id=mind_map.id %}?format=partial"
+                           hx-target="#mindmaps-container"
+                           hx-swap="innerHTML"
+                           hx-push-url="true">
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% else %}
+    <div class="alert alert-info">
+        <div class="empty-state">
+            <i class="fas fa-project-diagram"></i>
+            <h4>Không có sơ đồ tư duy nào</h4>
+            <p class="text-muted">Bạn chưa có sơ đồ tư duy nào. Hãy tạo sơ đồ đầu tiên của bạn!</p>
+            <a href="{% url 'advanced_learning:mind_map_create' %}" class="btn btn-success mt-3">
+                <i class="fas fa-plus"></i> Tạo Sơ Đồ Mới
+            </a>
+        </div>
+    </div>
+{% endif %}

@@ -49,14 +49,105 @@
     }
     
     .empty-state i {
-        font-size: 4rem;
+        font-size: 3rem;
         color: #dee2e6;
         margin-bottom: 20px;
     }
     
-    .exercise-type-badge {
-        font-size: 0.8rem;
-        padding: 0.25rem 0.5rem;
+    .exercise-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-top: 10px;
+    }
+    
+    .exercise-stat {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    
+    .exercise-stat i {
+        color: #6f42c1;
+        margin-right: 5px;
+    }
+    
+    .btn-purple {
+        background-color: #6f42c1;
+        border-color: #6f42c1;
+        color: white;
+    }
+    
+    .btn-purple:hover {
+        background-color: #5e35b1;
+        border-color: #5e35b1;
+        color: white;
+    }
+    
+    .btn-outline-purple {
+        color: #6f42c1;
+        border-color: #6f42c1;
+    }
+    
+    .btn-outline-purple:hover {
+        background-color: #6f42c1;
+        color: white;
+    }
+    
+    .text-purple {
+        color: #6f42c1;
+    }
+    
+    .exercise-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+    
+    .exercise-grid-card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        border-top: 4px solid #6f42c1;
+    }
+    
+    .exercise-grid-card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .exercise-grid-card .card-body {
+        flex: 1;
+    }
+    
+    .exercise-grid-card .card-footer {
+        padding: 0.5rem 1rem;
+        background-color: transparent;
+    }
+    
+    .view-toggle-btn.active {
+        background-color: #6f42c1;
+        color: white;
+    }
+    
+    .action-overlay {
+        display: none;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+        width: 80%;
+    }
+    
+    .exercise-grid-card:hover .action-overlay {
+        display: block;
     }
     
     .type-code {
@@ -86,205 +177,113 @@
         <p class="lead">Thực hành kiến thức thông qua các bài tập tương tác như lập trình, câu đố, mô phỏng và trò chơi học tập.</p>
     </div>
     <div class="col-md-4 text-end">
-        <a href="{% url 'advanced_learning:create_exercise' %}" class="btn btn-purple">
-            <i class="fas fa-plus"></i> Tạo Bài Tập Mới
+        <a href="{% url 'advanced_learning:my_exercise_submissions' %}" class="btn btn-outline-purple me-2">
+            <i class="fas fa-history"></i> Bài Nộp Của Tôi
         </a>
-    </div>
-</div>
-
-<!-- Tìm kiếm và lọc -->
-<div class="card search-card mb-4">
-    <div class="card-body">
-        <form method="get" class="row g-3">
-            <div class="col-md-4">
-                <div class="input-group">
-                    <input type="text" class="form-control" name="search" placeholder="Tìm kiếm bài tập..." value="{{ search_query }}">
-                    <button class="btn btn-purple" type="submit">
-                        <i class="fas fa-search"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <select class="form-select" name="subject" onchange="this.form.submit()">
-                    <option value="">Tất cả chủ đề</option>
-                    {% for subject in subjects %}
-                    <option value="{{ subject.id }}" {% if selected_subject == subject.id|stringformat:"i" %}selected{% endif %}>
-                        {{ subject.name }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-3">
-                <select class="form-select" name="type" onchange="this.form.submit()">
-                    <option value="">Tất cả loại bài tập</option>
-                    {% for type_code, type_name in exercise_types %}
-                    <option value="{{ type_code }}" {% if selected_type == type_code %}selected{% endif %}>
-                        {{ type_name }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-2">
-                {% if search_query or selected_subject or selected_type %}
-                <a href="{% url 'advanced_learning:exercise_list' %}" class="btn btn-outline-secondary w-100">
-                    <i class="fas fa-times"></i> Xóa bộ lọc
-                </a>
-                {% endif %}
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Danh sách bài tập -->
-<div class="row">
-    <div class="col-md-12">
-        {% if exercises %}
-            {% for exercise in exercises %}
-            <div class="card exercise-card">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-8">
-                            <h5 class="exercise-title">{{ exercise.title }}</h5>
-                            <p class="exercise-meta">
-                                {% if exercise.lesson.topic.subject %}
-                                <span class="badge bg-primary">{{ exercise.lesson.topic.subject.name }}</span>
-                                {% endif %}
-                                <span class="badge 
-                                    {% if exercise.exercise_type == 'code' %}type-code
-                                    {% elif exercise.exercise_type == 'quiz' %}type-quiz
-                                    {% elif exercise.exercise_type == 'simulation' %}type-simulation
-                                    {% else %}type-game{% endif %} 
-                                    exercise-type-badge">
-                                    {% if exercise.exercise_type == 'code' %}
-                                        Bài tập lập trình
-                                    {% elif exercise.exercise_type == 'quiz' %}
-                                        Câu đố tương tác
-                                    {% elif exercise.exercise_type == 'simulation' %}
-                                        Mô phỏng
-                                    {% else %}
-                                        Trò chơi học tập
-                                    {% endif %}
-                                </span>
-                            </p>
-                            <div class="exercise-description">
-                                {{ exercise.description|truncatechars:200 }}
-                            </div>
-                        </div>
-                        <div class="col-md-4 text-end d-flex align-items-center justify-content-end">
-                            <a href="{% url 'advanced_learning:exercise_detail' exercise_id=exercise.id %}" class="btn btn-outline-purple me-2">
-                                <i class="fas fa-play"></i> Thực Hành
-                            </a>
-                            <div class="dropdown">
-                                <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton{{ exercise.id }}" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fas fa-ellipsis-v"></i>
-                                </button>
-                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ exercise.id }}">
-                                    <li>
-                                        <a class="dropdown-item" href="{% url 'advanced_learning:edit_exercise' exercise_id=exercise.id %}">
-                                            <i class="fas fa-edit"></i> Chỉnh sửa
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" href="{% url 'advanced_learning:delete_exercise' exercise_id=exercise.id %}">
-                                            <i class="fas fa-trash"></i> Xóa
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        {% else %}
-            <div class="card">
-                <div class="card-body empty-state">
-                    <i class="fas fa-laptop-code"></i>
-                    <h4>Không có bài tập nào</h4>
-                    <p class="text-muted">Không tìm thấy bài tập nào phù hợp với tiêu chí tìm kiếm của bạn.</p>
-                    <a href="{% url 'advanced_learning:create_exercise' %}" class="btn btn-purple mt-3">
-                        <i class="fas fa-plus"></i> Tạo Bài Tập Mới
-                    </a>
-                </div>
-            </div>
+        {% if user.is_staff %}
+        <a href="{% url 'advanced_learning:create_exercise' %}" class="btn btn-purple">
+            <i class="fas fa-plus"></i> Tạo Bài Tập
+        </a>
         {% endif %}
     </div>
 </div>
 
-<!-- Thông tin về bài tập thực hành tương tác -->
-<div class="row mt-5">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header bg-purple text-white">
-                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Về Bài Tập Thực Hành Tương Tác</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h5>Bài tập thực hành tương tác là gì?</h5>
-                        <p>Bài tập thực hành tương tác là các hoạt động học tập cho phép người học tương tác trực tiếp với nội dung, áp dụng kiến thức đã học vào thực hành và nhận phản hồi ngay lập tức. Các bài tập này giúp củng cố kiến thức, phát triển kỹ năng và tăng cường sự tham gia của người học.</p>
-                    </div>
-                    <div class="col-md-6">
-                        <h5>Các loại bài tập thực hành tương tác:</h5>
-                        <ul>
-                            <li><strong>Bài tập lập trình:</strong> Thực hành viết mã, giải quyết vấn đề và phát triển thuật toán.</li>
-                            <li><strong>Câu đố tương tác:</strong> Trả lời câu hỏi, giải đố và thử thách tư duy.</li>
-                            <li><strong>Mô phỏng:</strong> Tương tác với mô hình mô phỏng các hiện tượng, quy trình hoặc hệ thống.</li>
-                            <li><strong>Trò chơi học tập:</strong> Học thông qua các trò chơi có mục tiêu giáo dục.</li>
-                        </ul>
+<div class="exercises-container" x-data="{ viewType: 'list' }">
+    <!-- Tìm kiếm và lọc -->
+    <div class="card search-card mb-4" x-data="{ searchQuery: '{{ search_query }}', selectedSubject: '{{ selected_subject }}', selectedType: '{{ selected_type }}' }">
+        <div class="card-body">
+            <form class="row g-3" id="search-form"
+                  hx-get="{% url 'advanced_learning:exercise_list' %}?format=partial"
+                  hx-target="#exercises-container"
+                  hx-trigger="submit"
+                  hx-indicator="#search-indicator">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="search" placeholder="Tìm kiếm bài tập..." 
+                               x-model="searchQuery">
+                        <button class="btn btn-purple" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                        <span id="search-indicator" class="htmx-indicator spinner-border spinner-border-sm text-purple ms-2" role="status"></span>
                     </div>
                 </div>
-                <div class="row mt-3">
-                    <div class="col-md-12">
-                        <h5>Lợi ích của bài tập thực hành tương tác:</h5>
-                        <ul>
-                            <li><strong>Học tập chủ động:</strong> Khuyến khích người học tham gia tích cực vào quá trình học tập.</li>
-                            <li><strong>Phản hồi tức thời:</strong> Cung cấp phản hồi ngay lập tức để người học có thể điều chỉnh và cải thiện.</li>
-                            <li><strong>Áp dụng thực tế:</strong> Cho phép người học áp dụng kiến thức lý thuyết vào thực hành.</li>
-                            <li><strong>Tăng động lực:</strong> Làm cho việc học trở nên thú vị và hấp dẫn hơn.</li>
-                            <li><strong>Cá nhân hóa:</strong> Cho phép người học tiến bộ theo tốc độ riêng và tập trung vào các lĩnh vực cần cải thiện.</li>
-                        </ul>
+                <div class="col-md-3">
+                    <select class="form-select" name="subject" x-model="selectedSubject"
+                            hx-get="{% url 'advanced_learning:exercise_list' %}?format=partial"
+                            hx-target="#exercises-container"
+                            hx-trigger="change"
+                            hx-include="[name='search'], [name='type']"
+                            hx-indicator="#search-indicator">
+                        <option value="">Tất cả chủ đề</option>
+                        {% for subject in subjects %}
+                        <option value="{{ subject.id }}">{{ subject.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" name="type" x-model="selectedType"
+                            hx-get="{% url 'advanced_learning:exercise_list' %}?format=partial"
+                            hx-target="#exercises-container"
+                            hx-trigger="change"
+                            hx-include="[name='search'], [name='subject']"
+                            hx-indicator="#search-indicator">
+                        <option value="">Tất cả loại bài tập</option>
+                        {% for type_code, type_name in exercise_types %}
+                        <option value="{{ type_code }}">{{ type_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-outline-secondary w-100"
+                            @click="searchQuery = ''; selectedSubject = ''; selectedType = '';"
+                            hx-get="{% url 'advanced_learning:exercise_list' %}?format=partial"
+                            hx-target="#exercises-container"
+                            hx-trigger="click"
+                            hx-indicator="#search-indicator">
+                        <i class="fas fa-times"></i> Xóa bộ lọc
+                    </button>
+                </div>
+            </form>
+            
+            <div class="row mt-3">
+                <div class="col-md-12 d-flex justify-content-end">
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-purple view-toggle-btn" 
+                                :class="{ 'active': viewType === 'grid' }"
+                                @click="viewType = 'grid'"
+                                hx-get="{% url 'advanced_learning:exercise_list' %}?format=partial&view=grid"
+                                hx-target="#exercises-container"
+                                hx-include="[name='search'], [name='subject'], [name='type']">
+                            <i class="fas fa-th-large"></i> Lưới
+                        </button>
+                        <button type="button" class="btn btn-outline-purple view-toggle-btn"
+                                :class="{ 'active': viewType === 'list' }"
+                                @click="viewType = 'list'"
+                                hx-get="{% url 'advanced_learning:exercise_list' %}?format=partial&view=list"
+                                hx-target="#exercises-container"
+                                hx-include="[name='search'], [name='subject'], [name='type']">
+                            <i class="fas fa-list"></i> Danh sách
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
+    
+    <!-- Danh sách bài tập -->
+    <div id="exercises-container">
+        {% include 'advanced_learning/exercises/list_partial.html' %}
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // Thêm màu tím cho nút và các phần tử khác
     document.addEventListener('DOMContentLoaded', function() {
-        // Thêm CSS cho màu tím
-        const style = document.createElement('style');
-        style.textContent = `
-            .btn-purple {
-                background-color: #6f42c1;
-                border-color: #6f42c1;
-                color: white;
-            }
-            .btn-purple:hover {
-                background-color: #5e35b1;
-                border-color: #5e35b1;
-                color: white;
-            }
-            .btn-outline-purple {
-                color: #6f42c1;
-                border-color: #6f42c1;
-            }
-            .btn-outline-purple:hover {
-                background-color: #6f42c1;
-                color: white;
-            }
-            .bg-purple {
-                background-color: #6f42c1 !important;
-            }
-            .text-purple {
-                color: #6f42c1 !important;
-            }
-        `;
-        document.head.appendChild(style);
+        // Khởi tạo Alpine.js nếu cần
+        if (typeof Alpine !== 'undefined') {
+            Alpine.start();
+        }
     });
 </script>
 {% endblock %}

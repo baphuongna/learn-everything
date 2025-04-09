@@ -1,0 +1,331 @@
+<div class="pomodoro-history-container">
+    <!-- Thống kê tổng quan -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card stats-card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Tổng Thời Gian Học Tập</h5>
+                    <p class="display-4">{{ total_hours }}h {{ remaining_minutes }}m</p>
+                    <p class="text-muted">Tương đương {{ total_minutes }} phút</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+            <div class="card stats-card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Tổng Số Pomodoros</h5>
+                    <p class="display-4">{{ total_pomodoros }}</p>
+                    <div class="pomodoro-counter">
+                        {% for i in "x"|ljust:total_pomodoros %}
+                            {% if forloop.counter <= 20 %}
+                            <i class="fas fa-apple-alt tomato"></i>
+                            {% endif %}
+                        {% endfor %}
+                        {% if total_pomodoros > 20 %}
+                        <span class="text-muted">+{{ total_pomodoros|add:"-20" }} nữa</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+            <div class="card stats-card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Số Phiên Pomodoro</h5>
+                    <p class="display-4">{{ sessions.count }}</p>
+                    <p class="text-muted">Phiên gần nhất: {{ sessions.first.start_time|date:"d/m/Y H:i" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bộ lọc -->
+    <div class="card filter-card mb-4" x-data="{ activeSubject: '{{ selected_subject }}', activeDate: '{{ selected_date }}' }">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label">Lọc theo chủ đề</label>
+                    <select class="form-select" 
+                            x-model="activeSubject"
+                            hx-get="{% url 'advanced_learning:pomodoro_history' %}?format=partial"
+                            hx-target="#pomodoro-history-container"
+                            hx-swap="innerHTML"
+                            hx-trigger="change"
+                            hx-include="[name='date']"
+                            name="subject">
+                        <option value="">Tất cả chủ đề</option>
+                        {% for subject in subjects %}
+                        <option value="{{ subject.id }}" {% if selected_subject == subject.id|stringformat:"s" %}selected{% endif %}>
+                            {{ subject.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Lọc theo ngày</label>
+                    <input type="date" class="form-control" 
+                           x-model="activeDate"
+                           hx-get="{% url 'advanced_learning:pomodoro_history' %}?format=partial"
+                           hx-target="#pomodoro-history-container"
+                           hx-swap="innerHTML"
+                           hx-trigger="change"
+                           hx-include="[name='subject']"
+                           name="date"
+                           value="{{ selected_date }}">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button class="btn btn-outline-secondary w-100"
+                            @click="activeSubject = ''; activeDate = '';"
+                            hx-get="{% url 'advanced_learning:pomodoro_history' %}?format=partial"
+                            hx-target="#pomodoro-history-container"
+                            hx-swap="innerHTML">
+                        <i class="fas fa-sync-alt"></i> Đặt lại bộ lọc
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Danh sách các phiên Pomodoro -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-list"></i> Các Phiên Pomodoro</h5>
+                    <span class="badge bg-light text-dark">{{ sessions.count }} phiên</span>
+                </div>
+                <div class="card-body">
+                    {% if sessions %}
+                        {% for session in sessions %}
+                        <div class="card session-card {% if session.end_time %}completed{% else %}active{% endif %}" x-data="{ showDetails: false }">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <h5 class="card-title">
+                                            {% if session.subject %}
+                                            <span class="badge bg-primary">{{ session.subject.name }}</span>
+                                            {% endif %}
+                                            {% if session.topic %}
+                                            <span class="badge bg-secondary">{{ session.topic.name }}</span>
+                                            {% endif %}
+                                        </h5>
+                                        <p class="card-text">
+                                            <strong>Bắt đầu:</strong> {{ session.start_time|date:"d/m/Y H:i:s" }}<br>
+                                            {% if session.end_time %}
+                                            <strong>Kết thúc:</strong> {{ session.end_time|date:"d/m/Y H:i:s" }}<br>
+                                            <strong>Tổng thời gian:</strong> 
+                                            {% with total_minutes=session.end_time|timeuntil:session.start_time %}
+                                                {{ total_minutes }}
+                                            {% endwith %}
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p class="card-text">
+                                            <strong>Pomodoros hoàn thành:</strong> {{ session.completed_pomodoros }}<br>
+                                            <div class="pomodoro-counter">
+                                                {% for i in "x"|ljust:session.completed_pomodoros %}
+                                                    {% if forloop.counter <= 10 %}
+                                                    <i class="fas fa-apple-alt tomato"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                                {% if session.completed_pomodoros > 10 %}
+                                                <span class="text-muted">+{{ session.completed_pomodoros|add:"-10" }}</span>
+                                                {% endif %}
+                                            </div>
+                                        </p>
+                                        {% if session.notes %}
+                                        <p class="card-text">
+                                            <strong>Ghi chú:</strong> {{ session.notes|truncatechars:100 }}
+                                        </p>
+                                        {% endif %}
+                                        <div class="d-flex justify-content-end">
+                                            <button class="btn btn-sm btn-outline-primary" @click="showDetails = !showDetails">
+                                                <span x-show="!showDetails"><i class="fas fa-chevron-down"></i> Chi tiết</span>
+                                                <span x-show="showDetails"><i class="fas fa-chevron-up"></i> Thu gọn</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <div class="d-flex justify-content-end">
+                                            {% if not session.end_time %}
+                                            <button class="btn btn-danger me-2"
+                                                    hx-post="{% url 'advanced_learning:pomodoro_end' %}"
+                                                    hx-vals='{"session_id": "{{ session.id }}", "completed_pomodoros": "{{ session.completed_pomodoros }}"}'
+                                                    hx-target="#pomodoro-history-container"
+                                                    hx-swap="innerHTML"
+                                                    hx-indicator="#end-indicator-{{ session.id }}">
+                                                <i class="fas fa-stop-circle"></i> Kết thúc
+                                                <span id="end-indicator-{{ session.id }}" class="htmx-indicator spinner-border spinner-border-sm"></span>
+                                            </button>
+                                            {% endif %}
+                                            <button class="btn btn-outline-primary"
+                                                    hx-get="{% url 'advanced_learning:pomodoro_timer' %}?session_id={{ session.id }}&format=partial"
+                                                    hx-target="#pomodoro-history-container"
+                                                    hx-swap="outerHTML"
+                                                    hx-push-url="{% url 'advanced_learning:pomodoro_timer' %}">
+                                                <i class="fas fa-copy"></i> Tạo tương tự
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Chi tiết mở rộng -->
+                                <div x-show="showDetails" x-transition class="mt-3">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6>Thông tin chi tiết</h6>
+                                            <ul class="list-group">
+                                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                    Thời gian làm việc
+                                                    <span>{{ session.work_duration }} phút</span>
+                                                </li>
+                                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                    Thời gian nghỉ
+                                                    <span>{{ session.break_duration }} phút</span>
+                                                </li>
+                                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                    Bắt đầu
+                                                    <span>{{ session.start_time|date:"d/m/Y H:i:s" }}</span>
+                                                </li>
+                                                {% if session.end_time %}
+                                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                    Kết thúc
+                                                    <span>{{ session.end_time|date:"d/m/Y H:i:s" }}</span>
+                                                </li>
+                                                {% endif %}
+                                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                    ID Phiên
+                                                    <span>{{ session.id }}</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6>Hành động</h6>
+                                            <div class="d-grid gap-2">
+                                                {% if not session.end_time %}
+                                                <button class="btn btn-danger"
+                                                        hx-post="{% url 'advanced_learning:pomodoro_end' %}"
+                                                        hx-vals='{"session_id": "{{ session.id }}", "completed_pomodoros": "{{ session.completed_pomodoros }}"}'
+                                                        hx-target="#pomodoro-history-container"
+                                                        hx-swap="innerHTML"
+                                                        hx-indicator="#end-detail-indicator-{{ session.id }}">
+                                                    <i class="fas fa-stop-circle"></i> Kết thúc phiên
+                                                    <span id="end-detail-indicator-{{ session.id }}" class="htmx-indicator spinner-border spinner-border-sm"></span>
+                                                </button>
+                                                {% endif %}
+                                                <button class="btn btn-outline-primary"
+                                                        hx-get="{% url 'advanced_learning:pomodoro_timer' %}?session_id={{ session.id }}&format=partial"
+                                                        hx-target="#pomodoro-history-container"
+                                                        hx-swap="outerHTML"
+                                                        hx-push-url="{% url 'advanced_learning:pomodoro_timer' %}">
+                                                    <i class="fas fa-copy"></i> Tạo phiên tương tự
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Bạn chưa có phiên Pomodoro nào. Hãy bắt đầu một phiên mới để theo dõi thời gian học tập của bạn.
+                    </div>
+                    <div class="text-center mt-4">
+                        <a href="{% url 'advanced_learning:pomodoro_timer' %}" class="btn btn-primary"
+                           hx-get="{% url 'advanced_learning:pomodoro_timer' %}?format=partial"
+                           hx-target="#pomodoro-history-container"
+                           hx-swap="outerHTML"
+                           hx-push-url="{% url 'advanced_learning:pomodoro_timer' %}">
+                            <i class="fas fa-play"></i> Bắt đầu phiên Pomodoro mới
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Biểu đồ thống kê -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Thống Kê Theo Thời Gian</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="pomodoro-history-chart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Khởi tạo biểu đồ
+        const ctx = document.getElementById('pomodoro-history-chart').getContext('2d');
+        
+        // Dữ liệu biểu đồ
+        const chartData = {
+            labels: {{ chart_labels|safe }},
+            datasets: [
+                {
+                    label: 'Số phiên Pomodoro',
+                    data: {{ chart_data|safe }},
+                    backgroundColor: 'rgba(0, 123, 255, 0.5)',
+                    borderColor: 'rgba(0, 123, 255, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Tổng thời gian (phút)',
+                    data: {{ chart_minutes|safe }},
+                    backgroundColor: 'rgba(40, 167, 69, 0.5)',
+                    borderColor: 'rgba(40, 167, 69, 1)',
+                    borderWidth: 1,
+                    yAxisID: 'y1'
+                }
+            ]
+        };
+        
+        // Tùy chọn biểu đồ
+        const chartOptions = {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Số phiên'
+                    },
+                    ticks: {
+                        precision: 0
+                    }
+                },
+                y1: {
+                    beginAtZero: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Thời gian (phút)'
+                    },
+                    grid: {
+                        drawOnChartArea: false
+                    }
+                }
+            },
+            responsive: true,
+            maintainAspectRatio: false
+        };
+        
+        // Tạo biểu đồ
+        new Chart(ctx, {
+            type: 'bar',
+            data: chartData,
+            options: chartOptions
+        });
+    });
+</script>

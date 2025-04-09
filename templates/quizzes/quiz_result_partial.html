@@ -1,0 +1,167 @@
+{% load static %}
+
+<div class="quiz-result-preview">
+    <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Kết quả bài kiểm tra: {{ quiz_attempt.quiz.title }}</h5>
+            <span class="badge bg-light text-dark">{{ quiz_attempt.created_at|date:"d/m/Y H:i" }}</span>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="result-summary">
+                        <h6 class="mb-3">Tóm tắt kết quả</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td>Điểm số:</td>
+                                <td>
+                                    <strong class="{% if quiz_attempt.passed %}text-success{% else %}text-danger{% endif %}">
+                                        {{ quiz_attempt.score|floatformat:1 }}%
+                                    </strong>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Trạng thái:</td>
+                                <td>
+                                    {% if quiz_attempt.passed %}
+                                        <span class="badge bg-success">Đạt</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Chưa đạt</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Thời gian làm bài:</td>
+                                <td>{{ duration }} phút</td>
+                            </tr>
+                            <tr>
+                                <td>Số câu đúng:</td>
+                                <td>{{ correct_count }}/{{ user_answers.count }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="result-chart text-center">
+                        <div class="progress-circle mx-auto" data-value="{{ quiz_attempt.score|floatformat:0 }}">
+                            <span class="progress-circle-left">
+                                <span class="progress-circle-bar border-primary"></span>
+                            </span>
+                            <span class="progress-circle-right">
+                                <span class="progress-circle-bar border-primary"></span>
+                            </span>
+                            <div class="progress-circle-value w-100 h-100 rounded-circle d-flex align-items-center justify-content-center">
+                                <div class="h2 font-weight-bold">{{ quiz_attempt.score|floatformat:0 }}<sup class="small">%</sup></div>
+                            </div>
+                        </div>
+                        <p class="mt-2">Tỷ lệ đúng</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="answer-summary">
+                <h6 class="mb-3">Tóm tắt câu trả lời</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Câu hỏi</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for answer in user_answers|slice:":5" %}
+                                <tr>
+                                    <td>{{ answer.question.text|truncatechars:50 }}</td>
+                                    <td>
+                                        {% if answer.is_correct %}
+                                            <span class="badge bg-success">Đúng</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Sai</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            {% if user_answers.count > 5 %}
+                                <tr>
+                                    <td colspan="2" class="text-center text-muted">
+                                        <small>... và {{ user_answers.count|add:"-5" }} câu hỏi khác</small>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="mt-4 text-center">
+                <a href="{% url 'quiz_result' attempt_id=quiz_attempt.id %}" class="btn btn-primary">
+                    <i class="fas fa-external-link-alt"></i> Xem đầy đủ
+                </a>
+                <a href="{% url 'quiz_detail' quiz_id=quiz_attempt.quiz.id %}" class="btn btn-outline-primary ml-2">
+                    <i class="fas fa-redo"></i> Làm lại
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Progress Circle */
+    .progress-circle {
+        position: relative;
+        height: 120px;
+        width: 120px;
+        border-radius: 50%;
+        background-color: #f2f2f2;
+    }
+    
+    .progress-circle-bar {
+        position: absolute;
+        height: 100%;
+        width: 100%;
+        background: none;
+        border-width: 8px;
+        border-style: solid;
+        border-color: #ddd;
+        border-radius: 50%;
+    }
+    
+    .progress-circle .progress-circle-left .progress-circle-bar {
+        left: 100%;
+        border-top-right-radius: 80px;
+        border-bottom-right-radius: 80px;
+        border-left: 0;
+        transform-origin: center left;
+    }
+    
+    .progress-circle .progress-circle-right .progress-circle-bar {
+        left: -100%;
+        border-top-left-radius: 80px;
+        border-bottom-left-radius: 80px;
+        border-right: 0;
+        transform-origin: center right;
+    }
+    
+    .progress-circle-value {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+</style>
+
+<script>
+    // Progress Circle Animation
+    (function() {
+        const progressCircles = document.querySelectorAll('.progress-circle');
+        
+        progressCircles.forEach(function(circle) {
+            const value = circle.getAttribute('data-value');
+            const leftTransform = 'rotate(' + Math.min(value * 3.6, 180) + 'deg)';
+            const rightTransform = 'rotate(' + Math.max(value * 3.6 - 180, 0) + 'deg)';
+            
+            circle.querySelector('.progress-circle-left .progress-circle-bar').style.transform = leftTransform;
+            circle.querySelector('.progress-circle-right .progress-circle-bar').style.transform = rightTransform;
+        });
+    })();
+</script>

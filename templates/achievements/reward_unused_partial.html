@@ -1,0 +1,47 @@
+<div class="row">
+    {% for user_reward in unused_rewards %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100" x-data="{ showDetails: false }">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">{{ user_reward.reward.name }}</h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="reward-icon mb-3">
+                        <i class="{{ user_reward.reward.icon }} fa-4x text-success"></i>
+                    </div>
+                    <div class="reward-meta mb-3">
+                        <p class="mb-1"><strong>Đổi ngày:</strong> {{ user_reward.redeemed_at|date:"d/m/Y" }}</p>
+                        <p class="mb-0"><strong>Mã:</strong> {{ user_reward.code }}</p>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-sm btn-outline-primary" @click="showDetails = !showDetails">
+                            <span x-show="!showDetails">Xem chi tiết</span>
+                            <span x-show="showDetails">Ẩn chi tiết</span>
+                        </button>
+                        <form hx-post="{% url 'achievements:use_reward' user_reward.id %}" 
+                              hx-target="#use-response-{{ user_reward.id }}" 
+                              hx-swap="outerHTML"
+                              hx-indicator="#use-indicator-{{ user_reward.id }}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success w-100">
+                                <span id="use-indicator-{{ user_reward.id }}" class="htmx-indicator spinner-border spinner-border-sm me-1"></span>
+                                <i class="fas fa-check-circle"></i> Sử Dụng Ngay
+                            </button>
+                        </form>
+                    </div>
+                    <div id="use-response-{{ user_reward.id }}"></div>
+                </div>
+                <div class="card-footer bg-transparent" x-show="showDetails" x-transition>
+                    <p class="card-text">{{ user_reward.reward.description }}</p>
+                    <p class="card-text"><strong>Hướng dẫn sử dụng:</strong> {{ user_reward.reward.usage_instructions }}</p>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i> Bạn chưa có phần thưởng nào chưa sử dụng.
+            </div>
+        </div>
+    {% endfor %}
+</div>

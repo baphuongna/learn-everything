@@ -1,0 +1,99 @@
+{% comment %}
+Component Alert - Hiển thị thông báo với HTMX và Alpine.js
+
+Cách sử dụng:
+1. Trong template:
+   {% include 'components/alert.html' with message="Thông báo của bạn" type="success" %}
+
+2. Với HTMX (server trả về):
+   response['HX-Trigger'] = '{"showAlert": {"message": "Thông báo thành công", "type": "success"}}'
+
+3. Với Alpine.js (client):
+   Alpine.store('alerts').add('Thông báo thành công', 'success');
+
+Các loại thông báo (type):
+- success: Thành công (màu xanh lá)
+- info: Thông tin (màu xanh dương)
+- warning: Cảnh báo (màu vàng)
+- danger: Lỗi (màu đỏ)
+{% endcomment %}
+
+{% if not _alert_component_loaded %}
+  {% with _alert_component_loaded=True %}
+    <div id="alert-container" 
+         x-data 
+         @show-alert.window="$store.alerts.add($event.detail.message, $event.detail.type)"
+         hx-ext="json-enc"
+         hx-on::after-request="
+           const trigger = JSON.parse(event.detail.xhr.getResponseHeader('HX-Trigger') || '{}');
+           if (trigger.showAlert) {
+             $store.alerts.add(trigger.showAlert.message, trigger.showAlert.type);
+           }
+         ">
+      
+      <template x-teleport="body">
+        <div class="toast-container position-fixed top-0 end-0 p-3">
+          <template x-for="(alert, index) in $store.alerts.list" :key="alert.id">
+            <div x-show="alert.visible" 
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 transform translate-x-full"
+                 x-transition:enter-end="opacity-100 transform translate-x-0"
+                 x-transition:leave="transition ease-in duration-300"
+                 x-transition:leave-start="opacity-100 transform translate-x-0"
+                 x-transition:leave-end="opacity-0 transform translate-x-full"
+                 class="toast show align-items-center border-0 mb-2"
+                 :class="`text-bg-${alert.type}`"
+                 role="alert" 
+                 aria-live="assertive" 
+                 aria-atomic="true">
+              <div class="d-flex">
+                <div class="toast-body" x-text="alert.message"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" 
+                        @click="$store.alerts.remove(alert.id)"></button>
+              </div>
+            </div>
+          </template>
+        </div>
+      </template>
+    </div>
+
+    <script>
+      document.addEventListener('alpine:init', () => {
+        Alpine.store('alerts', {
+          list: [],
+          nextId: 1,
+          
+          add(message, type = 'info') {
+            const id = this.nextId++;
+            const alert = { id, message, type, visible: true };
+            this.list.push(alert);
+            
+            // Tự động ẩn sau 5 giây
+            setTimeout(() => {
+              this.remove(id);
+            }, 5000);
+          },
+          
+          remove(id) {
+            const index = this.list.findIndex(alert => alert.id === id);
+            if (index !== -1) {
+              this.list[index].visible = false;
+              // Xóa khỏi mảng sau khi animation hoàn tất
+              setTimeout(() => {
+                this.list = this.list.filter(alert => alert.id !== id);
+              }, 300);
+            }
+          }
+        });
+      });
+    </script>
+  {% endwith %}
+{% endif %}
+
+{% if message %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      Alpine.store('alerts').add('{{ message }}', '{{ type|default:"info" }}');
+    });
+  </script>
+{% endif %}

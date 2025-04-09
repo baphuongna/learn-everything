@@ -28,59 +28,99 @@
         color: #6c757d;
     }
 
-    .note-content {
-        max-height: 100px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-    }
-
     .search-card {
         border-radius: 10px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         margin-bottom: 20px;
     }
-
+    
     .empty-state {
         text-align: center;
         padding: 40px 20px;
     }
-
+    
     .empty-state i {
         font-size: 4rem;
         color: #dee2e6;
         margin-bottom: 20px;
     }
-
-    .feynman-steps {
-        counter-reset: step-counter;
-        list-style-type: none;
-        padding-left: 0;
-    }
-
-    .feynman-steps li {
-        position: relative;
-        padding-left: 50px;
-        margin-bottom: 15px;
-        counter-increment: step-counter;
-    }
-
-    .feynman-steps li::before {
-        content: counter(step-counter);
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 35px;
-        height: 35px;
+    
+    .step-number {
+        display: inline-block;
+        width: 25px;
+        height: 25px;
         background-color: #fd7e14;
         color: white;
         border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        text-align: center;
+        line-height: 25px;
+        margin-right: 10px;
         font-weight: bold;
+    }
+    
+    .note-content {
+        margin-top: 10px;
+        padding-left: 35px;
+    }
+    
+    .note-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+    
+    .note-grid-card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        border-top: 4px solid #fd7e14;
+    }
+    
+    .note-grid-card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .note-grid-card .card-body {
+        flex: 1;
+    }
+    
+    .note-grid-card .card-footer {
+        padding: 0.5rem 1rem;
+        background-color: transparent;
+    }
+    
+    .view-toggle-btn.active {
+        background-color: #fd7e14;
+        color: white;
+    }
+    
+    .action-overlay {
+        display: none;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+        width: 80%;
+    }
+    
+    .note-grid-card:hover .action-overlay {
+        display: block;
+    }
+    
+    .review-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 5;
     }
 </style>
 {% endblock %}
@@ -91,150 +131,101 @@
         <h1 class="mb-3">
             <i class="fas fa-lightbulb text-warning"></i> Phương Pháp Feynman
         </h1>
-        <p class="lead">Hiểu sâu sắc các khái niệm phức tạp bằng cách giải thích chúng bằng ngôn ngữ đơn giản.</p>
+        <p class="lead">Tạo ghi chú theo phương pháp Feynman để hiểu sâu và ghi nhớ lâu các khái niệm phức tạp.</p>
     </div>
     <div class="col-md-4 text-end">
         <a href="{% url 'advanced_learning:feynman_note_create' %}" class="btn btn-warning">
             <i class="fas fa-plus"></i> Tạo Ghi Chú Mới
         </a>
-    </div>
-</div>
-
-<!-- Thông tin ôn tập -->
-{% if notes_to_review_count > 0 %}
-<div class="alert alert-warning mb-4">
-    <div class="d-flex justify-content-between align-items-center">
-        <div>
-            <i class="fas fa-sync-alt"></i> Bạn có <strong>{{ notes_to_review_count }}</strong> ghi chú Feynman cần ôn tập hôm nay.
-        </div>
-        <a href="{% url 'advanced_learning:feynman_notes_to_review' %}" class="btn btn-warning btn-sm">
-            <i class="fas fa-check"></i> Ôn Tập Ngay
+        {% if notes_to_review_count > 0 %}
+        <a href="{% url 'advanced_learning:feynman_notes_to_review' %}" class="btn btn-outline-warning ms-2">
+            <i class="fas fa-sync-alt"></i> Ôn Tập ({{ notes_to_review_count }})
         </a>
-    </div>
-</div>
-{% endif %}
-
-<!-- Tìm kiếm và lọc -->
-<div class="card search-card mb-4">
-    <div class="card-body">
-        <form method="get" class="row g-3">
-            <div class="col-md-6">
-                <div class="input-group">
-                    <input type="text" class="form-control" name="search" placeholder="Tìm kiếm ghi chú..." value="{{ search_query }}">
-                    <button class="btn btn-warning" type="submit">
-                        <i class="fas fa-search"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <select class="form-select" name="subject" onchange="this.form.submit()">
-                    <option value="">Tất cả chủ đề</option>
-                    {% for subject in subjects %}
-                    <option value="{{ subject.id }}" {% if selected_subject == subject.id|stringformat:"i" %}selected{% endif %}>
-                        {{ subject.name }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-2">
-                {% if search_query or selected_subject %}
-                <a href="{% url 'advanced_learning:feynman_note_list' %}" class="btn btn-outline-secondary w-100">
-                    <i class="fas fa-times"></i> Xóa bộ lọc
-                </a>
-                {% endif %}
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Danh sách ghi chú -->
-<div class="row">
-    <div class="col-md-12">
-        {% if notes %}
-            {% for note in notes %}
-            <div class="card note-card">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-8">
-                            <h5 class="note-title">{{ note.title }}</h5>
-                            <p class="note-meta">
-                                {% if note.subject %}
-                                <span class="badge bg-primary">{{ note.subject.name }}</span>
-                                {% endif %}
-                                <span class="ms-2"><i class="far fa-calendar-alt"></i> {{ note.created_at|date:"d/m/Y H:i" }}</span>
-                            </p>
-                            <p><strong>Khái niệm:</strong> {{ note.concept|truncatechars:100 }}</p>
-                            <div class="note-content">
-                                <strong>Giải thích:</strong> {{ note.explanation|truncatechars:200 }}
-                            </div>
-                        </div>
-                        <div class="col-md-4 text-end d-flex align-items-center justify-content-end">
-                            <a href="{% url 'advanced_learning:feynman_note_detail' note_id=note.id %}" class="btn btn-outline-warning me-2">
-                                <i class="fas fa-eye"></i> Xem
-                            </a>
-                            <a href="{% url 'advanced_learning:feynman_note_edit' note_id=note.id %}" class="btn btn-outline-secondary me-2">
-                                <i class="fas fa-edit"></i> Sửa
-                            </a>
-                            <a href="{% url 'advanced_learning:feynman_note_delete' note_id=note.id %}" class="btn btn-outline-danger">
-                                <i class="fas fa-trash"></i> Xóa
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        {% else %}
-            <div class="card">
-                <div class="card-body empty-state">
-                    <i class="fas fa-lightbulb"></i>
-                    <h4>Không có ghi chú nào</h4>
-                    <p class="text-muted">Bạn chưa có ghi chú Feynman nào. Hãy tạo ghi chú đầu tiên của bạn!</p>
-                    <a href="{% url 'advanced_learning:feynman_note_create' %}" class="btn btn-warning mt-3">
-                        <i class="fas fa-plus"></i> Tạo Ghi Chú Mới
-                    </a>
-                </div>
-            </div>
         {% endif %}
     </div>
 </div>
 
-<!-- Thông tin về phương pháp Feynman -->
-<div class="row mt-5">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header bg-warning text-dark">
-                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Về Phương Pháp Feynman</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h5>Phương pháp Feynman là gì?</h5>
-                        <p>Phương pháp Feynman là một kỹ thuật học tập được đặt theo tên của nhà vật lý học đoạt giải Nobel Richard Feynman. Phương pháp này giúp bạn hiểu sâu sắc các khái niệm phức tạp bằng cách giải thích chúng bằng ngôn ngữ đơn giản như thể bạn đang dạy cho một đứa trẻ.</p>
-                    </div>
-                    <div class="col-md-6">
-                        <h5>Các bước của phương pháp Feynman:</h5>
-                        <ol class="feynman-steps">
-                            <li><strong>Chọn một khái niệm:</strong> Xác định khái niệm hoặc chủ đề bạn muốn hiểu sâu sắc.</li>
-                            <li><strong>Giải thích bằng ngôn ngữ đơn giản:</strong> Viết ra giải thích về khái niệm đó bằng ngôn ngữ đơn giản như thể bạn đang dạy cho một đứa trẻ 12 tuổi.</li>
-                            <li><strong>Xác định lỗ hổng kiến thức:</strong> Xem xét giải thích của bạn và xác định những phần bạn còn chưa hiểu rõ hoặc không thể giải thích một cách đơn giản.</li>
-                            <li><strong>Cải thiện và đơn giản hóa:</strong> Quay lại tài liệu gốc, học lại những phần còn thiếu, và cải thiện giải thích của bạn cho đến khi bạn có thể diễn đạt khái niệm một cách đơn giản và rõ ràng.</li>
-                        </ol>
-                    </div>
+<!-- Tìm kiếm và lọc -->
+<div class="card search-card mb-4" x-data="{ searchQuery: '{{ search_query }}', selectedSubject: '{{ selected_subject }}' }">
+    <div class="card-body">
+        <form class="row g-3" id="search-form"
+              hx-get="{% url 'advanced_learning:feynman_note_list' %}?format=partial"
+              hx-target="#notes-container"
+              hx-trigger="submit"
+              hx-indicator="#search-indicator">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <input type="text" class="form-control" name="search" placeholder="Tìm kiếm ghi chú..." 
+                           x-model="searchQuery">
+                    <button class="btn btn-warning" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <span id="search-indicator" class="htmx-indicator spinner-border spinner-border-sm text-warning ms-2" role="status"></span>
                 </div>
-                <div class="row mt-3">
-                    <div class="col-md-12">
-                        <h5>Lợi ích:</h5>
-                        <ul>
-                            <li>Hiểu sâu sắc các khái niệm phức tạp</li>
-                            <li>Xác định và điền vào các lỗ hổng kiến thức</li>
-                            <li>Cải thiện khả năng ghi nhớ dài hạn</li>
-                            <li>Phát triển kỹ năng giao tiếp và giải thích</li>
-                            <li>Áp dụng được cho hầu hết các lĩnh vực học tập</li>
-                        </ul>
-                    </div>
+            </div>
+            <div class="col-md-4">
+                <select class="form-select" name="subject" x-model="selectedSubject"
+                        hx-get="{% url 'advanced_learning:feynman_note_list' %}?format=partial"
+                        hx-target="#notes-container"
+                        hx-trigger="change"
+                        hx-include="[name='search']"
+                        hx-indicator="#search-indicator">
+                    <option value="">Tất cả chủ đề</option>
+                    {% for subject in subjects %}
+                    <option value="{{ subject.id }}">{{ subject.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-outline-secondary w-100"
+                        @click="searchQuery = ''; selectedSubject = '';"
+                        hx-get="{% url 'advanced_learning:feynman_note_list' %}?format=partial"
+                        hx-target="#notes-container"
+                        hx-trigger="click"
+                        hx-indicator="#search-indicator">
+                    <i class="fas fa-times"></i> Xóa bộ lọc
+                </button>
+            </div>
+        </form>
+        
+        <div class="row mt-3">
+            <div class="col-md-12 text-end">
+                <div class="btn-group" role="group" x-data="{ view: 'grid' }">
+                    <button type="button" class="btn btn-outline-warning view-toggle-btn" 
+                            :class="{ 'active': view === 'grid' }"
+                            @click="view = 'grid'"
+                            hx-get="{% url 'advanced_learning:feynman_note_list' %}?format=partial&view=grid"
+                            hx-target="#notes-container"
+                            hx-include="[name='search'], [name='subject']">
+                        <i class="fas fa-th-large"></i> Lưới
+                    </button>
+                    <button type="button" class="btn btn-outline-warning view-toggle-btn"
+                            :class="{ 'active': view === 'list' }"
+                            @click="view = 'list'"
+                            hx-get="{% url 'advanced_learning:feynman_note_list' %}?format=partial&view=list"
+                            hx-target="#notes-container"
+                            hx-include="[name='search'], [name='subject']">
+                        <i class="fas fa-list"></i> Danh sách
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Danh sách ghi chú -->
+<div id="notes-container">
+    {% include 'advanced_learning/feynman_notes/list_partial.html' %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Khởi tạo Alpine.js nếu cần
+        if (typeof Alpine !== 'undefined') {
+            Alpine.start();
+        }
+    });
+</script>
 {% endblock %}

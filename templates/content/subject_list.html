@@ -4,55 +4,160 @@
 {% block title %}Chủ Đề Học Tập - Nền Tảng Học Tập{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-md-12">
-        <h1 class="mb-3">Chủ Đề Học Tập</h1>
-        <p class="lead">Khám phá các chủ đề học tập đa dạng từ ngôn ngữ đến lập trình và toán học.</p>
+<div class="container" x-data="{ searchQuery: '', categoryFilter: 'all', showFilters: false }">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">Chủ Đề Học Tập</h1>
+            <p class="lead">Khám phá các chủ đề học tập đa dạng từ ngôn ngữ đến lập trình và toán học.</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <button class="btn btn-outline-primary" @click="showFilters = !showFilters">
+                <i class="fas" :class="showFilters ? 'fa-times' : 'fa-filter'"></i>
+                <span x-text="showFilters ? 'Ẩn bộ lọc' : 'Lọc chủ đề'"></span>
+            </button>
+        </div>
+    </div>
+
+    <div class="card mb-4" x-show="showFilters" x-transition>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Tìm kiếm chủ đề..."
+                               x-model="searchQuery"
+                               hx-get="{% url 'subject_list' %}?format=partial"
+                               hx-trigger="keyup changed delay:500ms"
+                               hx-target="#subjects-container"
+                               hx-include="[name='category']"
+                               hx-indicator="#search-indicator">
+                        <button class="btn btn-primary">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select" name="category" x-model="categoryFilter"
+                            hx-get="{% url 'subject_list' %}?format=partial"
+                            hx-trigger="change"
+                            hx-target="#subjects-container"
+                            hx-include="[name='search']"
+                            hx-indicator="#search-indicator">
+                        <option value="all">Tất cả danh mục</option>
+                        <option value="language">Ngôn ngữ</option>
+                        <option value="programming">Lập trình</option>
+                        <option value="math">Toán học</option>
+                        <option value="science">Khoa học</option>
+                        <option value="other">Khác</option>
+                    </select>
+                </div>
+            </div>
+            <div class="text-center mt-2">
+                <span id="search-indicator" class="htmx-indicator spinner-border spinner-border-sm text-primary" role="status"></span>
+            </div>
+        </div>
+    </div>
+
+<div id="subjects-container">
+    <div class="row">
+        {% for subject in subjects %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100" x-data="{ showDetails: false }" @mouseenter="showDetails = true" @mouseleave="showDetails = false">
+                <div class="card-img-top text-center py-4" style="height: 200px; display: flex; align-items: center; justify-content: center; background-color: #f8f9fa;">
+                    {% with subject_key=subject.name|lower|cut:' ' %}
+                        {% if subject_key == 'python' %}
+                        <img src="{% static 'images/subject_icons/python.svg' %}" alt="{{ subject.name }}" style="height: 150px;">
+                        {% elif subject_key == 'java' %}
+                        <img src="{% static 'images/subject_icons/java.svg' %}" alt="{{ subject.name }}" style="height: 150px;">
+                        {% elif subject_key == 'javascript' %}
+                        <img src="{% static 'images/subject_icons/javascript.svg' %}" alt="{{ subject.name }}" style="height: 150px;">
+                        {% elif subject_key == 'english' or subject_key == 'tienganh' %}
+                        <img src="{% static 'images/subject_icons/english.svg' %}" alt="{{ subject.name }}" style="height: 150px;">
+                        {% elif subject_key == 'chinese' or subject_key == 'tiengtrung' %}
+                        <img src="{% static 'images/subject_icons/chinese.svg' %}" alt="{{ subject.name }}" style="height: 150px;">
+                        {% elif subject_key == 'math' or subject_key == 'toanhoc' %}
+                        <img src="{% static 'images/subject_icons/math.svg' %}" alt="{{ subject.name }}" style="height: 150px;">
+                        {% elif subject.icon %}
+                        <img src="{{ subject.icon.url }}" alt="{{ subject.name }}" style="height: 150px; max-width: 100%;">
+                        {% else %}
+                        <div style="width: 150px; height: 150px; background-color: #007bff; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                            <span style="font-size: 72px; color: white; font-weight: bold;">{{ subject.name|first|upper }}</span>
+                        </div>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ subject.name }}</h5>
+                    <p class="card-text">{{ subject.description|truncatewords:20 }}</p>
+                </div>
+                <div class="card-footer bg-white border-top-0">
+                    <a href="{% url 'subject_detail' subject.slug %}" class="btn btn-primary"
+                       hx-boost="true">
+                        Xem Chi Tiết
+                    </a>
+                    <button class="btn btn-outline-primary float-end"
+                            x-show="showDetails"
+                            x-transition
+                            hx-get="{% url 'subject_detail' subject.slug %}?format=partial&preview=true"
+                            hx-target="#subject-preview-modal-body"
+                            hx-trigger="click"
+                            data-bs-toggle="modal"
+                            data-bs-target="#subject-preview-modal">
+                        <i class="fas fa-eye"></i> Xem trước
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-md-12">
+            <div class="alert alert-info">
+                Hiện tại chưa có chủ đề nào. Vui lòng quay lại sau.
+            </div>
+        </div>
+        {% endfor %}
     </div>
 </div>
 
-<div class="row">
-    {% for subject in subjects %}
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
-            <div class="card-img-top text-center py-4" style="height: 200px; display: flex; align-items: center; justify-content: center; background-color: #f8f9fa;">
-                {% with subject_key=subject.name|lower|cut:' ' %}
-                    {% if subject_key == 'python' %}
-                    <img src="{% static 'images/subject_icons/python.svg' %}" alt="{{ subject.name }}" style="height: 150px;">
-                    {% elif subject_key == 'java' %}
-                    <img src="{% static 'images/subject_icons/java.svg' %}" alt="{{ subject.name }}" style="height: 150px;">
-                    {% elif subject_key == 'javascript' %}
-                    <img src="{% static 'images/subject_icons/javascript.svg' %}" alt="{{ subject.name }}" style="height: 150px;">
-                    {% elif subject_key == 'english' or subject_key == 'tienganh' %}
-                    <img src="{% static 'images/subject_icons/english.svg' %}" alt="{{ subject.name }}" style="height: 150px;">
-                    {% elif subject_key == 'chinese' or subject_key == 'tiengtrung' %}
-                    <img src="{% static 'images/subject_icons/chinese.svg' %}" alt="{{ subject.name }}" style="height: 150px;">
-                    {% elif subject_key == 'math' or subject_key == 'toanhoc' %}
-                    <img src="{% static 'images/subject_icons/math.svg' %}" alt="{{ subject.name }}" style="height: 150px;">
-                    {% elif subject.icon %}
-                    <img src="{{ subject.icon.url }}" alt="{{ subject.name }}" style="height: 150px; max-width: 100%;">
-                    {% else %}
-                    <div style="width: 150px; height: 150px; background-color: #007bff; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                        <span style="font-size: 72px; color: white; font-weight: bold;">{{ subject.name|first|upper }}</span>
+<!-- Modal xem trước chủ đề -->
+<div class="modal fade" id="subject-preview-modal" tabindex="-1" aria-labelledby="subject-preview-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="subject-preview-modal-label">Xem trước chủ đề</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body" id="subject-preview-modal-body">
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Đang tải...</span>
                     </div>
-                    {% endif %}
-                {% endwith %}
+                    <p class="mt-3">Đang tải thông tin chủ đề...</p>
+                </div>
             </div>
-            <div class="card-body">
-                <h5 class="card-title">{{ subject.name }}</h5>
-                <p class="card-text">{{ subject.description|truncatewords:20 }}</p>
-            </div>
-            <div class="card-footer bg-white border-top-0">
-                <a href="{% url 'subject_detail' subject.slug %}" class="btn btn-primary">Xem Chi Tiết</a>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
             </div>
         </div>
     </div>
-    {% empty %}
-    <div class="col-md-12">
-        <div class="alert alert-info">
-            Hiện tại chưa có chủ đề nào. Vui lòng quay lại sau.
-        </div>
-    </div>
-    {% endfor %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Khởi tạo Alpine.js
+        if (typeof Alpine !== 'undefined') {
+            Alpine.start();
+        }
+
+        // Xử lý sự kiện HTMX sau khi tải nội dung
+        document.body.addEventListener('htmx:afterSwap', function(event) {
+            if (event.detail.target.id === 'subjects-container') {
+                // Khởi tạo lại Alpine.js cho các phần tử mới
+                if (window.Alpine) {
+                    window.Alpine.initTree(document.body);
+                }
+            }
+        });
+    });
+</script>
 {% endblock %}

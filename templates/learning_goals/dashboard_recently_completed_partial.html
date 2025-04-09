@@ -1,0 +1,39 @@
+{% if recently_completed %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Mục Tiêu</th>
+                    <th>Loại</th>
+                    <th>Kết Quả</th>
+                    <th>Hoàn Thành</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for goal in recently_completed %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'learning_goals:goal_detail' goal_id=goal.id %}">{{ goal.title }}</a>
+                        </td>
+                        <td>
+                            {% if goal.goal_type == 'daily' %}
+                                <span class="badge bg-info">Hàng ngày</span>
+                            {% elif goal.goal_type == 'weekly' %}
+                                <span class="badge bg-info">Hàng tuần</span>
+                            {% elif goal.goal_type == 'monthly' %}
+                                <span class="badge bg-info">Hàng tháng</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ goal.current_value }}/{{ goal.target_value }} {{ goal.unit }}</td>
+                        <td>{{ goal.updated_at|date:"d/m/Y" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="text-center mt-3">
+        <a href="{% url 'learning_goals:goal_list' %}?status=completed" class="btn btn-sm btn-outline-success">Xem tất cả mục tiêu đã hoàn thành</a>
+    </div>
+{% else %}
+    <p class="text-muted text-center">Không có mục tiêu mới hoàn thành nào.</p>
+{% endif %}

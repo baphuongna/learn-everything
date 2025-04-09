@@ -1,0 +1,31 @@
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="fas fa-check-circle me-2"></i> Bình luận đã được thêm thành công!
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+
+<div class="comment-item">
+    <div class="comment-header d-flex justify-content-between">
+        <div>
+            <strong>{{ comment.user.username }}</strong>
+            <small class="text-muted ms-2">{{ comment.created_at|date:"d/m/Y H:i" }}</small>
+        </div>
+    </div>
+    <div class="comment-body">
+        <p>{{ comment.content|linebreaksbr }}</p>
+    </div>
+</div>
+<hr>
+
+<script>
+    // Xóa nội dung form
+    document.getElementById('content').value = '';
+    
+    // Tự động đóng thông báo sau 3 giây
+    setTimeout(() => {
+        const alert = document.querySelector('.alert');
+        if (alert) {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        }
+    }, 3000);
+</script>

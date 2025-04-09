@@ -1,0 +1,289 @@
+{% load static %}
+
+<div class="competition-detail" x-data="{ activeTab: 'info' }">
+    <div class="competition-header">
+        <h2 class="competition-title">{{ competition.title }}</h2>
+        <div class="competition-meta">
+            <span class="badge bg-primary">{{ competition.subject.name }}</span>
+            <span class="badge {% if competition.difficulty_level == 1 %}bg-success{% elif competition.difficulty_level == 2 %}bg-warning{% else %}bg-danger{% endif %}">
+                {{ competition.get_difficulty_level_display }}
+            </span>
+            <span class="badge bg-secondary">{{ competition.get_competition_type_display }}</span>
+            {% if competition.is_featured %}
+            <span class="badge bg-warning"><i class="fas fa-star"></i> Nổi bật</span>
+            {% endif %}
+        </div>
+        <div class="competition-description">
+            {{ competition.description }}
+        </div>
+        
+        {% now "Y-m-d H:i:s" as current_time %}
+        {% if competition.start_time|date:"Y-m-d H:i:s" > current_time %}
+            <!-- Đếm ngược đến khi bắt đầu -->
+            <div class="countdown-container" x-data="{ 
+                countdown: '', 
+                targetDate: new Date('{{ competition.start_time|date:'Y-m-d H:i:s' }}'),
+                updateCountdown() {
+                    const now = new Date();
+                    const diff = this.targetDate - now;
+                    
+                    if (diff <= 0) {
+                        this.countdown = 'Cuộc thi đã bắt đầu!';
+                        return;
+                    }
+                    
+                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                    
+                    this.countdown = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+                }
+            }" x-init="setInterval(() => updateCountdown(), 1000); updateCountdown();">
+                <div class="countdown-title">Thời gian bắt đầu</div>
+                <div class="countdown-timer" x-text="countdown"></div>
+                <div class="countdown-info">Cuộc thi sẽ bắt đầu vào {{ competition.start_time|date:"d/m/Y H:i" }}</div>
+            </div>
+        {% elif competition.end_time|date:"Y-m-d H:i:s" < current_time %}
+            <!-- Cuộc thi đã kết thúc -->
+            <div class="alert alert-secondary">
+                <i class="fas fa-info-circle"></i> Cuộc thi đã kết thúc vào {{ competition.end_time|date:"d/m/Y H:i" }}.
+            </div>
+        {% else %}
+            <!-- Cuộc thi đang diễn ra -->
+            <div class="countdown-container" x-data="{ 
+                countdown: '', 
+                targetDate: new Date('{{ competition.end_time|date:'Y-m-d H:i:s' }}'),
+                updateCountdown() {
+                    const now = new Date();
+                    const diff = this.targetDate - now;
+                    
+                    if (diff <= 0) {
+                        this.countdown = 'Cuộc thi đã kết thúc!';
+                        return;
+                    }
+                    
+                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                    
+                    this.countdown = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+                }
+            }" x-init="setInterval(() => updateCountdown(), 1000); updateCountdown();">
+                <div class="countdown-title">Thời gian còn lại</div>
+                <div class="countdown-timer" x-text="countdown"></div>
+                <div class="countdown-info">Cuộc thi sẽ kết thúc vào {{ competition.end_time|date:"d/m/Y H:i" }}</div>
+            </div>
+        {% endif %}
+        
+        <div class="competition-stats">
+            <div class="competition-stat">
+                <i class="fas fa-clock"></i> {{ competition.time_limit }} phút
+            </div>
+            <div class="competition-stat">
+                <i class="fas fa-calendar-alt"></i> Bắt đầu: {{ competition.start_time|date:"d/m/Y H:i" }}
+            </div>
+            <div class="competition-stat">
+                <i class="fas fa-calendar-alt"></i> Kết thúc: {{ competition.end_time|date:"d/m/Y H:i" }}
+            </div>
+            <div class="competition-stat">
+                <i class="fas fa-users"></i> {{ competition.competitionparticipant_set.count }} người tham gia
+            </div>
+            {% if competition.max_participants > 0 %}
+            <div class="competition-stat">
+                <i class="fas fa-user-plus"></i> Tối đa {{ competition.max_participants }} người
+            </div>
+            {% endif %}
+            <div class="competition-stat">
+                <i class="fas fa-question-circle"></i> {{ competition.questions.count }} câu hỏi
+            </div>
+        </div>
+        
+        <div class="competition-actions mt-4">
+            {% if user_participant %}
+                {% if user_participant.is_completed %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i> Bạn đã hoàn thành cuộc thi này với điểm số: <strong>{{ user_participant.score }}</strong>
+                    </div>
+                {% else %}
+                    {% if competition.start_time|date:"Y-m-d H:i:s" <= current_time and competition.end_time|date:"Y-m-d H:i:s" >= current_time and competition.is_active %}
+                        <a href="{% url 'advanced_learning:take_competition' competition_id=competition.id %}" class="btn btn-orange">
+                            <i class="fas fa-play-circle"></i> Tiếp tục làm bài thi
+                        </a>
+                    {% else %}
+                        <button class="btn btn-secondary" disabled>
+                            <i class="fas fa-lock"></i> Cuộc thi đã kết thúc hoặc chưa bắt đầu
+                        </button>
+                    {% endif %}
+                {% endif %}
+            {% else %}
+                {% if competition.start_time|date:"Y-m-d H:i:s" <= current_time and competition.end_time|date:"Y-m-d H:i:s" >= current_time and competition.is_active %}
+                    {% if competition.max_participants > 0 and competition.competitionparticipant_set.count >= competition.max_participants %}
+                        <button class="btn btn-secondary" disabled>
+                            <i class="fas fa-users-slash"></i> Đã đạt số lượng người tham gia tối đa
+                        </button>
+                    {% else %}
+                        <a href="{% url 'advanced_learning:join_competition' competition_id=competition.id %}" class="btn btn-orange">
+                            <i class="fas fa-play"></i> Tham gia cuộc thi
+                        </a>
+                    {% endif %}
+                {% else %}
+                    <button class="btn btn-secondary" disabled>
+                        <i class="fas fa-lock"></i> Cuộc thi chưa bắt đầu hoặc đã kết thúc
+                    </button>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Tab Navigation -->
+    <ul class="nav nav-tabs mb-4" id="competitionDetailTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" :class="{ 'active': activeTab === 'info' }" id="info-tab" 
+                    @click="activeTab = 'info'">
+                <i class="fas fa-info-circle"></i> Thông Tin
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" :class="{ 'active': activeTab === 'leaderboard' }" id="leaderboard-tab" 
+                    @click="activeTab = 'leaderboard'"
+                    hx-get="{% url 'advanced_learning:competition_leaderboard' competition_id=competition.id %}?format=partial"
+                    hx-target="#leaderboard-content"
+                    hx-trigger="click once">
+                <i class="fas fa-trophy"></i> Bảng Xếp Hạng
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" :class="{ 'active': activeTab === 'participants' }" id="participants-tab" 
+                    @click="activeTab = 'participants'"
+                    hx-get="{% url 'advanced_learning:competition_participants' competition_id=competition.id %}?format=partial"
+                    hx-target="#participants-content"
+                    hx-trigger="click once">
+                <i class="fas fa-users"></i> Người Tham Gia
+            </button>
+        </li>
+    </ul>
+    
+    <!-- Tab Content -->
+    <div class="tab-content" id="competitionDetailTabContent">
+        <!-- Thông tin tab -->
+        <div class="tab-pane fade" :class="{ 'show active': activeTab === 'info' }" id="info-content" role="tabpanel">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-info-circle text-orange"></i> Thông Tin Chi Tiết</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Thông tin cơ bản</h6>
+                            <ul class="list-group mb-4">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Chủ đề
+                                    <span>{{ competition.subject.name }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Độ khó
+                                    <span>
+                                        {% if competition.difficulty_level == 1 %}
+                                            <span class="badge bg-success">Dễ</span>
+                                        {% elif competition.difficulty_level == 2 %}
+                                            <span class="badge bg-warning">Trung bình</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Khó</span>
+                                        {% endif %}
+                                    </span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Loại cuộc thi
+                                    <span>{{ competition.get_competition_type_display }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Thời gian làm bài
+                                    <span>{{ competition.time_limit }} phút</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Số câu hỏi
+                                    <span>{{ competition.questions.count }}</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Thời gian</h6>
+                            <ul class="list-group mb-4">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Thời gian bắt đầu
+                                    <span>{{ competition.start_time|date:"d/m/Y H:i" }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Thời gian kết thúc
+                                    <span>{{ competition.end_time|date:"d/m/Y H:i" }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Trạng thái
+                                    <span>
+                                        {% if competition.start_time|date:"Y-m-d H:i:s" > current_time %}
+                                            <span class="badge bg-secondary">Sắp diễn ra</span>
+                                        {% elif competition.end_time|date:"Y-m-d H:i:s" < current_time %}
+                                            <span class="badge bg-danger">Đã kết thúc</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Đang diễn ra</span>
+                                        {% endif %}
+                                    </span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Số người tham gia
+                                    <span>{{ competition.competitionparticipant_set.count }}</span>
+                                </li>
+                                {% if competition.max_participants > 0 %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Số người tham gia tối đa
+                                    <span>{{ competition.max_participants }}</span>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    {% if competition.rules %}
+                    <h6>Luật chơi</h6>
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            {{ competition.rules|linebreaks }}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if competition.prizes %}
+                    <h6>Giải thưởng</h6>
+                    <div class="card">
+                        <div class="card-body">
+                            {{ competition.prizes|linebreaks }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bảng xếp hạng tab -->
+        <div class="tab-pane fade" :class="{ 'show active': activeTab === 'leaderboard' }" id="leaderboard-content" role="tabpanel">
+            <div class="text-center py-4">
+                <div class="spinner-border text-orange" role="status">
+                    <span class="visually-hidden">Đang tải...</span>
+                </div>
+                <p class="mt-2">Đang tải bảng xếp hạng...</p>
+            </div>
+        </div>
+        
+        <!-- Người tham gia tab -->
+        <div class="tab-pane fade" :class="{ 'show active': activeTab === 'participants' }" id="participants-content" role="tabpanel">
+            <div class="text-center py-4">
+                <div class="spinner-border text-orange" role="status">
+                    <span class="visually-hidden">Đang tải...</span>
+                </div>
+                <p class="mt-2">Đang tải danh sách người tham gia...</p>
+            </div>
+        </div>
+    </div>
+</div>

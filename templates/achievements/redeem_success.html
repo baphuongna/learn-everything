@@ -1,0 +1,15 @@
+<div id="redeem-response-{{ user_reward.reward.id }}" class="alert alert-success mt-3">
+    <i class="fas fa-check-circle me-2"></i> {{ success }}
+    <div class="mt-2">
+        <p class="mb-1"><strong>Mã phần thưởng:</strong> {{ user_reward.code }}</p>
+        <p class="mb-0"><strong>Điểm còn lại:</strong> {{ reward_point.points }}</p>
+    </div>
+    <div class="mt-2">
+        <button class="btn btn-sm btn-primary" 
+                hx-get="{% url 'achievements:reward_list' %}?section=unused&format=partial" 
+                hx-target="#reward-tab-content" 
+                hx-swap="innerHTML">
+            <i class="fas fa-box-open"></i> Xem Phần Thưởng Của Tôi
+        </button>
+    </div>
+</div>

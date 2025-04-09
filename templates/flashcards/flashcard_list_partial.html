@@ -1,0 +1,44 @@
+{% if flashcard_sets %}
+    <div class="row">
+        {% for flashcard_set in flashcard_sets %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">{{ flashcard_set.title }}</h5>
+                    <span class="badge bg-light text-dark">{{ flashcard_set.flashcards.count }} thẻ</span>
+                </div>
+                <div class="card-body">
+                    <p><strong>Bài học:</strong> {{ flashcard_set.lesson.title }}</p>
+                    <p><strong>Chủ đề:</strong> {{ flashcard_set.lesson.topic.subject.name }}</p>
+                    <p>{{ flashcard_set.description|truncatechars:100 }}</p>
+                </div>
+                <div class="card-footer d-flex justify-content-between align-items-center">
+                    <a href="{% url 'flashcard_set_detail' flashcard_set.id %}" 
+                       class="btn btn-primary"
+                       hx-get="{% url 'flashcard_set_detail' flashcard_set.id %}?format=partial"
+                       hx-target="#flashcard-preview"
+                       hx-swap="innerHTML"
+                       hx-push-url="false">
+                        <i class="fas fa-eye"></i> Xem
+                    </a>
+                    <a href="{% url 'flashcard_set_detail' flashcard_set.id %}" class="btn btn-success">
+                        <i class="fas fa-play"></i> Học Ngay
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Phân trang nếu cần -->
+    {% if is_paginated %}
+        {% include 'components/pagination.html' with page_obj=page_obj %}
+    {% endif %}
+{% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> Không tìm thấy bộ flashcard nào phù hợp với tiêu chí tìm kiếm.
+    </div>
+{% endif %}
+
+<!-- Khu vực xem trước flashcard -->
+<div id="flashcard-preview" class="mt-4"></div>

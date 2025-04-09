@@ -1,0 +1,28 @@
+{% comment %}
+Component Loading - Hiển thị trạng thái đang tải với HTMX
+
+Cách sử dụng:
+1. Trong template:
+   {% include 'components/loading.html' with id="my-loader" size="sm" %}
+
+2. Với HTMX:
+   <button hx-get="/api/data" hx-target="#result" hx-indicator="#my-loader">
+     Tải dữ liệu
+   </button>
+
+Các kích thước (size):
+- sm: Nhỏ
+- md: Trung bình (mặc định)
+- lg: Lớn
+{% endcomment %}
+
+{% with id=id|default:"loading-indicator" size=size|default:"md" %}
+<div id="{{ id }}" class="htmx-indicator text-center my-2">
+  <div class="spinner-border text-primary spinner-border-{{ size }}" role="status">
+    <span class="visually-hidden">Đang tải...</span>
+  </div>
+  {% if message %}
+  <p class="text-muted mt-2">{{ message }}</p>
+  {% endif %}
+</div>
+{% endwith %}

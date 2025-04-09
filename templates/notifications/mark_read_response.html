@@ -1,0 +1,70 @@
+<div id="notification-{{ notification.id }}" class="list-group-item list-group-item-action" x-data="{ showActions: false }">
+    <div class="d-flex w-100 justify-content-between align-items-center">
+        <div class="notification-content">
+            <div class="d-flex align-items-center">
+                <div class="notification-icon me-3">
+                    {% if notification.notification_type == 'info' %}
+                        <i class="fas fa-info-circle text-info fa-2x"></i>
+                    {% elif notification.notification_type == 'success' %}
+                        <i class="fas fa-check-circle text-success fa-2x"></i>
+                    {% elif notification.notification_type == 'warning' %}
+                        <i class="fas fa-exclamation-triangle text-warning fa-2x"></i>
+                    {% elif notification.notification_type == 'danger' %}
+                        <i class="fas fa-exclamation-circle text-danger fa-2x"></i>
+                    {% endif %}
+                </div>
+                <div>
+                    <h5 class="mb-1">{{ notification.title }}</h5>
+                    <p class="mb-1">{{ notification.message }}</p>
+                    <small class="text-muted">
+                        {{ notification.created_at|date:"d/m/Y H:i" }}
+                        {% if notification.related_feature != 'system' %}
+                            •
+                            {% if notification.related_feature == 'pomodoro' %}
+                                <span class="badge bg-primary">Pomodoro Timer</span>
+                            {% elif notification.related_feature == 'cornell' %}
+                                <span class="badge bg-success">Cornell Notes</span>
+                            {% elif notification.related_feature == 'mindmap' %}
+                                <span class="badge bg-info">Mind Mapping</span>
+                            {% elif notification.related_feature == 'feynman' %}
+                                <span class="badge bg-warning">Feynman Technique</span>
+                            {% elif notification.related_feature == 'project' %}
+                                <span class="badge bg-secondary">Project-Based Learning</span>
+                            {% elif notification.related_feature == 'exercise' %}
+                                <span class="badge bg-dark">Interactive Exercises</span>
+                            {% elif notification.related_feature == 'competition' %}
+                                <span class="badge bg-danger">Competition Mode</span>
+                            {% endif %}
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="notification-actions" @mouseenter="showActions = true" @mouseleave="showActions = false">
+            <div class="btn-group" x-show="showActions" x-transition>
+                {% if notification.url %}
+                    <a href="{{ notification.url }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-external-link-alt"></i>
+                    </a>
+                {% endif %}
+                
+                <button class="btn btn-sm btn-outline-danger"
+                        hx-post="{% url 'notifications:delete' notification.id %}"
+                        hx-target="#notification-{{ notification.id }}"
+                        hx-swap="outerHTML">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+            <button class="btn btn-sm btn-outline-secondary" @click="showActions = !showActions">
+                <i class="fas fa-ellipsis-v"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Cập nhật số lượng thông báo chưa đọc
+    document.dispatchEvent(new CustomEvent('update-unread-count', { 
+        detail: { count: {{ unread_count }} } 
+    }));
+</script>
