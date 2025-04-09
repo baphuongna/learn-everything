@@ -24,7 +24,8 @@
                       hx-get="{% url 'quizzes:quiz_list' %}"
                       hx-target="#quiz-list-container"
                       hx-trigger="submit, input[name='search'].keyup changed delay:500ms"
-                      hx-indicator="#search-indicator">
+                      hx-indicator="#search-indicator"
+                      hx-push-url="true">
 
                     <div class="row g-3 mb-3">
                         <div class="col-md-8">
@@ -44,7 +45,7 @@
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <label for="subject" class="form-label">Chủ đề</label>
-                                <select name="subject" id="subject" class="form-select" hx-trigger="change">
+                                <select name="subject" id="subject" class="form-select" hx-trigger="change" @change="$event.target.form.requestSubmit()">
                                     <option value="">Tất cả chủ đề</option>
                                     {% for subject in subjects %}
                                         <option value="{{ subject.id }}" {% if selected_subject == subject.id|stringformat:"i" %}selected{% endif %}>
@@ -55,7 +56,7 @@
                             </div>
                             <div class="col-md-4">
                                 <label for="difficulty" class="form-label">Độ khó</label>
-                                <select name="difficulty" id="difficulty" class="form-select" hx-trigger="change">
+                                <select name="difficulty" id="difficulty" class="form-select" hx-trigger="change" @change="$event.target.form.requestSubmit()">
                                     <option value="">Tất cả độ khó</option>
                                     {% for level_code, level_name in difficulty_levels %}
                                         <option value="{{ level_code }}" {% if selected_difficulty == level_code %}selected{% endif %}>

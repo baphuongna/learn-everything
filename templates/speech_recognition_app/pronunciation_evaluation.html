@@ -1,0 +1,262 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Đánh giá phát âm{% endblock %}
+
+{% block extra_css %}
+<style>
+    .recording-indicator {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background-color: #dc3545;
+        display: inline-block;
+        margin-right: 10px;
+        animation: pulse 1s infinite;
+    }
+    
+    @keyframes pulse {
+        0% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+        }
+        
+        70% {
+            transform: scale(1);
+            box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+        }
+        
+        100% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+        }
+    }
+    
+    .timer {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    
+    .controls {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-microphone-alt text-primary"></i> Đánh giá phát âm
+            </h1>
+            <p class="lead">Luyện tập và đánh giá phát âm của bạn với độ chính xác cao.</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'pronunciation_history' %}" class="btn btn-outline-primary">
+                <i class="fas fa-history"></i> Lịch sử đánh giá
+            </a>
+            <a href="{% url 'speech_recognition_home' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-7">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-microphone"></i> Đánh giá phát âm</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'evaluate_pronunciation' %}" enctype="multipart/form-data" id="pronunciation-form">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        
+                        <div class="mt-4">
+                            <h5>Ghi âm trực tiếp</h5>
+                            <div id="recording-status" class="mb-3">
+                                <p>Nhấn nút bên dưới để bắt đầu ghi âm</p>
+                                <div class="timer" id="timer">00:00</div>
+                            </div>
+                            
+                            <div class="controls">
+                                <button type="button" id="startButton" class="btn btn-primary">
+                                    <i class="fas fa-microphone"></i> Bắt đầu ghi âm
+                                </button>
+                                <button type="button" id="stopButton" class="btn btn-danger" style="display: none;">
+                                    <i class="fas fa-stop"></i> Dừng ghi âm
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-check-circle"></i> Đánh giá phát âm
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-history"></i> Đánh giá gần đây</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for result in recent_results %}
+                        <a href="{% url 'pronunciation_evaluation_result' result.id %}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <div>
+                                    <h5 class="mb-1">{{ result.expected_text|truncatechars:40 }}</h5>
+                                    <div class="progress" style="height: 5px;">
+                                        <div class="progress-bar {% if result.pronunciation_score >= 80 %}bg-success{% elif result.pronunciation_score >= 60 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                             role="progressbar" 
+                                             style="width: {{ result.pronunciation_score }}%;" 
+                                             aria-valuenow="{{ result.pronunciation_score }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100"></div>
+                                    </div>
+                                    <small class="text-muted">Điểm phát âm: {{ result.pronunciation_score|floatformat:1 }}/100</small>
+                                </div>
+                                <small class="text-muted">{{ result.created_at|date:"d/m/Y H:i" }}</small>
+                            </div>
+                        </a>
+                        {% empty %}
+                        <div class="list-group-item">
+                            <p class="mb-0 text-center">Bạn chưa có kết quả đánh giá phát âm nào.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% if recent_results %}
+                <div class="card-footer text-end">
+                    <a href="{% url 'pronunciation_history' %}" class="btn btn-sm btn-outline-primary">Xem tất cả</a>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb"></i> Mẹo luyện phát âm</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li>Nghe và bắt chước người bản xứ</li>
+                        <li>Tập trung vào các âm khó phát âm</li>
+                        <li>Ghi âm và so sánh với bản gốc</li>
+                        <li>Luyện tập thường xuyên và kiên trì</li>
+                        <li>Sử dụng công cụ đánh giá phát âm để cải thiện</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let mediaRecorder;
+        let audioChunks = [];
+        let timerInterval;
+        let seconds = 0;
+        let minutes = 0;
+        
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const timer = document.getElementById('timer');
+        const audioFileInput = document.querySelector('input[name="audio_file"]');
+        const recordingStatus = document.getElementById('recording-status');
+        
+        // Bắt đầu ghi âm
+        startButton.addEventListener('click', async function() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                
+                mediaRecorder.ondataavailable = function(e) {
+                    audioChunks.push(e.data);
+                };
+                
+                mediaRecorder.onstop = async function() {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    
+                    // Tạo file từ blob và gán vào input
+                    const audioFile = new File([audioBlob], "recording.wav", { type: 'audio/wav' });
+                    
+                    // Tạo DataTransfer object để gán file vào input
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(audioFile);
+                    audioFileInput.files = dataTransfer.files;
+                    
+                    // Kích hoạt sự kiện change để cập nhật UI
+                    const event = new Event('change', { bubbles: true });
+                    audioFileInput.dispatchEvent(event);
+                };
+                
+                // Bắt đầu ghi âm
+                audioChunks = [];
+                mediaRecorder.start();
+                
+                // Cập nhật UI
+                startButton.style.display = 'none';
+                stopButton.style.display = 'inline-block';
+                recordingStatus.innerHTML = `
+                    <p>
+                        <span class="recording-indicator"></span>
+                        Đang ghi âm...
+                    </p>
+                    <div class="timer" id="timer">00:00</div>
+                `;
+                
+                // Bắt đầu đếm thời gian
+                seconds = 0;
+                minutes = 0;
+                timerInterval = setInterval(updateTimer, 1000);
+                
+            } catch (err) {
+                console.error('Lỗi khi truy cập microphone:', err);
+                alert('Không thể truy cập microphone. Vui lòng kiểm tra quyền truy cập.');
+            }
+        });
+        
+        // Dừng ghi âm
+        stopButton.addEventListener('click', function() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+                clearInterval(timerInterval);
+                
+                // Cập nhật UI
+                startButton.style.display = 'inline-block';
+                stopButton.style.display = 'none';
+                recordingStatus.innerHTML = `
+                    <p>Nhấn nút bên dưới để bắt đầu ghi âm</p>
+                    <div class="timer" id="timer">00:00</div>
+                `;
+            }
+        });
+        
+        // Cập nhật đồng hồ đếm thời gian
+        function updateTimer() {
+            seconds++;
+            if (seconds >= 60) {
+                seconds = 0;
+                minutes++;
+            }
+            
+            const formattedMinutes = String(minutes).padStart(2, '0');
+            const formattedSeconds = String(seconds).padStart(2, '0');
+            timer.textContent = `${formattedMinutes}:${formattedSeconds}`;
+        }
+    });
+</script>
+{% endblock %}

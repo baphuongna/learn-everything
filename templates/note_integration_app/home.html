@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Tích hợp công cụ ghi chú{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-sync-alt text-primary"></i> Tích hợp công cụ ghi chú
+            </h1>
+            <p class="lead">Đồng bộ hóa ghi chú của bạn với các công cụ ghi chú phổ biến.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-plug"></i> Tài khoản đã kết nối</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for account in accounts %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="mb-1">
+                                        {% if account.provider == 'notion' %}
+                                        <i class="fas fa-book text-primary"></i>
+                                        {% elif account.provider == 'evernote' %}
+                                        <i class="fas fa-sticky-note text-success"></i>
+                                        {% elif account.provider == 'onenote' %}
+                                        <i class="fas fa-file-alt text-info"></i>
+                                        {% endif %}
+                                        {{ account.get_provider_display }}
+                                    </h5>
+                                    <p class="mb-0 text-muted">
+                                        {% if account.account_info %}
+                                            {% if account.account_info.name %}
+                                                {{ account.account_info.name }}
+                                            {% elif account.account_info.workspace_name %}
+                                                {{ account.account_info.workspace_name }}
+                                            {% endif %}
+                                            
+                                            {% if account.account_info.email %}
+                                                ({{ account.account_info.email }})
+                                            {% endif %}
+                                        {% else %}
+                                            Kết nối từ {{ account.created_at|date:"d/m/Y H:i" }}
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <div>
+                                    <a href="{% url 'note_integration_account_details' account.id %}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye"></i> Chi tiết
+                                    </a>
+                                    <a href="{% url 'note_integration_disconnect' account.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc chắn muốn ngắt kết nối tài khoản này không?');">
+                                        <i class="fas fa-unlink"></i> Ngắt kết nối
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="list-group-item">
+                            <p class="mb-0 text-center">Bạn chưa kết nối với bất kỳ công cụ ghi chú nào.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-plus"></i> Kết nối tài khoản mới</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <img src="{% static 'images/notion-logo.png' %}" alt="Notion" class="img-fluid mb-3" style="max-height: 60px;">
+                                    <h5>Notion</h5>
+                                    <p class="text-muted small">Công cụ ghi chú và quản lý công việc đa năng</p>
+                                    <a href="{% url 'note_integration_connect' 'notion' %}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-plug"></i> Kết nối
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <img src="{% static 'images/onenote-logo.png' %}" alt="OneNote" class="img-fluid mb-3" style="max-height: 60px;">
+                                    <h5>Microsoft OneNote</h5>
+                                    <p class="text-muted small">Sổ tay kỹ thuật số từ Microsoft</p>
+                                    <a href="{% url 'note_integration_connect' 'onenote' %}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-plug"></i> Kết nối
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <img src="{% static 'images/evernote-logo.png' %}" alt="Evernote" class="img-fluid mb-3" style="max-height: 60px;">
+                                    <h5>Evernote</h5>
+                                    <p class="text-muted small">Ứng dụng ghi chú và lưu trữ thông tin</p>
+                                    <button class="btn btn-secondary btn-sm" disabled>
+                                        <i class="fas fa-clock"></i> Sắp ra mắt
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-history"></i> Ghi chú đã đồng bộ gần đây</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for note in synced_notes %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="mb-1">{{ note.title }}</h5>
+                                    <p class="mb-0">
+                                        <span class="badge bg-primary">{{ note.integration_account.get_provider_display }}</span>
+                                        <small class="text-muted">Đồng bộ lần cuối: {{ note.last_synced_at|date:"d/m/Y H:i" }}</small>
+                                    </p>
+                                </div>
+                                <div>
+                                    {% if note.external_url %}
+                                    <a href="{{ note.external_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-external-link-alt"></i> Mở
+                                    </a>
+                                    {% endif %}
+                                    {% if note.memory_item_id %}
+                                    <a href="{% url 'memory_item_detail' note.memory_item_id %}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye"></i> Xem ghi chú
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="list-group-item">
+                            <p class="mb-0 text-center">Bạn chưa đồng bộ ghi chú nào.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

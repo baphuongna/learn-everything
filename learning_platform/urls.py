@@ -94,6 +94,15 @@ urlpatterns = [
 
     # Learning Chatbot
     path('chatbot/', include('learning_chatbot.urls')),
+
+    # Speech Recognition
+    path('speech-recognition/', include('speech_recognition_app.urls')),
+
+    # OCR
+    path('ocr/', include('ocr_app.urls')),
+
+    # Note Integration
+    path('note-integration/', include('note_integration_app.urls')),
 ]
 
 # Serve media files in development

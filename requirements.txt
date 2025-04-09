@@ -1,5 +1,5 @@
 Django==5.2
-Pillow==10.2.0
+# Pillow==10.2.0 # Không tương thích với Python 3.13, sử dụng opencv-python thay thế
 django-crispy-forms==2.1
 crispy-bootstrap4==2022.1
 markdown==3.5.2
@@ -18,18 +18,23 @@ dj-database-url==2.1.0
 requests==2.31.0
 
 # Biểu đồ và phân tích dữ liệu
-matplotlib==3.8.2
+opencv-python-headless==4.9.0.80
+# matplotlib==3.8.2 # Không tương thích với Python 3.13, sử dụng opencv-python-headless thay thế
 seaborn==0.13.0
-pandas==2.1.4
+pandas==2.2.3
 numpy==1.26.2
 
 # API và tích hợp
-django-rest-framework==0.1.0
+djangorestframework==3.14.0
 django-cors-headers==4.3.1
 requests==2.31.0
+notion-client==2.0.0
+evernote-sdk-python3==1.25.0
+# python-onenote không có phiên bản ổn định, sẽ sử dụng Microsoft Graph API thay thế
+msgraph-core==0.2.2
 
 # Xử lý PDF
-xhtml2pdf==0.2.11
+xhtml2pdf==0.2.17
 ReportLab==4.0.9
 
 # Thời gian và lịch
@@ -49,9 +54,15 @@ django-filter==23.5
 
 # Xử lý ngôn ngữ tự nhiên
 nltk==3.9.1
+spacy==3.7.2
+SpeechRecognition==3.10.0
+openai-whisper==20231117
+pytesseract==0.3.10
+easyocr==1.7.1
 joblib==1.4.2
 regex==2024.11.6
 tqdm==4.67.1
+# difflib là thư viện chuẩn của Python, không cần cài đặt riêng
 
 # Quản lý tập tin
 django-storages==1.14.2
@@ -67,6 +78,6 @@ django-compressor==4.4  # Tối ưu hóa tài nguyên tĩnh
 django-browser-reload==1.12.1  # Tự động tải lại trang khi có thay đổi
 
 # HTMX và Alpine.js
-django-alpine==0.1.5  # Hỗ trợ Alpine.js trong Django
-django-htmx-refresh==0.1.0  # Tự động làm mới nội dung HTMX
-django-template-partials==23.11  # Hỗ trợ partial templates cho HTMX
+django-alpine==0.1.4  # Hỗ trợ Alpine.js trong Django
+django-htmx-refresh==0.0.7  # Tự động làm mới nội dung HTMX
+django-template-partials==24.4  # Hỗ trợ partial templates cho HTMX

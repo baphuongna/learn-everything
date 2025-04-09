@@ -97,6 +97,9 @@ INSTALLED_APPS = [
     "personalization",  # Ứng dụng cá nhân hóa
     "ai_assistant",  # Ứng dụng trợ lý học tập AI
     "learning_chatbot",  # Ứng dụng chatbot hỗ trợ học tập
+    "speech_recognition_app",  # Ứng dụng nhận diện giọng nói
+    "ocr_app",  # Ứng dụng nhận dạng ký tự quang học
+    "note_integration_app",  # Ứng dụng tích hợp công cụ ghi chú
 ]
 
 MIDDLEWARE = [
@@ -346,5 +349,16 @@ SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000')
 # Cấu hình OpenAI API
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
 OPENAI_MODEL = os.environ.get('OPENAI_MODEL', 'gpt-3.5-turbo')
-OPENAI_MAX_TOKENS = int(os.environ.get('OPENAI_MAX_TOKENS', 1000))
-OPENAI_TEMPERATURE = float(os.environ.get('OPENAI_TEMPERATURE', 0.7))
+
+# Cấu hình Tesseract OCR
+TESSERACT_CMD_PATH = os.environ.get('TESSERACT_CMD_PATH', 'tesseract')
+
+# Cấu hình Notion API
+NOTION_CLIENT_ID = os.environ.get('NOTION_CLIENT_ID', '')
+NOTION_CLIENT_SECRET = os.environ.get('NOTION_CLIENT_SECRET', '')
+NOTION_REDIRECT_URI = os.environ.get('NOTION_REDIRECT_URI', f'{SITE_URL}/note-integration/callback/')
+
+# Cấu hình Microsoft Graph API (OneNote)
+MICROSOFT_CLIENT_ID = os.environ.get('MICROSOFT_CLIENT_ID', '')
+MICROSOFT_CLIENT_SECRET = os.environ.get('MICROSOFT_CLIENT_SECRET', '')
+MICROSOFT_REDIRECT_URI = os.environ.get('MICROSOFT_REDIRECT_URI', f'{SITE_URL}/note-integration/callback/')

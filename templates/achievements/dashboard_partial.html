@@ -1,6 +1,21 @@
-<div class="dashboard-container">
+<div class="dashboard-container" x-data="{ activeTab: 'overview' }">
+    <!-- Tabs cho chế độ di động -->
+    <div class="d-md-none mb-3">
+        <div class="btn-group w-100" role="group">
+            <button type="button" class="btn" :class="activeTab === 'overview' ? 'btn-primary' : 'btn-outline-primary'" @click="activeTab = 'overview'">
+                <i class="fas fa-chart-bar"></i> Tổng quan
+            </button>
+            <button type="button" class="btn" :class="activeTab === 'badges' ? 'btn-primary' : 'btn-outline-primary'" @click="activeTab = 'badges'">
+                <i class="fas fa-award"></i> Huy hiệu
+            </button>
+            <button type="button" class="btn" :class="activeTab === 'rewards' ? 'btn-primary' : 'btn-outline-primary'" @click="activeTab = 'rewards'">
+                <i class="fas fa-gift"></i> Phần thưởng
+            </button>
+        </div>
+    </div>
+
     <!-- Thống kê tổng quan -->
-    <div class="row mb-4">
+    <div class="row mb-4" x-show="activeTab === 'overview'" x-transition>
         <div class="col-md-4">
             <div class="card bg-primary text-white h-100">
                 <div class="card-body text-center">
@@ -30,15 +45,15 @@
         </div>
     </div>
 
-    <div class="row">
+    <div class="row" x-show="activeTab === 'overview' || activeTab === 'badges'" x-transition>
         <!-- Huy hiệu theo danh mục -->
-        <div class="col-md-6 mb-4">
+        <div class="col-md-6 mb-4" :class="{'col-md-12': activeTab === 'badges'}">
             <div class="card h-100">
                 <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="fas fa-medal"></i> Huy Hiệu Theo Danh Mục</h5>
-                    <button class="btn btn-sm btn-light" 
-                            hx-get="{% url 'achievements:dashboard' %}?section=badges&format=partial" 
-                            hx-target="#badges-section" 
+                    <button class="btn btn-sm btn-light"
+                            hx-get="{% url 'achievements:dashboard' %}?section=badges&format=partial"
+                            hx-target="#badges-section"
                             hx-swap="innerHTML"
                             hx-indicator="#badges-indicator">
                         <span id="badges-indicator" class="htmx-indicator spinner-border spinner-border-sm"></span>
@@ -64,13 +79,13 @@
         </div>
 
         <!-- Lịch sử điểm thưởng -->
-        <div class="col-md-6 mb-4">
+        <div class="col-md-6 mb-4" x-show="activeTab === 'overview'" x-transition>
             <div class="card h-100">
                 <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="fas fa-history"></i> Lịch Sử Điểm Thưởng</h5>
-                    <button class="btn btn-sm btn-light" 
-                            hx-get="{% url 'achievements:dashboard' %}?section=points&format=partial" 
-                            hx-target="#points-section" 
+                    <button class="btn btn-sm btn-light"
+                            hx-get="{% url 'achievements:dashboard' %}?section=points&format=partial"
+                            hx-target="#points-section"
                             hx-swap="innerHTML"
                             hx-indicator="#points-indicator">
                         <span id="points-indicator" class="htmx-indicator spinner-border spinner-border-sm"></span>
@@ -120,15 +135,15 @@
         </div>
     </div>
 
-    <div class="row">
+    <div class="row" x-show="activeTab === 'overview' || activeTab === 'rewards'" x-transition>
         <!-- Huy hiệu mới nhận -->
-        <div class="col-md-6 mb-4">
+        <div class="col-md-6 mb-4" x-show="activeTab === 'overview'" x-transition>
             <div class="card h-100">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="fas fa-award"></i> Huy Hiệu Mới Nhận</h5>
-                    <button class="btn btn-sm btn-light" 
-                            hx-get="{% url 'achievements:dashboard' %}?section=badges&format=partial" 
-                            hx-target="#recent-badges-section" 
+                    <button class="btn btn-sm btn-light"
+                            hx-get="{% url 'achievements:dashboard' %}?section=badges&format=partial"
+                            hx-target="#recent-badges-section"
                             hx-swap="innerHTML"
                             hx-indicator="#recent-badges-indicator">
                         <span id="recent-badges-indicator" class="htmx-indicator spinner-border spinner-border-sm"></span>
@@ -163,13 +178,13 @@
         </div>
 
         <!-- Phần thưởng mới đổi -->
-        <div class="col-md-6 mb-4">
+        <div class="col-md-6 mb-4" :class="{'col-md-12': activeTab === 'rewards'}">
             <div class="card h-100">
                 <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="fas fa-gift"></i> Phần Thưởng Mới Đổi</h5>
-                    <button class="btn btn-sm btn-light" 
-                            hx-get="{% url 'achievements:dashboard' %}?section=rewards&format=partial" 
-                            hx-target="#recent-rewards-section" 
+                    <button class="btn btn-sm btn-light"
+                            hx-get="{% url 'achievements:dashboard' %}?section=rewards&format=partial"
+                            hx-target="#recent-rewards-section"
                             hx-swap="innerHTML"
                             hx-indicator="#recent-rewards-indicator">
                         <span id="recent-rewards-indicator" class="htmx-indicator spinner-border spinner-border-sm"></span>

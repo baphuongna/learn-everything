@@ -1,9 +1,8 @@
 import random
-import os
 from io import BytesIO
-from PIL import Image, ImageDraw, ImageFont
+import numpy as np
+import cv2
 from django.core.files.base import ContentFile
-from django.conf import settings
 from django.templatetags.static import static
 
 def generate_gradient_image(text, width=200, height=200, start_color=None, end_color=None):
@@ -35,16 +34,20 @@ def generate_gradient_image(text, width=200, height=200, start_color=None, end_c
             min(start_color[2] + 100, 255)
         )
 
-    # Tạo ảnh mới
-    image = Image.new('RGB', (width, height), color=(255, 255, 255))
-    draw = ImageDraw.Draw(image)
+    # Tạo hình ảnh trống với kích thước chỉ định
+    image = np.zeros((height, width, 3), dtype=np.uint8)
 
-    # Vẽ gradient
+    # Tạo gradient
     for y in range(height):
-        r = int(start_color[0] + (end_color[0] - start_color[0]) * y / height)
-        g = int(start_color[1] + (end_color[1] - start_color[1]) * y / height)
-        b = int(start_color[2] + (end_color[2] - start_color[2]) * y / height)
-        draw.line([(0, y), (width, y)], fill=(r, g, b))
+        # Tính toán màu cho mỗi dòng dựa trên tỷ lệ y/height
+        ratio = y / height
+        color = (
+            int(start_color[0] + (end_color[0] - start_color[0]) * ratio),
+            int(start_color[1] + (end_color[1] - start_color[1]) * ratio),
+            int(start_color[2] + (end_color[2] - start_color[2]) * ratio)
+        )
+        # Điền màu cho toàn bộ dòng
+        image[y, :] = color
 
     # Lấy chữ cái đầu tiên của văn bản
     if text:
@@ -52,35 +55,23 @@ def generate_gradient_image(text, width=200, height=200, start_color=None, end_c
     else:
         initial = "?"
 
-    # Vẽ chữ cái đầu tiên ở giữa ảnh
-    try:
-        # Thử tải font mặc định
-        font_size = min(width, height) // 2
-        font = ImageFont.truetype("arial.ttf", font_size)
-    except IOError:
-        # Nếu không tìm thấy font, sử dụng font mặc định
-        font = ImageFont.load_default()
+    # Tính toán kích thước font dựa trên kích thước hình ảnh
+    font_size = min(width, height) // 3
+    font_scale = font_size / 30  # Điều chỉnh tỷ lệ font cho phù hợp với OpenCV
+    font_thickness = max(1, font_size // 20)
 
-    # Tính toán vị trí để đặt chữ cái ở giữa
-    try:
-        # Phiên bản mới của Pillow
-        text_width, text_height = font.getbbox(initial)[2:]
-    except AttributeError:
-        try:
-            # Phiên bản cũ hơn của Pillow
-            text_width, text_height = draw.textsize(initial, font=font)
-        except AttributeError:
-            # Fallback nếu cả hai phương thức đều không khả dụng
-            text_width, text_height = font.getsize(initial)
+    # Tính toán kích thước văn bản để đặt ở giữa
+    text_size = cv2.getTextSize(initial, cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_thickness)[0]
+    text_x = (width - text_size[0]) // 2
+    text_y = (height + text_size[1]) // 2
 
-    position = ((width - text_width) // 2, (height - text_height) // 2)
+    # Thêm chữ cái vào giữa hình ảnh
+    cv2.putText(image, initial, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX,
+                font_scale, (255, 255, 255), font_thickness, cv2.LINE_AA)
 
-    # Vẽ chữ cái với màu trắng
-    draw.text(position, initial, fill=(255, 255, 255), font=font)
-
-    # Lưu ảnh vào BytesIO
-    output = BytesIO()
-    image.save(output, format='PNG')
+    # Chuyển đổi hình ảnh sang dạng PNG và lưu vào BytesIO
+    _, buffer = cv2.imencode('.png', image)
+    output = BytesIO(buffer)
     output.seek(0)
 
     return output

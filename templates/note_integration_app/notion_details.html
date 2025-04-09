@@ -1,0 +1,332 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Chi tiết tài khoản Notion{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-book text-primary"></i> Tài khoản Notion
+            </h1>
+            <p class="lead">Quản lý tích hợp với Notion.</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'note_integration_home' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Thông tin tài khoản</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Workspace:</span>
+                            <span class="text-primary">{{ account.account_info.workspace_name }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Workspace ID:</span>
+                            <span class="text-muted">{{ account.account_info.workspace_id }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Kết nối từ:</span>
+                            <span>{{ account.created_at|date:"d/m/Y H:i" }}</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'note_integration_disconnect' account.id %}" class="btn btn-danger w-100" onclick="return confirm('Bạn có chắc chắn muốn ngắt kết nối tài khoản này không?');">
+                        <i class="fas fa-unlink"></i> Ngắt kết nối
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-database"></i> Databases</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for database in databases %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="mb-1">{{ database.title.0.plain_text }}</h5>
+                                    <p class="mb-0 text-muted">ID: {{ database.id }}</p>
+                                </div>
+                                <button class="btn btn-sm btn-primary select-database" data-database-id="{{ database.id }}" data-database-name="{{ database.title.0.plain_text }}">
+                                    <i class="fas fa-check"></i> Chọn
+                                </button>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="list-group-item">
+                            <p class="mb-0 text-center">Không tìm thấy database nào.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-sync-alt"></i> Ghi chú đã đồng bộ</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for note in synced_notes %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="mb-1">{{ note.title }}</h5>
+                                    <p class="mb-0">
+                                        <small class="text-muted">Đồng bộ lần cuối: {{ note.last_synced_at|date:"d/m/Y H:i" }}</small>
+                                    </p>
+                                </div>
+                                <div>
+                                    {% if note.external_url %}
+                                    <a href="{{ note.external_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-external-link-alt"></i> Mở trong Notion
+                                    </a>
+                                    {% endif %}
+                                    {% if note.memory_item_id %}
+                                    <a href="{% url 'memory_item_detail' note.memory_item_id %}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye"></i> Xem ghi chú
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="list-group-item">
+                            <p class="mb-0 text-center">Bạn chưa đồng bộ ghi chú nào.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal chọn ghi chú để đồng bộ -->
+<div class="modal fade" id="syncNoteModal" tabindex="-1" aria-labelledby="syncNoteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="syncNoteModalLabel">Đồng bộ ghi chú với Notion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Database đã chọn:</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="selectedDatabaseName" readonly>
+                        <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">
+                            <i class="fas fa-times"></i> Đổi
+                        </button>
+                    </div>
+                    <input type="hidden" id="selectedDatabaseId">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="memoryItemSelect" class="form-label">Chọn ghi chú để đồng bộ:</label>
+                    <select class="form-select" id="memoryItemSelect">
+                        <option value="" selected disabled>Đang tải...</option>
+                    </select>
+                </div>
+                
+                <div id="notePreview" class="border rounded p-3 mb-3" style="display: none;">
+                    <h5 id="previewTitle"></h5>
+                    <div id="previewContent" class="text-muted"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="syncNoteButton">
+                    <i class="fas fa-sync-alt"></i> Đồng bộ
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal kết quả đồng bộ -->
+<div class="modal fade" id="syncResultModal" tabindex="-1" aria-labelledby="syncResultModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="syncResultModalLabel">Kết quả đồng bộ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="syncResultMessage"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <a href="#" id="openNoteButton" class="btn btn-primary" target="_blank">
+                    <i class="fas fa-external-link-alt"></i> Mở trong Notion
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const syncNoteModal = new bootstrap.Modal(document.getElementById('syncNoteModal'));
+        const syncResultModal = new bootstrap.Modal(document.getElementById('syncResultModal'));
+        
+        // Xử lý khi chọn database
+        const selectDatabaseButtons = document.querySelectorAll('.select-database');
+        selectDatabaseButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const databaseId = this.dataset.databaseId;
+                const databaseName = this.dataset.databaseName;
+                
+                document.getElementById('selectedDatabaseId').value = databaseId;
+                document.getElementById('selectedDatabaseName').value = databaseName;
+                
+                // Tải danh sách ghi chú
+                fetch('{% url "memory_get_items" %}')
+                    .then(response => response.json())
+                    .then(data => {
+                        const memoryItemSelect = document.getElementById('memoryItemSelect');
+                        memoryItemSelect.innerHTML = '<option value="" selected disabled>Chọn ghi chú...</option>';
+                        
+                        data.items.forEach(item => {
+                            const option = document.createElement('option');
+                            option.value = item.id;
+                            option.textContent = item.title;
+                            option.dataset.content = item.content;
+                            memoryItemSelect.appendChild(option);
+                        });
+                        
+                        syncNoteModal.show();
+                    })
+                    .catch(error => {
+                        console.error('Lỗi khi tải danh sách ghi chú:', error);
+                        alert('Không thể tải danh sách ghi chú. Vui lòng thử lại sau.');
+                    });
+            });
+        });
+        
+        // Hiển thị xem trước ghi chú
+        const memoryItemSelect = document.getElementById('memoryItemSelect');
+        memoryItemSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const title = selectedOption.textContent;
+            const content = selectedOption.dataset.content;
+            
+            document.getElementById('previewTitle').textContent = title;
+            document.getElementById('previewContent').textContent = content;
+            document.getElementById('notePreview').style.display = 'block';
+        });
+        
+        // Xử lý đồng bộ ghi chú
+        const syncNoteButton = document.getElementById('syncNoteButton');
+        syncNoteButton.addEventListener('click', function() {
+            const databaseId = document.getElementById('selectedDatabaseId').value;
+            const memoryItemId = document.getElementById('memoryItemSelect').value;
+            
+            if (!databaseId || !memoryItemId) {
+                alert('Vui lòng chọn database và ghi chú.');
+                return;
+            }
+            
+            // Hiển thị trạng thái đang xử lý
+            syncNoteButton.disabled = true;
+            syncNoteButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...';
+            
+            // Gửi yêu cầu đồng bộ
+            const formData = new FormData();
+            formData.append('account_id', '{{ account.id }}');
+            formData.append('memory_item_id', memoryItemId);
+            formData.append('database_id', databaseId);
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+            
+            fetch('{% url "note_integration_sync_note" %}', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    // Đặt lại trạng thái nút
+                    syncNoteButton.disabled = false;
+                    syncNoteButton.innerHTML = '<i class="fas fa-sync-alt"></i> Đồng bộ';
+                    
+                    // Đóng modal đồng bộ
+                    syncNoteModal.hide();
+                    
+                    // Hiển thị kết quả
+                    if (data.success) {
+                        document.getElementById('syncResultMessage').innerHTML = `
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle"></i> ${data.message}
+                            </div>
+                        `;
+                        
+                        // Hiển thị nút mở ghi chú
+                        const openNoteButton = document.getElementById('openNoteButton');
+                        openNoteButton.href = data.external_url;
+                        openNoteButton.style.display = 'block';
+                        
+                        // Hiển thị modal kết quả
+                        syncResultModal.show();
+                        
+                        // Tải lại trang sau 2 giây
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000);
+                    } else {
+                        document.getElementById('syncResultMessage').innerHTML = `
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-circle"></i> ${data.error}
+                            </div>
+                        `;
+                        
+                        // Ẩn nút mở ghi chú
+                        document.getElementById('openNoteButton').style.display = 'none';
+                        
+                        // Hiển thị modal kết quả
+                        syncResultModal.show();
+                    }
+                })
+                .catch(error => {
+                    console.error('Lỗi khi đồng bộ ghi chú:', error);
+                    
+                    // Đặt lại trạng thái nút
+                    syncNoteButton.disabled = false;
+                    syncNoteButton.innerHTML = '<i class="fas fa-sync-alt"></i> Đồng bộ';
+                    
+                    // Đóng modal đồng bộ
+                    syncNoteModal.hide();
+                    
+                    // Hiển thị thông báo lỗi
+                    document.getElementById('syncResultMessage').innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle"></i> Đã xảy ra lỗi khi đồng bộ ghi chú. Vui lòng thử lại sau.
+                        </div>
+                    `;
+                    
+                    // Ẩn nút mở ghi chú
+                    document.getElementById('openNoteButton').style.display = 'none';
+                    
+                    // Hiển thị modal kết quả
+                    syncResultModal.show();
+                });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,271 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Kết quả OCR{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-file-alt text-primary"></i> Kết quả OCR
+            </h1>
+            <p class="lead">Kết quả nhận dạng văn bản từ hình ảnh.</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'ocr_home' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-image"></i> Hình ảnh gốc</h5>
+                </div>
+                <div class="card-body text-center">
+                    <img src="{{ result.image.url }}" alt="Hình ảnh gốc" class="img-fluid border rounded">
+                    <div class="mt-3">
+                        <p class="mb-1"><strong>Ngôn ngữ:</strong> {{ result.get_language_display }}</p>
+                        <p class="mb-0"><strong>Thời gian:</strong> {{ result.created_at|date:"d/m/Y H:i:s" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-file-alt"></i> Văn bản được nhận dạng</h5>
+                </div>
+                <div class="card-body">
+                    <div class="p-3 bg-light rounded" id="result-text" style="min-height: 200px; white-space: pre-wrap;">{{ result.text_result }}</div>
+                    
+                    <div class="mt-3">
+                        <button id="copyButton" class="btn btn-outline-primary">
+                            <i class="fas fa-copy"></i> Sao chép văn bản
+                        </button>
+                        
+                        <div class="dropdown d-inline-block">
+                            <button class="btn btn-primary dropdown-toggle" type="button" id="actionDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-ellipsis-h"></i> Thao tác
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="actionDropdown">
+                                <li>
+                                    <a class="dropdown-item" href="#" id="createFlashcardButton">
+                                        <i class="fas fa-clone"></i> Tạo Flashcard
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="#" id="createNoteButton">
+                                        <i class="fas fa-sticky-note"></i> Tạo ghi chú
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="#" id="deleteButton">
+                                        <i class="fas fa-trash"></i> Xóa kết quả
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal tạo Flashcard -->
+<div class="modal fade" id="createFlashcardModal" tabindex="-1" aria-labelledby="createFlashcardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createFlashcardModalLabel">Tạo Flashcard mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="flashcardForm" method="post" action="{% url 'flashcards:flashcard_create' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="front" class="form-label">Mặt trước:</label>
+                        <textarea class="form-control" id="front" name="front" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="back" class="form-label">Mặt sau:</label>
+                        <textarea class="form-control" id="back" name="back" rows="3" required>{{ result.text_result }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="subject" class="form-label">Chủ đề:</label>
+                        <select class="form-select" id="subject" name="subject" required>
+                            <option value="" selected disabled>Chọn chủ đề</option>
+                            <!-- Sẽ được điền bằng JavaScript -->
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="submitFlashcardButton">Tạo Flashcard</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal tạo ghi chú -->
+<div class="modal fade" id="createNoteModal" tabindex="-1" aria-labelledby="createNoteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createNoteModalLabel">Tạo ghi chú mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="noteForm" method="post" action="{% url 'memory_item_create' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Tiêu đề:</label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="content" class="form-label">Nội dung:</label>
+                        <textarea class="form-control" id="content" name="content" rows="5" required>{{ result.text_result }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="category" class="form-label">Danh mục:</label>
+                        <select class="form-select" id="category" name="category" required>
+                            <option value="" selected disabled>Chọn danh mục</option>
+                            <!-- Sẽ được điền bằng JavaScript -->
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="submitNoteButton">Tạo ghi chú</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal xác nhận xóa -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Xác nhận xóa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa kết quả OCR này không?</p>
+                <p class="text-danger">Hành động này không thể hoàn tác.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form method="post" action="#">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Xóa</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Sao chép văn bản
+        const copyButton = document.getElementById('copyButton');
+        const resultText = document.getElementById('result-text').textContent.trim();
+        
+        copyButton.addEventListener('click', function() {
+            navigator.clipboard.writeText(resultText)
+                .then(() => {
+                    copyButton.innerHTML = '<i class="fas fa-check"></i> Đã sao chép';
+                    setTimeout(() => {
+                        copyButton.innerHTML = '<i class="fas fa-copy"></i> Sao chép văn bản';
+                    }, 2000);
+                })
+                .catch(err => {
+                    console.error('Lỗi khi sao chép:', err);
+                    alert('Không thể sao chép văn bản.');
+                });
+        });
+        
+        // Tạo Flashcard
+        const createFlashcardButton = document.getElementById('createFlashcardButton');
+        const createFlashcardModal = new bootstrap.Modal(document.getElementById('createFlashcardModal'));
+        const submitFlashcardButton = document.getElementById('submitFlashcardButton');
+        
+        createFlashcardButton.addEventListener('click', function() {
+            // Tải danh sách chủ đề
+            fetch('{% url "flashcards:get_subjects" %}')
+                .then(response => response.json())
+                .then(data => {
+                    const subjectSelect = document.getElementById('subject');
+                    subjectSelect.innerHTML = '<option value="" selected disabled>Chọn chủ đề</option>';
+                    
+                    data.subjects.forEach(subject => {
+                        const option = document.createElement('option');
+                        option.value = subject.id;
+                        option.textContent = subject.name;
+                        subjectSelect.appendChild(option);
+                    });
+                    
+                    createFlashcardModal.show();
+                })
+                .catch(error => {
+                    console.error('Lỗi khi tải danh sách chủ đề:', error);
+                    alert('Không thể tải danh sách chủ đề. Vui lòng thử lại sau.');
+                });
+        });
+        
+        submitFlashcardButton.addEventListener('click', function() {
+            document.getElementById('flashcardForm').submit();
+        });
+        
+        // Tạo ghi chú
+        const createNoteButton = document.getElementById('createNoteButton');
+        const createNoteModal = new bootstrap.Modal(document.getElementById('createNoteModal'));
+        const submitNoteButton = document.getElementById('submitNoteButton');
+        
+        createNoteButton.addEventListener('click', function() {
+            // Tải danh sách danh mục
+            fetch('{% url "memory_get_categories" %}')
+                .then(response => response.json())
+                .then(data => {
+                    const categorySelect = document.getElementById('category');
+                    categorySelect.innerHTML = '<option value="" selected disabled>Chọn danh mục</option>';
+                    
+                    data.categories.forEach(category => {
+                        const option = document.createElement('option');
+                        option.value = category.id;
+                        option.textContent = category.name;
+                        categorySelect.appendChild(option);
+                    });
+                    
+                    createNoteModal.show();
+                })
+                .catch(error => {
+                    console.error('Lỗi khi tải danh sách danh mục:', error);
+                    alert('Không thể tải danh sách danh mục. Vui lòng thử lại sau.');
+                });
+        });
+        
+        submitNoteButton.addEventListener('click', function() {
+            document.getElementById('noteForm').submit();
+        });
+        
+        // Xóa kết quả
+        const deleteButton = document.getElementById('deleteButton');
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        
+        deleteButton.addEventListener('click', function() {
+            deleteModal.show();
+        });
+    });
+</script>
+{% endblock %}

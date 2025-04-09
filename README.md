@@ -16,9 +16,11 @@ Nền Tảng Học Tập là một ứng dụng web được xây dựng bằng 
 
 ### Yêu Cầu
 
-- Python 3.8+
-- Django 5.2+
-- PostgreSQL (Supabase)
+- **Python**: Khuyến nghị sử dụng Python 3.10 hoặc 3.11 để tránh các vấn đề tương thích
+  - Python 3.13 có thể gặp vấn đề tương thích với một số thư viện
+  - Python 3.8 không tương thích với Django 5.2
+- **Django 5.2+**
+- **PostgreSQL** (Supabase)
 - Các thư viện khác được liệt kê trong `requirements.txt`
 
 ### Các Bước Cài Đặt
@@ -40,6 +42,13 @@ Nền Tảng Học Tập là một ứng dụng web được xây dựng bằng 
    ```
    pip install -r requirements.txt
    ```
+
+   **Lưu ý về tương thích Python 3.13**:
+   Nếu bạn đang sử dụng Python 3.13 và gặp vấn đề khi cài đặt các gói phụ thuộc, chúng tôi đã cập nhật requirements.txt để hỗ trợ Python 3.13. Các thay đổi bao gồm:
+   - Thay thế Pillow bằng opencv-python-headless để xử lý hình ảnh
+   - Nâng cấp pandas lên phiên bản 2.2.3
+   - Điều chỉnh phiên bản của các gói HTMX và Alpine.js
+   - Nâng cấp xhtml2pdf lên phiên bản 0.2.17 để tương thích với ReportLab 4.x
 
 4. Cài đặt Git hooks để bảo vệ thông tin nhạy cảm:
    - Trên Windows:
@@ -73,6 +82,32 @@ Nền Tảng Học Tập là một ứng dụng web được xây dựng bằng 
 8. Tạo dữ liệu mẫu (tùy chọn):
    ```
    python sample_data.py
+   ```
+
+### Xử lý sự cố
+
+Nếu bạn gặp vấn đề khi cài đặt các gói phụ thuộc, hãy thử các giải pháp sau:
+
+1. **Vấn đề với Python 3.13**:
+   - Hạ cấp xuống Python 3.10 hoặc 3.11 (khuyến nghị)
+   - Hoặc cài đặt các gói thay thế đã được cập nhật trong requirements.txt
+
+2. **Lỗi xung đột phiên bản**:
+   - Nếu gặp lỗi "ResolutionImpossible" hoặc xung đột phiên bản, hãy cài đặt từng gói một:
+     ```
+     pip install Django==5.2
+     pip install opencv-python-headless==4.9.0.80
+     # Tiếp tục với các gói khác
+     ```
+
+3. **Sử dụng tùy chọn --no-deps**:
+   ```
+   pip install -r requirements.txt --no-deps
+   ```
+
+4. **Cập nhật pip và setuptools**:
+   ```
+   pip install --upgrade pip setuptools wheel
    ```
 
 9. Chạy máy chủ phát triển:

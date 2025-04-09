@@ -1,0 +1,405 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Kết quả đánh giá phát âm{% endblock %}
+
+{% block extra_css %}
+<style>
+    .score-circle {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        font-size: 2rem;
+        font-weight: bold;
+        color: white;
+    }
+    
+    .score-circle.excellent {
+        background-color: #28a745;
+    }
+    
+    .score-circle.good {
+        background-color: #17a2b8;
+    }
+    
+    .score-circle.average {
+        background-color: #ffc107;
+    }
+    
+    .score-circle.poor {
+        background-color: #dc3545;
+    }
+    
+    .score-label {
+        text-align: center;
+        margin-top: 10px;
+        font-weight: bold;
+    }
+    
+    .feedback-container {
+        white-space: pre-line;
+    }
+    
+    .text-comparison {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 5px;
+        background-color: #f8f9fa;
+    }
+    
+    .text-comparison h5 {
+        margin-bottom: 15px;
+    }
+    
+    .text-comparison .expected {
+        color: #28a745;
+        font-weight: bold;
+    }
+    
+    .text-comparison .actual {
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-chart-bar text-primary"></i> Kết quả đánh giá phát âm
+            </h1>
+            <p class="lead">Chi tiết đánh giá phát âm của bạn.</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'pronunciation_evaluation' %}" class="btn btn-outline-primary">
+                <i class="fas fa-microphone-alt"></i> Đánh giá mới
+            </a>
+            <a href="{% url 'pronunciation_history' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-history"></i> Lịch sử
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-star"></i> Điểm số</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-12 mb-4">
+                            <div class="score-circle {% if result.get_overall_score >= 90 %}excellent{% elif result.get_overall_score >= 75 %}good{% elif result.get_overall_score >= 50 %}average{% else %}poor{% endif %}">
+                                {{ result.get_overall_score|floatformat:1 }}
+                            </div>
+                            <div class="score-label">Điểm tổng hợp</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <h3 class="{% if result.pronunciation_score >= 90 %}text-success{% elif result.pronunciation_score >= 75 %}text-info{% elif result.pronunciation_score >= 50 %}text-warning{% else %}text-danger{% endif %}">
+                                    {{ result.pronunciation_score|floatformat:1 }}
+                                </h3>
+                                <div class="small">Phát âm</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <h3 class="{% if result.accuracy_score >= 90 %}text-success{% elif result.accuracy_score >= 75 %}text-info{% elif result.accuracy_score >= 50 %}text-warning{% else %}text-danger{% endif %}">
+                                    {{ result.accuracy_score|floatformat:1 }}
+                                </h3>
+                                <div class="small">Chính xác</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <h3 class="{% if result.fluency_score >= 90 %}text-success{% elif result.fluency_score >= 75 %}text-info{% elif result.fluency_score >= 50 %}text-warning{% else %}text-danger{% endif %}">
+                                    {{ result.fluency_score|floatformat:1 }}
+                                </h3>
+                                <div class="small">Trôi chảy</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h5>Thông tin:</h5>
+                        <ul class="list-group">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>Thời gian:</span>
+                                <span>{{ result.created_at|date:"d/m/Y H:i:s" }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>Ngôn ngữ:</span>
+                                <span>{{ result.language }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            {% if result.audio_file %}
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-volume-up"></i> Bản ghi âm</h5>
+                </div>
+                <div class="card-body text-center">
+                    <audio controls src="{{ result.audio_file.url }}" class="w-100 mb-3"></audio>
+                    <a href="{{ result.audio_file.url }}" download class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-download"></i> Tải xuống
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-comment-alt"></i> Phản hồi chi tiết</h5>
+                </div>
+                <div class="card-body">
+                    <div class="feedback-container">
+                        {{ result.feedback|linebreaks }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-exchange-alt"></i> So sánh văn bản</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-comparison">
+                        <h5>Văn bản mẫu:</h5>
+                        <p class="expected">{{ result.expected_text }}</p>
+                    </div>
+                    
+                    <div class="text-comparison">
+                        <h5>Văn bản nhận diện:</h5>
+                        <p class="actual">{{ result.text_result }}</p>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a href="{% url 'pronunciation_evaluation' %}" class="btn btn-primary">
+                            <i class="fas fa-redo"></i> Thử lại
+                        </a>
+                        
+                        <div class="dropdown d-inline-block ms-2">
+                            <button class="btn btn-outline-primary dropdown-toggle" type="button" id="actionDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-ellipsis-h"></i> Thao tác
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="actionDropdown">
+                                <li>
+                                    <a class="dropdown-item" href="#" id="createFlashcardButton">
+                                        <i class="fas fa-clone"></i> Tạo Flashcard
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="#" id="createNoteButton">
+                                        <i class="fas fa-sticky-note"></i> Tạo ghi chú
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="#" id="deleteButton">
+                                        <i class="fas fa-trash"></i> Xóa kết quả
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal tạo Flashcard -->
+<div class="modal fade" id="createFlashcardModal" tabindex="-1" aria-labelledby="createFlashcardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createFlashcardModalLabel">Tạo Flashcard mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="flashcardForm" method="post" action="{% url 'flashcards:flashcard_create' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="front" class="form-label">Mặt trước:</label>
+                        <textarea class="form-control" id="front" name="front" rows="3" required>{{ result.expected_text }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="back" class="form-label">Mặt sau:</label>
+                        <textarea class="form-control" id="back" name="back" rows="3" required>{{ result.text_result }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="subject" class="form-label">Chủ đề:</label>
+                        <select class="form-select" id="subject" name="subject" required>
+                            <option value="" selected disabled>Chọn chủ đề</option>
+                            <!-- Sẽ được điền bằng JavaScript -->
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="submitFlashcardButton">Tạo Flashcard</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal tạo ghi chú -->
+<div class="modal fade" id="createNoteModal" tabindex="-1" aria-labelledby="createNoteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createNoteModalLabel">Tạo ghi chú mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="noteForm" method="post" action="{% url 'memory_item_create' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Tiêu đề:</label>
+                        <input type="text" class="form-control" id="title" name="title" value="Đánh giá phát âm: {{ result.expected_text|truncatechars:30 }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="content" class="form-label">Nội dung:</label>
+                        <textarea class="form-control" id="content" name="content" rows="5" required>Văn bản mẫu: {{ result.expected_text }}
+
+Văn bản nhận diện: {{ result.text_result }}
+
+Điểm phát âm: {{ result.pronunciation_score|floatformat:1 }}/100
+Điểm chính xác: {{ result.accuracy_score|floatformat:1 }}/100
+Điểm trôi chảy: {{ result.fluency_score|floatformat:1 }}/100
+
+Phản hồi:
+{{ result.feedback }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="category" class="form-label">Danh mục:</label>
+                        <select class="form-select" id="category" name="category" required>
+                            <option value="" selected disabled>Chọn danh mục</option>
+                            <!-- Sẽ được điền bằng JavaScript -->
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="submitNoteButton">Tạo ghi chú</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal xác nhận xóa -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Xác nhận xóa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa kết quả đánh giá phát âm này không?</p>
+                <p class="text-danger">Hành động này không thể hoàn tác.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form method="post" action="#">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Xóa</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tạo Flashcard
+        const createFlashcardButton = document.getElementById('createFlashcardButton');
+        const createFlashcardModal = new bootstrap.Modal(document.getElementById('createFlashcardModal'));
+        const submitFlashcardButton = document.getElementById('submitFlashcardButton');
+        
+        createFlashcardButton.addEventListener('click', function() {
+            // Tải danh sách chủ đề
+            fetch('{% url "flashcards:get_subjects" %}')
+                .then(response => response.json())
+                .then(data => {
+                    const subjectSelect = document.getElementById('subject');
+                    subjectSelect.innerHTML = '<option value="" selected disabled>Chọn chủ đề</option>';
+                    
+                    data.subjects.forEach(subject => {
+                        const option = document.createElement('option');
+                        option.value = subject.id;
+                        option.textContent = subject.name;
+                        subjectSelect.appendChild(option);
+                    });
+                    
+                    createFlashcardModal.show();
+                })
+                .catch(error => {
+                    console.error('Lỗi khi tải danh sách chủ đề:', error);
+                    alert('Không thể tải danh sách chủ đề. Vui lòng thử lại sau.');
+                });
+        });
+        
+        submitFlashcardButton.addEventListener('click', function() {
+            document.getElementById('flashcardForm').submit();
+        });
+        
+        // Tạo ghi chú
+        const createNoteButton = document.getElementById('createNoteButton');
+        const createNoteModal = new bootstrap.Modal(document.getElementById('createNoteModal'));
+        const submitNoteButton = document.getElementById('submitNoteButton');
+        
+        createNoteButton.addEventListener('click', function() {
+            // Tải danh sách danh mục
+            fetch('{% url "memory_get_categories" %}')
+                .then(response => response.json())
+                .then(data => {
+                    const categorySelect = document.getElementById('category');
+                    categorySelect.innerHTML = '<option value="" selected disabled>Chọn danh mục</option>';
+                    
+                    data.categories.forEach(category => {
+                        const option = document.createElement('option');
+                        option.value = category.id;
+                        option.textContent = category.name;
+                        categorySelect.appendChild(option);
+                    });
+                    
+                    createNoteModal.show();
+                })
+                .catch(error => {
+                    console.error('Lỗi khi tải danh sách danh mục:', error);
+                    alert('Không thể tải danh sách danh mục. Vui lòng thử lại sau.');
+                });
+        });
+        
+        submitNoteButton.addEventListener('click', function() {
+            document.getElementById('noteForm').submit();
+        });
+        
+        // Xóa kết quả
+        const deleteButton = document.getElementById('deleteButton');
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        
+        deleteButton.addEventListener('click', function() {
+            deleteModal.show();
+        });
+    });
+</script>
+{% endblock %}

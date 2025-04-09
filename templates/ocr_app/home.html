@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Nhận dạng ký tự quang học (OCR){% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-file-image text-primary"></i> Nhận dạng ký tự quang học (OCR)
+            </h1>
+            <p class="lead">Chuyển đổi văn bản từ hình ảnh thành văn bản có thể chỉnh sửa.</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'ocr_history' %}" class="btn btn-outline-primary">
+                <i class="fas fa-history"></i> Lịch sử
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-upload"></i> Tải lên hình ảnh</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'ocr_upload' %}" enctype="multipart/form-data" id="upload-form">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        
+                        <div class="mt-3">
+                            <div id="image-preview-container" class="mb-3" style="display: none;">
+                                <label class="form-label">Xem trước:</label>
+                                <div class="border rounded p-2">
+                                    <img id="image-preview" src="#" alt="Xem trước hình ảnh" class="img-fluid">
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-upload"></i> Tải lên và nhận dạng
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-history"></i> Kết quả gần đây</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for result in recent_results %}
+                        <a href="{% url 'ocr_result' result.id %}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <div>
+                                    <h5 class="mb-1">{{ result.text_result|truncatechars:50 }}</h5>
+                                    <small class="text-muted">Ngôn ngữ: {{ result.get_language_display }}</small>
+                                </div>
+                                <small class="text-muted">{{ result.created_at|date:"d/m/Y H:i" }}</small>
+                            </div>
+                        </a>
+                        {% empty %}
+                        <div class="list-group-item">
+                            <p class="mb-0 text-center">Bạn chưa có kết quả OCR nào.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% if recent_results %}
+                <div class="card-footer text-end">
+                    <a href="{% url 'ocr_history' %}" class="btn btn-sm btn-outline-primary">Xem tất cả</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('upload-form');
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const imageInput = document.querySelector('input[type="file"]');
+        const previewContainer = document.getElementById('image-preview-container');
+        const imagePreview = document.getElementById('image-preview');
+        
+        // Hiển thị xem trước hình ảnh
+        imageInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                }
+                
+                reader.readAsDataURL(this.files[0]);
+            } else {
+                previewContainer.style.display = 'none';
+            }
+        });
+        
+        // Hiển thị trạng thái đang xử lý khi submit form
+        form.addEventListener('submit', function() {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...';
+        });
+    });
+</script>
+{% endblock %}

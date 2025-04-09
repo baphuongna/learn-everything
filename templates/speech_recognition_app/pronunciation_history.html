@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Lịch sử đánh giá phát âm{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-history text-primary"></i> Lịch sử đánh giá phát âm
+            </h1>
+            <p class="lead">Danh sách các kết quả đánh giá phát âm của bạn.</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'pronunciation_evaluation' %}" class="btn btn-outline-primary">
+                <i class="fas fa-microphone-alt"></i> Đánh giá mới
+            </a>
+            <a href="{% url 'speech_recognition_home' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-list"></i> Danh sách kết quả</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Thời gian</th>
+                                    <th scope="col">Văn bản mẫu</th>
+                                    <th scope="col">Điểm phát âm</th>
+                                    <th scope="col">Điểm chính xác</th>
+                                    <th scope="col">Điểm trôi chảy</th>
+                                    <th scope="col">Âm thanh</th>
+                                    <th scope="col">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for result in results %}
+                                <tr>
+                                    <td>{{ result.created_at|date:"d/m/Y H:i" }}</td>
+                                    <td>{{ result.expected_text|truncatechars:50 }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="progress flex-grow-1" style="height: 5px;">
+                                                <div class="progress-bar {% if result.pronunciation_score >= 80 %}bg-success{% elif result.pronunciation_score >= 60 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                                     role="progressbar" 
+                                                     style="width: {{ result.pronunciation_score }}%;" 
+                                                     aria-valuenow="{{ result.pronunciation_score }}" 
+                                                     aria-valuemin="0" 
+                                                     aria-valuemax="100"></div>
+                                            </div>
+                                            <span class="ms-2">{{ result.pronunciation_score|floatformat:1 }}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="progress flex-grow-1" style="height: 5px;">
+                                                <div class="progress-bar {% if result.accuracy_score >= 80 %}bg-success{% elif result.accuracy_score >= 60 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                                     role="progressbar" 
+                                                     style="width: {{ result.accuracy_score }}%;" 
+                                                     aria-valuenow="{{ result.accuracy_score }}" 
+                                                     aria-valuemin="0" 
+                                                     aria-valuemax="100"></div>
+                                            </div>
+                                            <span class="ms-2">{{ result.accuracy_score|floatformat:1 }}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="progress flex-grow-1" style="height: 5px;">
+                                                <div class="progress-bar {% if result.fluency_score >= 80 %}bg-success{% elif result.fluency_score >= 60 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                                     role="progressbar" 
+                                                     style="width: {{ result.fluency_score }}%;" 
+                                                     aria-valuenow="{{ result.fluency_score }}" 
+                                                     aria-valuemin="0" 
+                                                     aria-valuemax="100"></div>
+                                            </div>
+                                            <span class="ms-2">{{ result.fluency_score|floatformat:1 }}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if result.audio_file %}
+                                        <audio controls src="{{ result.audio_file.url }}" style="max-width: 150px;"></audio>
+                                        {% else %}
+                                        <span class="text-muted">Không có</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'pronunciation_evaluation_result' result.id %}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye"></i> Xem
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">
+                                        <p class="mb-0">Bạn chưa có kết quả đánh giá phát âm nào.</p>
+                                        <a href="{% url 'pronunciation_evaluation' %}" class="btn btn-primary mt-3">
+                                            <i class="fas fa-microphone-alt"></i> Bắt đầu đánh giá
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -21,179 +21,21 @@
     </div>
 </div>
 
-<div class="row">
-    <div class="col-md-8">
-        <!-- Ghi nhớ gần đây -->
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="fas fa-clock"></i> Ghi Nhớ Gần Đây</h5>
-            </div>
-            <div class="card-body p-0">
-                <div class="list-group list-group-flush">
-                    {% for item in recent_items %}
-                    <a href="{% url 'memory_item_detail' item.pk %}" class="list-group-item list-group-item-action">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1">{{ item.title }}</h5>
-                            <small class="text-muted">{{ item.updated_at|date:"d/m/Y H:i" }}</small>
-                        </div>
-                        <p class="mb-1 text-truncate">{{ item.content|striptags|truncatechars:100 }}</p>
-                        <small>
-                            <span class="badge bg-primary">{{ item.category.name }}</span>
-                            {% if item.is_favorite %}
-                            <span class="badge bg-warning"><i class="fas fa-star"></i> Yêu thích</span>
-                            {% endif %}
-                            {% if item.priority == 3 %}
-                            <span class="badge bg-danger">Ưu tiên cao</span>
-                            {% elif item.priority == 2 %}
-                            <span class="badge bg-warning">Ưu tiên trung bình</span>
-                            {% endif %}
-                        </small>
-                    </a>
-                    {% empty %}
-                    <div class="list-group-item">
-                        <p class="mb-0 text-center">Bạn chưa có ghi nhớ nào. <a href="{% url 'memory_item_create' %}">Tạo ghi nhớ mới</a>.</p>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% if recent_items %}
-            <div class="card-footer text-end">
-                <a href="{% url 'memory_search' %}" class="btn btn-sm btn-outline-primary">Xem tất cả</a>
-            </div>
-            {% endif %}
+<div id="memory-bank-container"
+     hx-get="{% url 'memory_home' %}?format=partial"
+     hx-trigger="load once"
+     hx-swap="innerHTML"
+     hx-indicator="#memory-bank-indicator">
+    <div class="text-center py-5">
+        <div id="memory-bank-indicator" class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
         </div>
-
-        <!-- Ghi nhớ yêu thích -->
-        <div class="card mb-4">
-            <div class="card-header bg-warning text-dark">
-                <h5 class="mb-0"><i class="fas fa-star"></i> Ghi Nhớ Yêu Thích</h5>
-            </div>
-            <div class="card-body p-0">
-                <div class="list-group list-group-flush">
-                    {% for item in favorite_items %}
-                    <a href="{% url 'memory_item_detail' item.pk %}" class="list-group-item list-group-item-action">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1">{{ item.title }}</h5>
-                            <small class="text-muted">{{ item.updated_at|date:"d/m/Y H:i" }}</small>
-                        </div>
-                        <p class="mb-1 text-truncate">{{ item.content|striptags|truncatechars:100 }}</p>
-                        <small>
-                            <span class="badge bg-primary">{{ item.category.name }}</span>
-                            {% if item.priority == 3 %}
-                            <span class="badge bg-danger">Ưu tiên cao</span>
-                            {% elif item.priority == 2 %}
-                            <span class="badge bg-warning">Ưu tiên trung bình</span>
-                            {% endif %}
-                        </small>
-                    </a>
-                    {% empty %}
-                    <div class="list-group-item">
-                        <p class="mb-0 text-center">Bạn chưa có ghi nhớ yêu thích nào.</p>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
+        <p class="mt-3">Loading Memory Bank...</p>
     </div>
 
-    <div class="col-md-4">
-        <!-- Thống kê -->
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Thống Kê</h5>
-            </div>
-            <div class="card-body">
-                <div class="row text-center">
-                    <div class="col-6 mb-3">
-                        <h2 class="text-primary">{{ total_items }}</h2>
-                        <p class="mb-0">Ghi nhớ</p>
-                    </div>
-                    <div class="col-6 mb-3">
-                        <h2 class="text-primary">{{ total_categories }}</h2>
-                        <p class="mb-0">Danh mục</p>
-                    </div>
-                </div>
-                <hr>
-                <div class="text-center">
-                    <h2 class="text-danger">{{ total_review_items }}</h2>
-                    <p class="mb-0">Ghi nhớ cần ôn tập hôm nay</p>
-                    {% if total_review_items > 0 %}
-                    <a href="{% url 'memory_review_list' %}" class="btn btn-danger btn-sm mt-2">Ôn tập ngay</a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
 
-        <!-- Danh mục -->
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="fas fa-folder"></i> Danh Mục</h5>
-            </div>
-            <div class="card-body p-0">
-                <div class="list-group list-group-flush">
-                    {% for category in categories %}
-                    <a href="{% url 'memory_category_detail' category.slug %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                        <div>
-                            <i class="{{ category.icon }}" style="color: {{ category.color }};"></i>
-                            {{ category.name }}
-                        </div>
-                        <span class="badge bg-primary rounded-pill">
-                            {{ category.memory_items.count }}
-                        </span>
-                    </a>
-                    {% empty %}
-                    <div class="list-group-item">
-                        <p class="mb-0 text-center">Bạn chưa có danh mục nào. <a href="{% url 'memory_category_list' %}">Tạo danh mục mới</a>.</p>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% if categories %}
-            <div class="card-footer text-end">
-                <a href="{% url 'memory_category_list' %}" class="btn btn-sm btn-outline-primary">Quản lý danh mục</a>
-            </div>
-            {% endif %}
-        </div>
 
-        <!-- Ghi nhớ cần ôn tập -->
-        <div class="card">
-            <div class="card-header bg-danger text-white">
-                <h5 class="mb-0"><i class="fas fa-sync-alt"></i> Cần Ôn Tập Hôm Nay</h5>
-            </div>
-            <div class="card-body p-0">
-                <div class="list-group list-group-flush">
-                    {% for item in review_items %}
-                    <a href="{% url 'memory_item_review' item.pk %}" class="list-group-item list-group-item-action">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1">{{ item.title }}</h5>
-                            <small class="text-danger">
-                                {% if item.review_count == 0 %}
-                                Lần đầu ôn tập
-                                {% else %}
-                                Lần ôn tập thứ {{ item.review_count|add:1 }}
-                                {% endif %}
-                            </small>
-                        </div>
-                        <small>
-                            <span class="badge bg-primary">{{ item.category.name }}</span>
-                            {% if item.is_favorite %}
-                            <span class="badge bg-warning"><i class="fas fa-star"></i> Yêu thích</span>
-                            {% endif %}
-                        </small>
-                    </a>
-                    {% empty %}
-                    <div class="list-group-item">
-                        <p class="mb-0 text-center">Không có ghi nhớ nào cần ôn tập hôm nay.</p>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% if review_items %}
-            <div class="card-footer text-end">
-                <a href="{% url 'memory_review_list' %}" class="btn btn-sm btn-danger">Xem tất cả</a>
-            </div>
-            {% endif %}
-        </div>
-    </div>
+
+
 </div>
 {% endblock %}

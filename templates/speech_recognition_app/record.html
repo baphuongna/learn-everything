@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Ghi âm giọng nói{% endblock %}
+
+{% block extra_css %}
+<style>
+    .recording-indicator {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background-color: #dc3545;
+        display: inline-block;
+        margin-right: 10px;
+        animation: pulse 1s infinite;
+    }
+    
+    @keyframes pulse {
+        0% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+        }
+        
+        70% {
+            transform: scale(1);
+            box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+        }
+        
+        100% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+        }
+    }
+    
+    .timer {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    
+    .controls {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .result-container {
+        margin-top: 2rem;
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-microphone text-primary"></i> Ghi âm giọng nói
+            </h1>
+            <p class="lead">Ghi âm giọng nói trực tiếp và chuyển đổi thành văn bản.</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'speech_recognition_home' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-microphone"></i> Ghi âm</h5>
+                </div>
+                <div class="card-body text-center">
+                    <div id="recording-status" class="mb-4">
+                        <p class="lead">Nhấn nút bên dưới để bắt đầu ghi âm</p>
+                        <div class="timer" id="timer">00:00</div>
+                    </div>
+                    
+                    <div class="controls">
+                        <button id="startButton" class="btn btn-primary btn-lg">
+                            <i class="fas fa-microphone"></i> Bắt đầu ghi âm
+                        </button>
+                        <button id="stopButton" class="btn btn-danger btn-lg" style="display: none;">
+                            <i class="fas fa-stop"></i> Dừng ghi âm
+                        </button>
+                    </div>
+                    
+                    <div class="form-group mt-4">
+                        <label for="language">Ngôn ngữ:</label>
+                        <select id="language" class="form-select">
+                            <option value="vi-VN" selected>Tiếng Việt</option>
+                            <option value="en-US">Tiếng Anh (US)</option>
+                            <option value="en-GB">Tiếng Anh (UK)</option>
+                            <option value="fr-FR">Tiếng Pháp</option>
+                            <option value="de-DE">Tiếng Đức</option>
+                            <option value="ja-JP">Tiếng Nhật</option>
+                            <option value="ko-KR">Tiếng Hàn</option>
+                            <option value="zh-CN">Tiếng Trung (Giản thể)</option>
+                            <option value="zh-TW">Tiếng Trung (Phồn thể)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" id="useWhisper">
+                        <label class="form-check-label" for="useWhisper">
+                            Sử dụng Whisper (chính xác hơn nhưng chậm hơn)
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="result-container" class="card mt-4" style="display: none;">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-check-circle"></i> Kết quả nhận diện</h5>
+                </div>
+                <div class="card-body">
+                    <h5>Văn bản được nhận diện:</h5>
+                    <div id="result-text" class="p-3 bg-light rounded">
+                        <p class="mb-0">Kết quả sẽ hiển thị ở đây...</p>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <button id="copyButton" class="btn btn-outline-primary">
+                            <i class="fas fa-copy"></i> Sao chép
+                        </button>
+                        <a id="viewResultButton" href="#" class="btn btn-primary">
+                            <i class="fas fa-eye"></i> Xem chi tiết
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="loading-container" class="text-center mt-4" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Đang xử lý...</span>
+                </div>
+                <p class="mt-2">Đang xử lý âm thanh và nhận diện giọng nói...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let mediaRecorder;
+        let audioChunks = [];
+        let timerInterval;
+        let seconds = 0;
+        let minutes = 0;
+        
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const timer = document.getElementById('timer');
+        const resultContainer = document.getElementById('result-container');
+        const resultText = document.getElementById('result-text');
+        const loadingContainer = document.getElementById('loading-container');
+        const copyButton = document.getElementById('copyButton');
+        const viewResultButton = document.getElementById('viewResultButton');
+        const recordingStatus = document.getElementById('recording-status');
+        const languageSelect = document.getElementById('language');
+        const useWhisperCheckbox = document.getElementById('useWhisper');
+        
+        // Bắt đầu ghi âm
+        startButton.addEventListener('click', async function() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                
+                mediaRecorder.ondataavailable = function(e) {
+                    audioChunks.push(e.data);
+                };
+                
+                mediaRecorder.onstop = async function() {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    await processAudio(audioBlob);
+                };
+                
+                // Bắt đầu ghi âm
+                audioChunks = [];
+                mediaRecorder.start();
+                
+                // Cập nhật UI
+                startButton.style.display = 'none';
+                stopButton.style.display = 'inline-block';
+                recordingStatus.innerHTML = `
+                    <p class="lead">
+                        <span class="recording-indicator"></span>
+                        Đang ghi âm...
+                    </p>
+                    <div class="timer" id="timer">00:00</div>
+                `;
+                
+                // Bắt đầu đếm thời gian
+                seconds = 0;
+                minutes = 0;
+                timerInterval = setInterval(updateTimer, 1000);
+                
+            } catch (err) {
+                console.error('Lỗi khi truy cập microphone:', err);
+                alert('Không thể truy cập microphone. Vui lòng kiểm tra quyền truy cập.');
+            }
+        });
+        
+        // Dừng ghi âm
+        stopButton.addEventListener('click', function() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+                clearInterval(timerInterval);
+                
+                // Cập nhật UI
+                startButton.style.display = 'inline-block';
+                stopButton.style.display = 'none';
+                loadingContainer.style.display = 'block';
+                recordingStatus.innerHTML = `
+                    <p class="lead">Nhấn nút bên dưới để bắt đầu ghi âm</p>
+                    <div class="timer" id="timer">00:00</div>
+                `;
+            }
+        });
+        
+        // Cập nhật đồng hồ đếm thời gian
+        function updateTimer() {
+            seconds++;
+            if (seconds >= 60) {
+                seconds = 0;
+                minutes++;
+            }
+            
+            const formattedMinutes = String(minutes).padStart(2, '0');
+            const formattedSeconds = String(seconds).padStart(2, '0');
+            timer.textContent = `${formattedMinutes}:${formattedSeconds}`;
+        }
+        
+        // Xử lý âm thanh đã ghi
+        async function processAudio(audioBlob) {
+            try {
+                const formData = new FormData();
+                formData.append('audio_data', audioBlob, 'recording.wav');
+                formData.append('language', languageSelect.value);
+                formData.append('use_whisper', useWhisperCheckbox.checked);
+                formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+                
+                const response = await fetch('{% url "speech_recognition_process_recording" %}', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultText.innerHTML = `<p class="mb-0">${data.text}</p>`;
+                    resultContainer.style.display = 'block';
+                    viewResultButton.href = `/speech-recognition/result/${data.result_id}/`;
+                } else {
+                    alert('Lỗi: ' + data.error);
+                }
+            } catch (err) {
+                console.error('Lỗi khi xử lý âm thanh:', err);
+                alert('Đã xảy ra lỗi khi xử lý âm thanh. Vui lòng thử lại.');
+            } finally {
+                loadingContainer.style.display = 'none';
+            }
+        }
+        
+        // Sao chép kết quả
+        copyButton.addEventListener('click', function() {
+            const text = resultText.textContent.trim();
+            navigator.clipboard.writeText(text)
+                .then(() => {
+                    copyButton.innerHTML = '<i class="fas fa-check"></i> Đã sao chép';
+                    setTimeout(() => {
+                        copyButton.innerHTML = '<i class="fas fa-copy"></i> Sao chép';
+                    }, 2000);
+                })
+                .catch(err => {
+                    console.error('Lỗi khi sao chép:', err);
+                    alert('Không thể sao chép văn bản.');
+                });
+        });
+    });
+</script>
+{% endblock %}

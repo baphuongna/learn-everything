@@ -7,8 +7,9 @@ from django.contrib import messages
 from datetime import timedelta
 import json
 from .models import FlashcardSet, Flashcard, SpacedRepetitionSchedule
-from .forms import FlashcardSetForm, FlashcardForm, AutoGenerateFlashcardsForm
+from .forms import FlashcardSetForm, FlashcardForm, AutoGenerateFlashcardsForm, TextToFlashcardsForm
 from .services import generate_flashcards_from_lesson
+from .auto_flashcard_service import AutoFlashcardService
 from content.models import Subject, Topic, Lesson
 
 def flashcard_list(request):
@@ -301,3 +302,78 @@ def auto_generate_flashcards(request):
     }
 
     return render(request, 'flashcards/auto_generate_flashcards.html', context)
+
+
+@login_required
+def text_to_flashcards(request):
+    """Tạo flashcards từ văn bản"""
+    if request.method == 'POST':
+        form = TextToFlashcardsForm(request.POST, user=request.user)
+        if form.is_valid():
+            text = form.cleaned_data['text']
+            flashcard_set = form.cleaned_data['flashcard_set']
+            language = form.cleaned_data['language']
+            max_cards = form.cleaned_data['max_cards']
+            use_ai = form.cleaned_data['use_ai']
+
+            # Tạo flashcards từ văn bản
+            service = AutoFlashcardService()
+
+            if use_ai:
+                flashcards = service.generate_flashcards_with_ai(text, language, max_cards)
+            else:
+                flashcards = service.generate_flashcards(text, language, max_cards)
+
+            # Lưu các flashcard vào database
+            for i, card_data in enumerate(flashcards):
+                Flashcard.objects.create(
+                    flashcard_set=flashcard_set,
+                    front=card_data['front'],
+                    back=card_data['back'],
+                    order=i
+                )
+
+            messages.success(request, f'Đã tạo {len(flashcards)} flashcard từ văn bản.')
+            return redirect('flashcard_set_detail', pk=flashcard_set.id)
+    else:
+        form = TextToFlashcardsForm(user=request.user)
+
+    context = {
+        'form': form,
+        'title': 'Tạo Flashcards từ văn bản'
+    }
+
+    return render(request, 'flashcards/text_to_flashcards.html', context)
+
+
+@login_required
+def preview_text_flashcards(request):
+    """Xem trước các flashcard được tạo từ văn bản"""
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        text = data.get('text', '')
+        language = data.get('language', 'vi')
+        max_cards = int(data.get('max_cards', 10))
+        use_ai = data.get('use_ai', True)
+
+        # Tạo flashcards từ văn bản
+        service = AutoFlashcardService()
+
+        if use_ai:
+            flashcards = service.generate_flashcards_with_ai(text, language, max_cards)
+        else:
+            flashcards = service.generate_flashcards(text, language, max_cards)
+
+        return JsonResponse({
+            'success': True,
+            'flashcards': flashcards
+        })
+
+    return JsonResponse({'success': False, 'error': 'Phương thức không hợp lệ'})
+
+
+@login_required
+def get_subjects(request):
+    """Lấy danh sách các chủ đề"""
+    subjects = Subject.objects.all().values('id', 'name')
+    return JsonResponse({'subjects': list(subjects)})

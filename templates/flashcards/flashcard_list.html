@@ -9,9 +9,14 @@
         <p class="lead">Học tập hiệu quả với phương pháp Active Recall và Spaced Repetition</p>
     </div>
     <div class="col-md-4 text-end">
-        <a href="{% url 'flashcards:auto_generate_flashcards' %}" class="btn btn-success">
-            <i class="fas fa-magic"></i> Tự động tạo Flashcards
-        </a>
+        <div class="btn-group">
+            <a href="{% url 'flashcards:auto_generate_flashcards' %}" class="btn btn-success">
+                <i class="fas fa-magic"></i> Tạo từ bài học
+            </a>
+            <a href="{% url 'flashcards:text_to_flashcards' %}" class="btn btn-primary">
+                <i class="fas fa-file-alt"></i> Tạo từ văn bản
+            </a>
+        </div>
     </div>
 </div>
 
@@ -56,7 +61,8 @@
                       hx-get="{% url 'flashcards:flashcard_list' %}"
                       hx-target="#flashcard-list-container"
                       hx-trigger="submit, input[name='search'].keyup changed delay:500ms"
-                      hx-indicator="#search-indicator">
+                      hx-indicator="#search-indicator"
+                      hx-push-url="true">
 
                     <div class="row g-3 mb-3">
                         <div class="col-md-8">
@@ -76,7 +82,7 @@
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <label for="subject" class="form-label">Chủ đề</label>
-                                <select name="subject" id="subject" class="form-select" hx-trigger="change">
+                                <select name="subject" id="subject" class="form-select" hx-trigger="change" @change="$event.target.form.requestSubmit()">
                                     <option value="">Tất cả chủ đề</option>
                                     {% for subject in subjects %}
                                         <option value="{{ subject.id }}" {% if selected_subject == subject.id|stringformat:"i" %}selected{% endif %}>
