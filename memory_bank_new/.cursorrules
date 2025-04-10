@@ -1,0 +1,121 @@
+# Cursor Rules - Nền Tảng Học Tập
+
+## Quy tắc chung
+- Sử dụng tiếng Việt cho giao diện người dùng và tài liệu
+- Tuân thủ PEP 8 cho mã Python
+- Sử dụng docstrings cho tất cả các hàm và lớp
+- Tổ chức mã theo mô hình MTV của Django
+- Sử dụng các template tag của Django thay vì logic phức tạp trong template
+- Sử dụng HTMX cho tương tác không cần tải lại trang
+- Sử dụng Alpine.js cho tương tác phía client
+- Sử dụng Bootstrap cho giao diện responsive
+
+## Quy tắc đặt tên
+- **Class**: PascalCase (ví dụ: UserProfile)
+- **Function/Method**: snake_case (ví dụ: get_user_progress)
+- **Variable**: snake_case (ví dụ: user_progress)
+- **Constant**: UPPER_SNAKE_CASE (ví dụ: MAX_UPLOAD_SIZE)
+- **URL**: kebab-case (ví dụ: /user-profile/)
+- **Template**: snake_case (ví dụ: user_profile.html)
+- **App**: snake_case (ví dụ: advanced_learning)
+
+## Quy tắc database
+- Sử dụng Supabase PostgreSQL làm cơ sở dữ liệu chính
+- Không lưu thông tin nhạy cảm trong mã nguồn
+- Sử dụng biến môi trường cho thông tin kết nối
+- Sử dụng migrations cho mọi thay đổi schema
+- Sử dụng ForeignKey với on_delete phù hợp
+- Sử dụng indexes cho các trường thường xuyên truy vấn
+- Sử dụng Django ORM thay vì raw SQL khi có thể
+
+## Quy tắc template
+- Mở rộng từ 'base/base.html' thay vì 'base.html'
+- Sử dụng blocks để tổ chức template
+- Sử dụng {% include %} cho các thành phần tái sử dụng
+- Sử dụng {% static %} cho tài nguyên tĩnh
+- Sử dụng {% url %} cho URLs
+- Sử dụng hx-* attributes cho HTMX
+- Sử dụng x-* attributes cho Alpine.js
+- Sử dụng Bootstrap classes cho styling
+
+## Quy tắc view
+- Sử dụng class-based views cho logic phức tạp
+- Sử dụng function-based views cho logic đơn giản
+- Sử dụng decorators @login_required cho views yêu cầu xác thực
+- Sử dụng Django forms cho xác thực dữ liệu
+- Sử dụng get_object_or_404 thay vì try-except
+- Kiểm tra request.htmx để xác định HTMX requests
+- Trả về partial templates cho HTMX requests
+
+## Quy tắc form
+- Sử dụng ModelForm khi làm việc với models
+- Sử dụng crispy-forms để tạo form đẹp
+- Sử dụng form validation trong clean methods
+- Sử dụng widgets phù hợp cho các trường
+- Sử dụng Summernote cho rich text fields
+
+## Quy tắc API
+- Sử dụng RESTful design
+- Trả về JSON responses
+- Sử dụng HTTP status codes phù hợp
+- Xác thực API requests
+- Xử lý lỗi và trả về error messages
+
+## Quy tắc bảo mật
+- Không lưu thông tin nhạy cảm trong mã nguồn
+- Sử dụng biến môi trường cho thông tin nhạy cảm
+- Sử dụng HTTPS trong production
+- Sử dụng CSRF protection
+- Xác thực người dùng cho các views cần thiết
+- Kiểm tra permissions trước khi thực hiện actions
+- Sanitize user input
+
+## Quy tắc testing
+- Viết tests cho tất cả các models, views, và forms
+- Sử dụng Django's TestCase
+- Sử dụng factories để tạo test data
+- Sử dụng mocks khi cần thiết
+- Kiểm tra edge cases
+- Kiểm tra validation logic
+
+## Quy tắc deployment
+- Sử dụng .env file cho biến môi trường
+- Không commit .env file
+- Sử dụng .env.example làm template
+- Sử dụng requirements.txt cho dependencies
+- Sử dụng pre-commit hooks để kiểm tra code
+- Kiểm tra thông tin nhạy cảm trước khi commit
+
+## Quy tắc documentation
+- Cập nhật memory_bank khi thêm tính năng mới
+- Cập nhật requirements.txt khi thêm dependencies mới
+- Đánh dấu tính năng đã hoàn thành trong tài liệu
+- Sử dụng docstrings cho tất cả các hàm và lớp
+- Giữ README.md cập nhật
+
+## Lưu ý đặc biệt
+- Khi gặp lỗi với crispy-forms, cần thêm 'crispy_bootstrap4' vào INSTALLED_APPS và cài đặt phiên bản phù hợp
+- Với django-summernote, cần thêm vào INSTALLED_APPS, cấu hình SUMMERNOTE_CONFIG và sử dụng SummernoteWidget
+- Khi tạo custom template filters, cần restart server để tag library được đăng ký
+- Trong model PomodoroSession, sử dụng 'work_duration' thay vì 'duration' khi aggregating hoặc querying
+- Script check_sensitive_info.py có thể gặp vấn đề với mã hóa ký tự Unicode trên Windows, cần sử dụng ASCII thuần túy
+- Khi kiểm tra thông tin nhạy cảm với pre-commit hook, cần bỏ qua thư mục .venv và các thư viện bên thứ ba
+
+## Tính năng học tập nâng cao
+- Cornell Notes: Tạo ghi chú Cornell từ bài tập tương tác với cột ghi chú chính, cột gợi ý và phần tóm tắt
+- Mind Maps: Tạo sơ đồ tư duy từ dự án học tập, hiển thị các task và trạng thái hoàn thành
+- Feynman Notes: Tạo ghi chú Feynman từ cuộc thi đấu, bao gồm khái niệm, giải thích, lỗ hổng kiến thức và giải thích đã cải thiện
+- UserProject: Sử dụng trường completed_tasks (JSONField) để lưu trữ danh sách các task đã hoàn thành
+
+## Hệ thống mục tiêu học tập
+- Mục tiêu lặp lại: Tự động tạo mục tiêu mới khi mục tiêu hiện tại hoàn thành, hỗ trợ tần suất hàng ngày, hàng tuần, hàng tháng
+- LearningGoal: Sử dụng các trường is_recurring và recurring_frequency để quản lý mục tiêu lặp lại
+- Phương thức create_recurring_goal: Tạo mục tiêu mới dựa trên mục tiêu hiện tại với ngày bắt đầu và kết thúc mới
+- Theo dõi tiến độ: Sử dụng Chart.js để hiển thị biểu đồ tiến độ theo thời gian
+- API endpoint goal_progress_data: Cung cấp dữ liệu tiến độ thực tế và dự kiến cho biểu đồ
+- Phương thức expected_progress: Tính toán tiến độ dự kiến dựa trên thời gian đã trôi qua
+- Phương thức is_behind_schedule: Kiểm tra xem mục tiêu có đang bị chậm tiến độ không
+- Hệ thống nhắc nhở: Sử dụng các trường reminder_enabled, reminder_frequency, reminder_days_before, reminder_time, reminder_email, reminder_app để quản lý nhắc nhở
+- Phương thức needs_reminder: Kiểm tra xem mục tiêu có cần gửi nhắc nhở không dựa trên các điều kiện
+- Phương thức send_reminder: Gửi nhắc nhở cho mục tiêu qua các kênh đã chọn
+- Management command send_goal_reminders: Gửi nhắc nhở tự động cho các mục tiêu

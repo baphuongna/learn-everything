@@ -6,9 +6,10 @@ from django.http import JsonResponse, HttpResponse
 from django.db.models import Avg, Count, Q
 from django.views.decorators.http import require_POST
 from django.contrib.auth.models import User
+from django.forms import modelformset_factory
 
 from .models import LearningGoal, GoalProgress, GoalCollaborator, GoalComment, GoalInvitation
-from .forms import LearningGoalForm, GoalProgressForm, GoalInvitationForm, GoalCommentForm
+from .forms import LearningGoalForm, GoalProgressForm, GoalInvitationForm, GoalCommentForm, ReminderSettingsForm
 from .utils import generate_ical_for_goal, generate_google_calendar_link
 
 @login_required
@@ -32,6 +33,7 @@ def goal_list(request):
     goal_type = request.GET.get('type', '')
     status = request.GET.get('status', '')
     format_type = request.GET.get('format', '')
+    recurring = request.GET.get('recurring', '')
 
     # Lấy danh sách mục tiêu
     goals = LearningGoal.objects.filter(user=request.user)
@@ -41,6 +43,8 @@ def goal_list(request):
         goals = goals.filter(goal_type=goal_type)
     if status:
         goals = goals.filter(status=status)
+    if recurring == 'true':
+        goals = goals.filter(is_recurring=True)
 
     # Phân loại mục tiêu
     daily_goals = goals.filter(goal_type='daily')
@@ -80,7 +84,8 @@ def goal_list(request):
         'completion_rate': completion_rate,
         'selected_type': goal_type,
         'selected_status': status,
-        'sort_by': sort_by
+        'sort_by': sort_by,
+        'is_recurring_filter': recurring == 'true'
     }
 
     # Kiểm tra nếu là request HTMX partial
@@ -257,6 +262,37 @@ def goal_detail(request, goal_id):
 @login_required
 def goal_create(request):
     """Tạo mục tiêu học tập mới"""
+    # Xử lý tham số recurring
+    recurring = request.GET.get('recurring', '')
+
+    # Đặt giá trị mặc định cho ngày bắt đầu và kết thúc
+    today = timezone.now().date()
+
+    # Mặc định là mục tiêu hàng tuần
+    end_date = today + timezone.timedelta(days=6)
+    goal_type = 'weekly'
+
+    # Khởi tạo dữ liệu ban đầu
+    initial_data = {
+        'start_date': today,
+        'end_date': end_date,
+        'goal_type': goal_type,
+    }
+
+    # Xử lý tham số recurring
+    if recurring in ['daily', 'weekly', 'monthly']:
+        initial_data['is_recurring'] = True
+        initial_data['recurring_frequency'] = recurring
+        initial_data['goal_type'] = recurring
+
+        # Cập nhật ngày kết thúc dựa trên loại mục tiêu
+        if recurring == 'daily':
+            initial_data['end_date'] = today
+        elif recurring == 'weekly':
+            initial_data['end_date'] = today + timezone.timedelta(days=6)
+        elif recurring == 'monthly':
+            initial_data['end_date'] = today + timezone.timedelta(days=29)
+
     if request.method == 'POST':
         form = LearningGoalForm(request.POST)
         if form.is_valid():
@@ -267,17 +303,7 @@ def goal_create(request):
             messages.success(request, 'Mục tiêu học tập đã được tạo thành công!')
             return redirect('learning_goals:goal_detail', goal_id=goal.id)
     else:
-        # Đặt giá trị mặc định cho ngày bắt đầu và kết thúc
-        today = timezone.now().date()
-
-        # Mặc định là mục tiêu hàng tuần
-        end_date = today + timezone.timedelta(days=6)
-
-        form = LearningGoalForm(initial={
-            'start_date': today,
-            'end_date': end_date,
-            'goal_type': 'weekly',
-        })
+        form = LearningGoalForm(initial=initial_data)
 
     context = {
         'form': form,
@@ -397,6 +423,7 @@ def goal_dashboard(request):
     completed_goals = goals.filter(status='completed').count()
     active_goals = goals.filter(status__in=['not_started', 'in_progress']).count()
     overdue_goals = goals.filter(status='overdue').count()
+    recurring_goals = goals.filter(is_recurring=True).count()
 
     # Tỷ lệ hoàn thành
     completion_rate = 0
@@ -432,6 +459,7 @@ def goal_dashboard(request):
         'completed_goals': completed_goals,
         'active_goals': active_goals,
         'overdue_goals': overdue_goals,
+        'recurring_goals': recurring_goals,
         'completion_rate': completion_rate,
         'daily_goals': daily_goals,
         'weekly_goals': weekly_goals,
@@ -519,3 +547,71 @@ def handle_invitation(request, invitation_id, action):
         messages.info(request, f'Bạn đã từ chối lời mời tham gia mục tiêu "{invitation.goal.title}"')
 
     return redirect('notifications:list')
+
+@login_required
+def reminder_settings(request):
+    """Cài đặt nhắc nhở cho tất cả các mục tiêu"""
+    # Lấy cài đặt nhắc nhở hiện tại của người dùng
+    user_goals = LearningGoal.objects.filter(user=request.user)
+
+    # Lấy cài đặt mặc định từ mục tiêu gần nhất
+    initial_data = {
+        'reminder_enabled': True,
+        'reminder_frequency': 'daily',
+        'reminder_days_before': 1,
+        'reminder_time': timezone.now().time(),
+        'reminder_email': True,
+        'reminder_app': True,
+        'apply_to_all': True
+    }
+
+    # Nếu người dùng đã có mục tiêu, lấy cài đặt từ mục tiêu gần nhất
+    if user_goals.exists():
+        latest_goal = user_goals.latest('created_at')
+        initial_data.update({
+            'reminder_enabled': latest_goal.reminder_enabled,
+            'reminder_frequency': latest_goal.reminder_frequency,
+            'reminder_days_before': latest_goal.reminder_days_before,
+            'reminder_time': latest_goal.reminder_time,
+            'reminder_email': latest_goal.reminder_email,
+            'reminder_app': latest_goal.reminder_app
+        })
+
+    if request.method == 'POST':
+        form = ReminderSettingsForm(request.POST)
+        if form.is_valid():
+            # Lấy dữ liệu từ form
+            reminder_enabled = form.cleaned_data['reminder_enabled']
+            reminder_frequency = form.cleaned_data['reminder_frequency']
+            reminder_days_before = form.cleaned_data['reminder_days_before']
+            reminder_time = form.cleaned_data['reminder_time']
+            reminder_email = form.cleaned_data['reminder_email']
+            reminder_app = form.cleaned_data['reminder_app']
+            apply_to_all = form.cleaned_data['apply_to_all']
+
+            # Cập nhật cài đặt cho tất cả mục tiêu hiện tại nếu được yêu cầu
+            if apply_to_all:
+                user_goals.update(
+                    reminder_enabled=reminder_enabled,
+                    reminder_frequency=reminder_frequency,
+                    reminder_days_before=reminder_days_before,
+                    reminder_time=reminder_time,
+                    reminder_email=reminder_email,
+                    reminder_app=reminder_app
+                )
+                messages.success(request, 'Cài đặt nhắc nhở đã được cập nhật cho tất cả mục tiêu!')
+            else:
+                messages.success(request, 'Cài đặt nhắc nhở đã được lưu làm mặc định cho các mục tiêu mới!')
+
+            return redirect('learning_goals:goal_list')
+    else:
+        form = ReminderSettingsForm(initial=initial_data)
+
+    context = {
+        'form': form,
+        'title': 'Cài Đặt Nhắc Nhở Mục Tiêu',
+        'button_text': 'Lưu Cài Đặt',
+        'goal_count': user_goals.count()
+    }
+
+    return render(request, 'learning_goals/reminder_settings.html', context)

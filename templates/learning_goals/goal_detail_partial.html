@@ -33,6 +33,10 @@
                         {% elif goal.priority == 'low' %}
                             <span class="badge bg-success">Ưu tiên thấp</span>
                         {% endif %}
+
+                        {% if goal.is_recurring %}
+                            <span class="badge bg-purple" title="Mục tiêu lặp lại"><i class="fas fa-sync-alt"></i> Lặp lại</span>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="card-body">
@@ -62,6 +66,20 @@
                             <div class="goal-info-item">
                                 <i class="fas fa-calendar-check text-danger"></i> Ngày kết thúc: {{ goal.end_date|date:"d/m/Y" }}
                             </div>
+                            {% if goal.is_recurring %}
+                            <div class="goal-info-item">
+                                <i class="fas fa-sync-alt text-purple"></i> Mục tiêu lặp lại:
+                                {% if goal.recurring_frequency == 'daily' %}
+                                    Hàng ngày
+                                {% elif goal.recurring_frequency == 'weekly' %}
+                                    Hàng tuần
+                                {% elif goal.recurring_frequency == 'monthly' %}
+                                    Hàng tháng
+                                {% else %}
+                                    Tùy chỉnh
+                                {% endif %}
+                            </div>
+                            {% endif %}
                             {% if not goal.status == 'completed' and goal.end_date %}
                                 <div class="goal-info-item">
                                     <i class="fas fa-hourglass-half text-warning"></i>
@@ -77,7 +95,7 @@
                         </div>
                     </div>
 
-                    <div class="goal-progress mb-4">
+                    <div class="goal-progress mb-4" id="progress-section">
                         <h6 class="text-muted">Tiến độ:</h6>
                         <div class="progress" style="height: 25px;">
                             <div class="progress-bar {% if is_behind %}bg-danger{% elif goal.status == 'completed' %}bg-success{% else %}bg-primary{% endif %}"
@@ -105,6 +123,14 @@
                                 </small>
                             </div>
                         {% endif %}
+
+                        <!-- Biểu đồ tiến độ theo thời gian -->
+                        <div class="progress-chart mt-4">
+                            <h6 class="text-muted">Tiến độ theo thời gian:</h6>
+                            <div class="chart-container" style="position: relative; height: 250px;">
+                                <canvas id="progressChart"></canvas>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="card-footer bg-transparent">

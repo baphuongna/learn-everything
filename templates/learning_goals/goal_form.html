@@ -166,6 +166,36 @@
                                             {{ form.reminder_frequency }}
                                         </div>
                                     </div>
+
+                                    <div id="reminderFields" class="{% if not form.instance.reminder_enabled %}d-none{% endif %}">
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label for="{{ form.reminder_days_before.id_for_label }}" class="form-label">{{ form.reminder_days_before.label }}</label>
+                                                {{ form.reminder_days_before }}
+                                                <div class="form-text">Số ngày nhắc trước khi đến hạn</div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="{{ form.reminder_time.id_for_label }}" class="form-label">{{ form.reminder_time.label }}</label>
+                                                {{ form.reminder_time }}
+                                                <div class="form-text">Thời gian gửi nhắc nhở</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <div class="form-check form-switch">
+                                                    {{ form.reminder_app }}
+                                                    <label class="form-check-label" for="{{ form.reminder_app.id_for_label }}">{{ form.reminder_app.label }}</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-check form-switch">
+                                                    {{ form.reminder_email }}
+                                                    <label class="form-check-label" for="{{ form.reminder_email.id_for_label }}">{{ form.reminder_email.label }}</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -208,6 +238,32 @@
                                                 <label for="{{ form.badge_description.id_for_label }}" class="form-label">{{ form.badge_description.label }}</label>
                                                 {{ form.badge_description }}
                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <a class="text-decoration-none" data-bs-toggle="collapse" href="#collapseRecurring" role="button" aria-expanded="false" aria-controls="collapseRecurring">
+                                    <i class="fas fa-sync-alt"></i> Mục tiêu lặp lại <i class="fas fa-chevron-down float-end"></i>
+                                </a>
+                            </div>
+                            <div class="collapse" id="collapseRecurring">
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="form-check form-switch">
+                                                {{ form.is_recurring }}
+                                                <label class="form-check-label" for="{{ form.is_recurring.id_for_label }}">{{ form.is_recurring.label }}</label>
+                                                <div class="form-text">Tự động tạo mục tiêu mới khi mục tiêu hiện tại hoàn thành</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="{{ form.recurring_frequency.id_for_label }}" class="form-label">{{ form.recurring_frequency.label }}</label>
+                                            {{ form.recurring_frequency }}
+                                            <div class="form-text">Tần suất tạo mục tiêu mới</div>
                                         </div>
                                     </div>
                                 </div>
@@ -261,13 +317,50 @@
         const goalTypeSelect = document.getElementById('{{ form.goal_type.id_for_label }}');
         const startDateInput = document.getElementById('{{ form.start_date.id_for_label }}');
         const endDateInput = document.getElementById('{{ form.end_date.id_for_label }}');
+        const categorySelect = document.getElementById('{{ form.category.id_for_label }}');
+        const targetValueInput = document.getElementById('{{ form.target_value.id_for_label }}');
+        const isRecurringCheckbox = document.getElementById('{{ form.is_recurring.id_for_label }}');
+        const recurringFrequencySelect = document.getElementById('{{ form.recurring_frequency.id_for_label }}');
 
-        goalTypeSelect.addEventListener('change', function() {
+        // Gợi ý giá trị mục tiêu dựa trên loại mục tiêu và danh mục
+        function suggestTargetValue() {
+            const goalType = goalTypeSelect.value;
+            const category = categorySelect.value;
+
+            let suggestedValue = 1;
+
+            if (category === 'study_time') {
+                if (goalType === 'daily') suggestedValue = 60; // 60 phút mỗi ngày
+                else if (goalType === 'weekly') suggestedValue = 300; // 5 giờ mỗi tuần
+                else if (goalType === 'monthly') suggestedValue = 1200; // 20 giờ mỗi tháng
+            } else if (category === 'lessons_completed') {
+                if (goalType === 'daily') suggestedValue = 1;
+                else if (goalType === 'weekly') suggestedValue = 5;
+                else if (goalType === 'monthly') suggestedValue = 20;
+            } else if (category === 'flashcards_reviewed') {
+                if (goalType === 'daily') suggestedValue = 20;
+                else if (goalType === 'weekly') suggestedValue = 100;
+                else if (goalType === 'monthly') suggestedValue = 400;
+            } else if (category === 'quizzes_completed') {
+                if (goalType === 'daily') suggestedValue = 1;
+                else if (goalType === 'weekly') suggestedValue = 3;
+                else if (goalType === 'monthly') suggestedValue = 10;
+            } else if (category === 'projects_completed') {
+                if (goalType === 'daily') suggestedValue = 0;
+                else if (goalType === 'weekly') suggestedValue = 1;
+                else if (goalType === 'monthly') suggestedValue = 2;
+            }
+
+            targetValueInput.value = suggestedValue;
+        }
+
+        // Cập nhật ngày kết thúc dựa trên loại mục tiêu
+        function updateEndDate() {
             if (startDateInput.value) {
                 const startDate = new Date(startDateInput.value);
                 let endDate = new Date(startDate);
 
-                switch (this.value) {
+                switch (goalTypeSelect.value) {
                     case 'daily':
                         // Cùng ngày
                         break;
@@ -287,14 +380,40 @@
                 const day = String(endDate.getDate()).padStart(2, '0');
                 endDateInput.value = `${year}-${month}-${day}`;
             }
+        }
+
+        // Xử lý sự kiện thay đổi loại mục tiêu
+        goalTypeSelect.addEventListener('change', function() {
+            updateEndDate();
+            suggestTargetValue();
+
+            // Cập nhật tần suất lặp lại theo loại mục tiêu
+            if (isRecurringCheckbox.checked) {
+                recurringFrequencySelect.value = this.value;
+            }
+        });
+
+        // Xử lý sự kiện thay đổi danh mục
+        categorySelect.addEventListener('change', function() {
+            suggestTargetValue();
         });
 
         // Cập nhật ngày kết thúc khi ngày bắt đầu thay đổi
         startDateInput.addEventListener('change', function() {
             if (this.value) {
-                // Kích hoạt sự kiện change của goalTypeSelect để cập nhật ngày kết thúc
-                const event = new Event('change');
-                goalTypeSelect.dispatchEvent(event);
+                updateEndDate();
+            }
+        });
+
+        // Xử lý ẩn/hiện các trường nhắc nhở
+        const reminderEnabledCheckbox = document.getElementById('{{ form.reminder_enabled.id_for_label }}');
+        const reminderFields = document.getElementById('reminderFields');
+
+        reminderEnabledCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                reminderFields.classList.remove('d-none');
+            } else {
+                reminderFields.classList.add('d-none');
             }
         });
 
@@ -309,6 +428,22 @@
                 badgeRewardFields.classList.add('d-none');
             }
         });
+
+        // Xử lý sự kiện thay đổi mục tiêu lặp lại
+        isRecurringCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                // Đặt tần suất lặp lại theo loại mục tiêu
+                recurringFrequencySelect.value = goalTypeSelect.value;
+                recurringFrequencySelect.disabled = false;
+            } else {
+                recurringFrequencySelect.disabled = true;
+            }
+        });
+
+        // Khởi tạo ban đầu
+        if (!isRecurringCheckbox.checked) {
+            recurringFrequencySelect.disabled = true;
+        }
     });
 </script>
 {% endblock %}

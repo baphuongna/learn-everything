@@ -84,6 +84,8 @@ urlpatterns = [
     path('projects/<int:project_id>/link-flashcards/', views.link_project_flashcards, name='link_project_flashcards'),
     path('projects/<int:project_id>/link-quiz/', views.link_project_quiz, name='link_project_quiz'),
     path('projects/<int:project_id>/link-pomodoro/', views.link_project_pomodoro, name='link_project_pomodoro'),
+    path('projects/<int:project_id>/tasks/<int:task_id>/complete/', views.mark_task_complete, name='mark_task_complete'),
+    path('projects/<int:project_id>/tasks/<int:task_id>/incomplete/', views.mark_task_incomplete, name='mark_task_incomplete'),
 
     # Bài tập thực hành tương tác
     path('exercises/', views.exercise_list, name='exercise_list'),

@@ -143,11 +143,11 @@ footer {
     .jumbotron {
         padding: 2rem;
     }
-    
+
     .card-deck {
         display: block;
     }
-    
+
     .card-deck .card {
         margin-bottom: 1.5rem;
     }
@@ -200,4 +200,13 @@ footer {
 .dark-mode .jumbotron {
     background-color: #454d55;
     color: #f8f9fa;
+}
+
+/* Custom Colors for Learning Goals */
+.bg-purple {
+    background-color: #7b1fa2;
+}
+
+.text-purple {
+    color: #7b1fa2;
 }

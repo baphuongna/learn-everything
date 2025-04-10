@@ -353,6 +353,7 @@ class UserProject(models.Model):
     rating = models.PositiveIntegerField(default=0, help_text='Đánh giá dự án (0-5 sao)')
     feedback = models.TextField(blank=True, null=True, help_text='Nhận xét về dự án')
     pomodoro_sessions = models.ManyToManyField(PomodoroSession, blank=True, related_name='user_projects', help_text='Các phiên Pomodoro liên quan đến dự án')
+    completed_tasks = models.JSONField(default=list, blank=True, null=True, help_text='Danh sách ID các task đã hoàn thành')
     flashcard_sets = models.ManyToManyField('flashcards.FlashcardSet', blank=True, related_name='user_projects', help_text='Các bộ flashcard liên quan đến dự án')
     quizzes = models.ManyToManyField('quizzes.Quiz', blank=True, related_name='user_projects', help_text='Các quiz liên quan đến dự án')
 
@@ -396,6 +397,12 @@ class UserProject(models.Model):
     def add_pomodoro_session(self, pomodoro_session):
         """Liên kết phiên Pomodoro với dự án"""
         self.pomodoro_sessions.add(pomodoro_session)
+
+    def is_task_completed(self, task_id):
+        """Kiểm tra xem task có được hoàn thành chưa"""
+        if not hasattr(self, 'completed_tasks') or not self.completed_tasks:
+            return False
+        return str(task_id) in self.completed_tasks
 
 # Bình luận và đánh giá dự án
 class ProjectComment(models.Model):

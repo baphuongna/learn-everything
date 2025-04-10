@@ -93,6 +93,17 @@
                                 <i class="fas fa-calendar-alt"></i> Hàng Tháng
                             </button>
                         </div>
+
+                        <!-- Bộ lọc mục tiêu lặp lại -->
+                        <div class="mt-2">
+                            <button class="btn {% if is_recurring_filter %}btn-purple{% else %}btn-outline-purple{% endif %} w-100"
+                                    hx-get="{% if is_recurring_filter %}{% url 'learning_goals:goal_list' %}?format=partial{% else %}{% url 'learning_goals:goal_list' %}?recurring=true&format=partial{% endif %}"
+                                    hx-target="#goal-list-container"
+                                    hx-swap="innerHTML"
+                                    hx-push-url="false">
+                                <i class="fas fa-sync-alt"></i> {% if is_recurring_filter %}Bỏ lọc mục tiêu lặp lại{% else %}Chỉ hiện mục tiêu lặp lại{% endif %}
+                            </button>
+                        </div>
                     </div>
                     <div class="col-md-2">
                         <div class="dropdown w-100">

@@ -8,14 +8,14 @@
     .progress-card {
         margin-bottom: 1.5rem;
     }
-    
+
     .study-session-form {
         background-color: #f8f9fa;
         padding: 1.5rem;
         border-radius: 0.25rem;
         margin-bottom: 1.5rem;
     }
-    
+
     .flashcard-due {
         margin-bottom: 0.5rem;
         padding: 0.5rem;
@@ -55,7 +55,7 @@
                 {% endfor %}
             </div>
         </div>
-        
+
         <div class="card mb-4">
             <div class="card-header bg-primary text-white">
                 <h4 class="mb-0">Ghi Lại Phiên Học Tập</h4>
@@ -86,7 +86,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-4">
         <div class="card mb-4">
             <div class="card-header bg-primary text-white">
@@ -95,16 +95,16 @@
             <div class="card-body">
                 <h5>Thời gian học trong 7 ngày qua</h5>
                 <h2 class="text-primary">{{ weekly_study_time }} phút</h2>
-                
+
                 <h5 class="mt-4">Mục tiêu hàng ngày</h5>
                 <h2 class="text-primary">{{ user.profile.daily_goal_minutes }} phút</h2>
-                
+
                 <div class="mt-4">
                     <a href="{% url 'profile' %}" class="btn btn-outline-primary btn-sm">Thay đổi mục tiêu</a>
                 </div>
             </div>
         </div>
-        
+
         <div class="card mb-4">
             <div class="card-header bg-primary text-white">
                 <h4 class="mb-0">Phiên Học Gần Đây</h4>
@@ -128,7 +128,7 @@
                 </ul>
             </div>
         </div>
-        
+
         <div class="card">
             <div class="card-header bg-primary text-white">
                 <h4 class="mb-0">Flashcards Cần Ôn Tập</h4>
@@ -152,7 +152,7 @@
                 {% else %}
                 <p>Bạn không có flashcard nào cần ôn tập hôm nay.</p>
                 <div class="mt-3">
-                    <a href="{% url 'flashcard_list' %}" class="btn btn-outline-primary">Khám Phá Flashcards</a>
+                    <a href="{% url 'flashcards:flashcard_list' %}" class="btn btn-outline-primary">Khám Phá Flashcards</a>
                 </div>
                 {% endif %}
             </div>

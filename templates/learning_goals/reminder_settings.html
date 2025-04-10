@@ -1,0 +1,127 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-bell"></i> {{ title }}</h4>
+                </div>
+                <div class="card-body">
+                    <p class="lead">Cài đặt nhắc nhở cho các mục tiêu học tập của bạn.</p>
+                    
+                    {% if goal_count > 0 %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Bạn hiện có {{ goal_count }} mục tiêu học tập.
+                    </div>
+                    {% endif %}
+                    
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="form-check form-switch">
+                                    {{ form.reminder_enabled }}
+                                    <label class="form-check-label" for="{{ form.reminder_enabled.id_for_label }}">
+                                        {{ form.reminder_enabled.label }}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="reminderFields" class="{% if not form.reminder_enabled.value %}d-none{% endif %}">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="{{ form.reminder_frequency.id_for_label }}" class="form-label">
+                                        {{ form.reminder_frequency.label }}
+                                    </label>
+                                    {{ form.reminder_frequency }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ form.reminder_days_before.id_for_label }}" class="form-label">
+                                        {{ form.reminder_days_before.label }}
+                                    </label>
+                                    {{ form.reminder_days_before }}
+                                    <div class="form-text">Số ngày nhắc trước khi đến hạn</div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="{{ form.reminder_time.id_for_label }}" class="form-label">
+                                        {{ form.reminder_time.label }}
+                                    </label>
+                                    {{ form.reminder_time }}
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mt-4">
+                                        <div class="form-check form-switch mb-2">
+                                            {{ form.reminder_app }}
+                                            <label class="form-check-label" for="{{ form.reminder_app.id_for_label }}">
+                                                {{ form.reminder_app.label }}
+                                            </label>
+                                        </div>
+                                        <div class="form-check form-switch">
+                                            {{ form.reminder_email }}
+                                            <label class="form-check-label" for="{{ form.reminder_email.id_for_label }}">
+                                                {{ form.reminder_email.label }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <div class="form-check form-switch">
+                                    {{ form.apply_to_all }}
+                                    <label class="form-check-label" for="{{ form.apply_to_all.id_for_label }}">
+                                        {{ form.apply_to_all.label }}
+                                    </label>
+                                </div>
+                                <div class="form-text">
+                                    Nếu bật, cài đặt này sẽ được áp dụng cho tất cả mục tiêu hiện tại của bạn.
+                                    Nếu tắt, cài đặt này sẽ chỉ áp dụng cho các mục tiêu mới.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> {{ button_text }}
+                            </button>
+                            <a href="{% url 'learning_goals:goal_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Quay Lại
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Xử lý ẩn/hiện các trường nhắc nhở
+        const reminderEnabledCheckbox = document.getElementById('{{ form.reminder_enabled.id_for_label }}');
+        const reminderFields = document.getElementById('reminderFields');
+        
+        reminderEnabledCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                reminderFields.classList.remove('d-none');
+            } else {
+                reminderFields.classList.add('d-none');
+            }
+        });
+    });
+</script>
+{% endblock %}

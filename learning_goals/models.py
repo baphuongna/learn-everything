@@ -57,6 +57,11 @@ class LearningGoal(models.Model):
     # Thông báo
     reminder_enabled = models.BooleanField(default=True, verbose_name='Bật nhắc nhở')
     reminder_frequency = models.CharField(max_length=20, choices=[('daily', 'Hàng ngày'), ('weekly', 'Hàng tuần')], default='daily', verbose_name='Tần suất nhắc nhở')
+    reminder_days_before = models.PositiveIntegerField(default=1, verbose_name='Số ngày nhắc trước hạn')
+    reminder_time = models.TimeField(default=timezone.now, verbose_name='Thời gian nhắc nhở')
+    reminder_email = models.BooleanField(default=True, verbose_name='Gửi nhắc nhở qua email')
+    reminder_app = models.BooleanField(default=True, verbose_name='Gửi nhắc nhở trong ứng dụng')
+    last_reminder_sent = models.DateTimeField(null=True, blank=True, verbose_name='Lần nhắc nhở gần nhất')
 
     # Phần thưởng
     reward_points = models.PositiveIntegerField(default=10, verbose_name='Điểm thưởng')
@@ -68,6 +73,15 @@ class LearningGoal(models.Model):
     # Chia sẻ
     is_public = models.BooleanField(default=False, verbose_name='Công khai')
     allow_collaboration = models.BooleanField(default=False, verbose_name='Cho phép cộng tác')
+
+    # Mục tiêu lặp lại
+    is_recurring = models.BooleanField(default=False, verbose_name='Lặp lại mục tiêu')
+    recurring_frequency = models.CharField(max_length=20, choices=[
+        ('daily', 'Hàng ngày'),
+        ('weekly', 'Hàng tuần'),
+        ('monthly', 'Hàng tháng'),
+        ('custom', 'Tùy chỉnh')
+    ], default='weekly', verbose_name='Tần suất lặp lại')
 
     # Thời gian tạo và cập nhật
     created_at = models.DateTimeField(auto_now_add=True)
@@ -102,6 +116,7 @@ class LearningGoal(models.Model):
 
     def update_progress(self, new_value):
         """Cập nhật tiến độ mục tiêu"""
+        old_status = self.status
         self.current_value = new_value
         self.save()
 
@@ -112,7 +127,68 @@ class LearningGoal(models.Model):
             date=timezone.now().date()
         )
 
+        # Xử lý mục tiêu lặp lại nếu mục tiêu vừa hoàn thành
+        if self.status == 'completed' and old_status != 'completed' and self.is_recurring:
+            self.create_recurring_goal()
+
         return self.progress_percentage
+
+    def create_recurring_goal(self):
+        """Tạo mục tiêu lặp lại mới"""
+        # Tính toán ngày bắt đầu và kết thúc mới
+        if self.recurring_frequency == 'daily':
+            start_date = self.end_date + timezone.timedelta(days=1)
+            end_date = start_date
+        elif self.recurring_frequency == 'weekly':
+            start_date = self.end_date + timezone.timedelta(days=1)
+            end_date = start_date + timezone.timedelta(days=6)
+        elif self.recurring_frequency == 'monthly':
+            start_date = self.end_date + timezone.timedelta(days=1)
+            end_date = start_date + timezone.timedelta(days=29)
+        else:  # custom
+            start_date = self.end_date + timezone.timedelta(days=1)
+            duration = (self.end_date - self.start_date).days
+            end_date = start_date + timezone.timedelta(days=duration)
+
+        # Tạo mục tiêu mới
+        new_goal = LearningGoal.objects.create(
+            user=self.user,
+            title=self.title,
+            description=self.description,
+            goal_type=self.goal_type,
+            category=self.category,
+            start_date=start_date,
+            end_date=end_date,
+            target_value=self.target_value,
+            current_value=0,
+            progress_percentage=0,
+            status='not_started',
+            subject=self.subject,
+            topic=self.topic,
+            lesson=self.lesson,
+            reminder_enabled=self.reminder_enabled,
+            reminder_frequency=self.reminder_frequency,
+            reward_points=self.reward_points,
+            has_badge_reward=self.has_badge_reward,
+            badge_name=self.badge_name,
+            badge_description=self.badge_description,
+            badge_level=self.badge_level,
+            is_public=self.is_public,
+            allow_collaboration=self.allow_collaboration,
+            is_recurring=self.is_recurring,
+            recurring_frequency=self.recurring_frequency
+        )
+
+        # Sao chép các cộng tác viên
+        for collaborator in self.collaborators.all():
+            GoalCollaborator.objects.create(
+                goal=new_goal,
+                user=collaborator.user,
+                role=collaborator.role,
+                can_update_progress=collaborator.can_update_progress
+            )
+
+        return new_goal
 
     def increment_progress(self, increment=1):
         """Tăng tiến độ mục tiêu"""
@@ -154,6 +230,80 @@ class LearningGoal(models.Model):
     def is_behind_schedule(self):
         """Kiểm tra xem mục tiêu có đang bị chậm tiến độ không"""
         return self.progress_percentage < self.expected_progress()
+
+    def needs_reminder(self):
+        """Kiểm tra xem mục tiêu có cần gửi nhắc nhở không"""
+        # Nếu đã hoàn thành hoặc không bật nhắc nhở, không cần gửi
+        if self.status == 'completed' or not self.reminder_enabled:
+            return False
+
+        today = timezone.now().date()
+        current_time = timezone.now().time()
+
+        # Kiểm tra xem đã đến thời gian nhắc nhở chưa
+        if current_time < self.reminder_time:
+            return False
+
+        # Tính toán ngày cần nhắc nhở
+        reminder_date = self.end_date - timezone.timedelta(days=self.reminder_days_before)
+
+        # Nếu hôm nay là ngày cần nhắc nhở
+        if today == reminder_date:
+            # Kiểm tra xem đã gửi nhắc nhở hôm nay chưa
+            if self.last_reminder_sent:
+                last_reminder_date = self.last_reminder_sent.date()
+                if last_reminder_date == today:
+                    return False
+            return True
+
+        # Nếu tần suất nhắc nhở là hàng ngày và mục tiêu đang chậm tiến độ
+        if self.reminder_frequency == 'daily' and self.is_behind_schedule():
+            # Kiểm tra xem đã gửi nhắc nhở hôm nay chưa
+            if self.last_reminder_sent:
+                last_reminder_date = self.last_reminder_sent.date()
+                if last_reminder_date == today:
+                    return False
+            return True
+
+        # Nếu tần suất nhắc nhở là hàng tuần và mục tiêu đang chậm tiến độ
+        if self.reminder_frequency == 'weekly' and self.is_behind_schedule():
+            # Kiểm tra xem đã gửi nhắc nhở trong tuần này chưa
+            if self.last_reminder_sent:
+                days_since_last_reminder = (today - self.last_reminder_sent.date()).days
+                if days_since_last_reminder < 7:
+                    return False
+            return True
+
+        return False
+
+    def send_reminder(self):
+        """Gửi nhắc nhở cho mục tiêu"""
+        from notifications.models import Notification
+
+        # Cập nhật thời gian gửi nhắc nhở gần nhất
+        self.last_reminder_sent = timezone.now()
+        self.save(update_fields=['last_reminder_sent'])
+
+        # Tạo thông báo trong ứng dụng
+        if self.reminder_app:
+            message = f"Mục tiêu '{self.title}' sắp đến hạn và chưa hoàn thành. Tiến độ hiện tại: {self.progress_percentage}%"
+
+            if self.is_behind_schedule():
+                message = f"Mục tiêu '{self.title}' đang chậm tiến độ. Tiến độ hiện tại: {self.progress_percentage}%, tiến độ dự kiến: {self.expected_progress()}%"
+
+            Notification.objects.create(
+                user=self.user,
+                title=f"Nhắc nhở mục tiêu: {self.title}",
+                message=message,
+                notification_type='goal_reminder',
+                related_object_id=self.id,
+                related_object_type='learning_goal'
+            )
+
+        # Gửi email nhắc nhở (sẽ triển khai sau)
+        if self.reminder_email:
+            # TODO: Triển khai gửi email nhắc nhở
+            pass
 
 class GoalProgress(models.Model):
     """Theo dõi tiến độ đạt mục tiêu"""

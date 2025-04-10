@@ -2254,11 +2254,18 @@ def create_cornell_from_exercise(request, exercise_id):
         # Điền trước thông tin từ bài tập
         initial_data = {
             'title': f'Ghi chú về {exercise.title}',
-            'topic': exercise.lesson.topic.name if exercise.lesson and exercise.lesson.topic else '',
             'main_notes': exercise.description,
-            'cues': f'Bài tập: {exercise.title}\nLoại: {exercise.get_exercise_type_display()}',
+            'cue_column': f'Bài tập: {exercise.title}\nLoại: {exercise.get_exercise_type_display()}',
             'summary': f'Ghi chú từ bài tập thực hành "{exercise.title}"',
         }
+
+        # Thêm thông tin về chủ đề và bài học nếu có
+        if exercise.lesson:
+            initial_data['lesson'] = exercise.lesson
+            if exercise.lesson.topic:
+                initial_data['topic'] = exercise.lesson.topic
+                if exercise.lesson.topic.subject:
+                    initial_data['subject'] = exercise.lesson.topic.subject
         form = CornellNoteForm(initial=initial_data)
 
     context = {
@@ -3121,12 +3128,59 @@ def create_feynman_from_competition(request, competition_id):
                 explanation += f'- Đáp án đúng: {answer.answer_text}\n'
             explanation += '\n'
 
+        # Tạo nội dung cho các lỗ hổng kiến thức và giải thích đã cải thiện
+        gaps_identified = ''
+        refined_explanation = ''
+
+        # Nếu người dùng không đạt điểm tối đa, xác định lỗ hổng kiến thức
+        total_possible_score = CompetitionQuestion.objects.filter(competition=competition).aggregate(total=Sum('points'))['total'] or 0
+        if user_participation.score < total_possible_score:
+            gaps_identified = f'Điểm số của bạn: {user_participation.score}/{total_possible_score}. Có thể bạn cần cải thiện hiểu biết về các câu hỏi sau:\n\n'
+
+            # Lấy các câu trả lời của người dùng
+            user_answers = user_participation.answers if hasattr(user_participation, 'answers') and user_participation.answers else {}
+
+            # Nếu không có dữ liệu câu trả lời, giả định tất cả các câu hỏi đều cần cải thiện
+            if not user_answers:
+                for question in questions:
+                    gaps_identified += f'- {question.question_text}\n'
+                    correct_answers = CompetitionAnswer.objects.filter(question=question, is_correct=True)
+                    for answer in correct_answers:
+                        gaps_identified += f'  Đáp án đúng: {answer.answer_text}\n'
+                    if question.explanation:
+                        gaps_identified += f'  Giải thích: {question.explanation}\n'
+                    gaps_identified += '\n'
+            else:
+                # Kiểm tra từng câu hỏi
+                for question in questions:
+                    question_key = f'question_{question.id}'
+                    if question_key not in user_answers or not CompetitionAnswer.objects.filter(id=user_answers[question_key], is_correct=True).exists():
+                        gaps_identified += f'- {question.question_text}\n'
+                        correct_answers = CompetitionAnswer.objects.filter(question=question, is_correct=True)
+                        for answer in correct_answers:
+                            gaps_identified += f'  Đáp án đúng: {answer.answer_text}\n'
+                        if question.explanation:
+                            gaps_identified += f'  Giải thích: {question.explanation}\n'
+                        gaps_identified += '\n'
+
+        # Tạo giải thích đã cải thiện
+        refined_explanation = f'Sau khi hoàn thành cuộc thi {competition.title}, tôi đã hiểu rõ hơn về các khái niệm sau:\n\n'
+        for question in questions:
+            correct_answers = CompetitionAnswer.objects.filter(question=question, is_correct=True)
+            if correct_answers.exists():
+                refined_explanation += f'- {question.question_text}\n'
+                for answer in correct_answers:
+                    refined_explanation += f'  {answer.answer_text}\n'
+                if question.explanation:
+                    refined_explanation += f'  Hiểu sâu hơn: {question.explanation}\n'
+                refined_explanation += '\n'
+
         initial_data = {
             'title': f'Feynman Note về {competition.title}',
             'concept': concept,
             'explanation': explanation,
-            'analogy': f'Cuộc thi {competition.title} kiểm tra kiến thức về {competition.subject.name if competition.subject else "chủ đề này"}.',
-            'simplification': f'Điểm số của bạn: {user_participation.score}. Hãy giải thích lại các khái niệm trong cuộc thi này bằng ngôn ngữ đơn giản nhất.',
+            'gaps_identified': gaps_identified,
+            'refined_explanation': refined_explanation
         }
 
         # Nếu cuộc thi có chủ đề, gán cho Feynman Note
@@ -4796,3 +4850,92 @@ def competition_achievements(request):
     }
 
     return render(request, 'advanced_learning/competitions/achievements.html', context)
+
+# Đánh dấu task hoàn thành/chưa hoàn thành
+@login_required
+@require_POST
+def mark_task_complete(request, project_id, task_id):
+    """Đánh dấu task đã hoàn thành"""
+    user_project = get_object_or_404(UserProject, id=project_id, user=request.user)
+    task = get_object_or_404(ProjectTask, id=task_id, project=user_project.project)
+
+    # Khởi tạo trường completed_tasks nếu chưa có
+    if not hasattr(user_project, 'completed_tasks') or not user_project.completed_tasks:
+        user_project.completed_tasks = []
+
+    # Chuyển đổi task_id thành chuỗi để so sánh
+    task_id_str = str(task_id)
+
+    # Thêm task vào danh sách đã hoàn thành nếu chưa có
+    if task_id_str not in user_project.completed_tasks:
+        user_project.completed_tasks.append(task_id_str)
+
+        # Cập nhật tiến độ dự án
+        total_tasks = user_project.project.tasks.count()
+        if total_tasks > 0:
+            user_project.progress = int(len(user_project.completed_tasks) / total_tasks * 100)
+
+            # Nếu hoàn thành tất cả task, đánh dấu dự án là hoàn thành
+            if user_project.progress == 100:
+                user_project.status = 'completed'
+                user_project.completed_at = timezone.now()
+
+        user_project.save()
+        messages.success(request, f'Đã đánh dấu task "{task.title}" là hoàn thành!')
+
+    # Trả về partial view nếu là request HTMX
+    if request.htmx:
+        project = user_project.project
+        tasks = project.tasks.all().order_by('order')
+        context = {
+            'project': project,
+            'user_project': user_project,
+            'tasks': tasks,
+        }
+        return render(request, 'advanced_learning/projects/detail_partial.html', context)
+
+    return redirect('advanced_learning:project_detail', project_id=user_project.project.id)
+
+@login_required
+@require_POST
+def mark_task_incomplete(request, project_id, task_id):
+    """Đánh dấu task chưa hoàn thành"""
+    user_project = get_object_or_404(UserProject, id=project_id, user=request.user)
+    task = get_object_or_404(ProjectTask, id=task_id, project=user_project.project)
+
+    # Khởi tạo trường completed_tasks nếu chưa có
+    if not hasattr(user_project, 'completed_tasks') or not user_project.completed_tasks:
+        user_project.completed_tasks = []
+
+    # Chuyển đổi task_id thành chuỗi để so sánh
+    task_id_str = str(task_id)
+
+    # Xóa task khỏi danh sách đã hoàn thành nếu có
+    if task_id_str in user_project.completed_tasks:
+        user_project.completed_tasks.remove(task_id_str)
+
+        # Cập nhật tiến độ dự án
+        total_tasks = user_project.project.tasks.count()
+        if total_tasks > 0:
+            user_project.progress = int(len(user_project.completed_tasks) / total_tasks * 100)
+
+            # Nếu không còn hoàn thành tất cả task, đánh dấu dự án là đang thực hiện
+            if user_project.progress < 100 and user_project.status == 'completed':
+                user_project.status = 'in_progress'
+                user_project.completed_at = None
+
+        user_project.save()
+        messages.success(request, f'Đã đánh dấu task "{task.title}" là chưa hoàn thành!')
+
+    # Trả về partial view nếu là request HTMX
+    if request.htmx:
+        project = user_project.project
+        tasks = project.tasks.all().order_by('order')
+        context = {
+            'project': project,
+            'user_project': user_project,
+            'tasks': tasks,
+        }
+        return render(request, 'advanced_learning/projects/detail_partial.html', context)
+
+    return redirect('advanced_learning:project_detail', project_id=user_project.project.id)

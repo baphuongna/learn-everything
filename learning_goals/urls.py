@@ -24,6 +24,9 @@ urlpatterns = [
     # Chia sẻ mục tiêu
     path('invitation/<int:invitation_id>/<str:action>/', views.handle_invitation, name='handle_invitation'),
 
+    # Cài đặt nhắc nhở
+    path('reminder-settings/', views.reminder_settings, name='reminder_settings'),
+
     # API endpoints
     path('api/goal/<int:goal_id>/progress-data/', api.goal_progress_data, name='api_goal_progress_data'),
     path('api/goal-completion-stats/', api.goal_completion_stats, name='api_goal_completion_stats'),

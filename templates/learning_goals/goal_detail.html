@@ -71,46 +71,46 @@
     .goal-detail-container {
         margin-bottom: 30px;
     }
-    
+
     .card {
         border-radius: 8px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         margin-bottom: 20px;
         overflow: hidden;
     }
-    
+
     .card-header {
         padding: 15px;
         font-weight: 600;
     }
-    
+
     .goal-info-item {
         margin-bottom: 10px;
     }
-    
+
     .goal-info-item i {
         width: 20px;
         text-align: center;
         margin-right: 10px;
     }
-    
+
     .comment-item {
         margin-bottom: 15px;
     }
-    
+
     .comment-header {
         margin-bottom: 5px;
     }
-    
+
     /* Spinner */
     .htmx-indicator {
         display: none;
     }
-    
+
     .htmx-request .htmx-indicator {
         display: inline-block;
     }
-    
+
     .htmx-request.htmx-indicator {
         display: inline-block;
     }
@@ -118,20 +118,81 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Xử lý sự kiện cập nhật từng phần
         document.body.addEventListener('htmx:afterSwap', function(event) {
-            if (event.detail.target.id === 'goal-detail-container' || 
-                event.detail.target.id === 'progress-section' || 
+            if (event.detail.target.id === 'goal-detail-container' ||
+                event.detail.target.id === 'progress-section' ||
                 event.detail.target.id === 'comment-section') {
-                
+
                 // Khởi tạo lại Alpine.js cho các phần tử mới
                 if (window.Alpine) {
                     window.Alpine.initTree(document.body);
                 }
+
+                // Khởi tạo lại biểu đồ tiến độ
+                initProgressChart();
             }
         });
+
+        // Khởi tạo biểu đồ tiến độ
+        initProgressChart();
+
+        function initProgressChart() {
+            const progressChartCanvas = document.getElementById('progressChart');
+            if (!progressChartCanvas) return;
+
+            // Lấy dữ liệu tiến độ từ API
+            fetch(`{% url 'learning_goals:api_goal_progress_data' goal_id=goal.id %}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Nếu đã có biểu đồ, hủy nó trước khi tạo mới
+                    if (window.progressChart) {
+                        window.progressChart.destroy();
+                    }
+
+                    // Tạo biểu đồ mới
+                    window.progressChart = new Chart(progressChartCanvas, {
+                        type: 'line',
+                        data: {
+                            labels: data.labels,
+                            datasets: data.datasets
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    position: 'top',
+                                },
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    title: {
+                                        display: true,
+                                        text: '{{ goal.unit }}'
+                                    }
+                                },
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'Ngày'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                })
+                .catch(error => console.error('Error loading progress data:', error));
+        }
     });
 </script>
 {% endblock %}

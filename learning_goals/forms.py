@@ -12,14 +12,17 @@ class LearningGoalForm(forms.ModelForm):
             'title', 'description', 'goal_type', 'category',
             'start_date', 'end_date', 'target_value',
             'subject', 'topic', 'lesson',
-            'reminder_enabled', 'reminder_frequency',
+            'reminder_enabled', 'reminder_frequency', 'reminder_days_before', 'reminder_time',
+            'reminder_email', 'reminder_app',
             'reward_points', 'has_badge_reward', 'badge_name', 'badge_description', 'badge_level',
-            'is_public', 'allow_collaboration'
+            'is_public', 'allow_collaboration',
+            'is_recurring', 'recurring_frequency'
         ]
         widgets = {
             'start_date': forms.DateInput(attrs={'type': 'date'}),
             'end_date': forms.DateInput(attrs={'type': 'date'}),
             'description': forms.Textarea(attrs={'rows': 3}),
+            'reminder_time': forms.TimeInput(attrs={'type': 'time'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -136,5 +139,60 @@ class GoalCommentForm(forms.Form):
             'class': 'form-control',
             'placeholder': 'Nhập bình luận của bạn',
             'rows': 3
+        })
+    )
+
+class ReminderSettingsForm(forms.Form):
+    """Form cài đặt nhắc nhở cho tất cả các mục tiêu"""
+    reminder_enabled = forms.BooleanField(
+        label='Bật nhắc nhở cho tất cả mục tiêu',
+        required=False,
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input'
+        })
+    )
+    reminder_frequency = forms.ChoiceField(
+        label='Tần suất nhắc nhở',
+        choices=[('daily', 'Hàng ngày'), ('weekly', 'Hàng tuần')],
+        widget=forms.Select(attrs={
+            'class': 'form-control'
+        })
+    )
+    reminder_days_before = forms.IntegerField(
+        label='Số ngày nhắc trước hạn',
+        min_value=0,
+        max_value=30,
+        initial=1,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control'
+        })
+    )
+    reminder_time = forms.TimeField(
+        label='Thời gian nhắc nhở',
+        widget=forms.TimeInput(attrs={
+            'class': 'form-control',
+            'type': 'time'
+        })
+    )
+    reminder_email = forms.BooleanField(
+        label='Gửi nhắc nhở qua email',
+        required=False,
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input'
+        })
+    )
+    reminder_app = forms.BooleanField(
+        label='Gửi nhắc nhở trong ứng dụng',
+        required=False,
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input'
+        })
+    )
+    apply_to_all = forms.BooleanField(
+        label='Áp dụng cho tất cả mục tiêu hiện tại',
+        required=False,
+        initial=True,
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input'
         })
     )

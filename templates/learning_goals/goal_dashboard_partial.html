@@ -15,6 +15,12 @@
                 <div class="card-body text-center">
                     <h5 class="card-title">Đã Hoàn Thành</h5>
                     <h2 class="display-4">{{ completed_goals }}</h2>
+                    <div class="completion-rate">
+                        <div class="progress mt-2" style="height: 10px;">
+                            <div class="progress-bar bg-light" role="progressbar" style="width: {{ completion_rate }}%;" aria-valuenow="{{ completion_rate }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <small>Tỷ lệ hoàn thành: {{ completion_rate }}%</small>
+                    </div>
                 </div>
             </div>
         </div>
@@ -31,6 +37,53 @@
                 <div class="card-body text-center">
                     <h5 class="card-title">Quá Hạn</h5>
                     <h2 class="display-4">{{ overdue_goals }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thống kê mục tiêu lặp lại -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-purple text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-sync-alt"></i> Mục Tiêu Lặp Lại</h5>
+                    <a href="{% url 'learning_goals:reminder_settings' %}" class="btn btn-sm btn-light">
+                        <i class="fas fa-bell"></i> Cài đặt nhắc nhở
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Tổng số</h5>
+                                    <h3>{{ recurring_goals }}</h3>
+                                    <a href="{% url 'learning_goals:goal_list' %}?recurring=true" class="btn btn-sm btn-outline-primary mt-2">Xem tất cả</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Tạo mục tiêu mới</h5>
+                                    <div class="d-grid gap-2 mt-3">
+                                        <a href="{% url 'learning_goals:goal_create' %}?recurring=daily" class="btn btn-sm btn-outline-primary">Hàng ngày</a>
+                                        <a href="{% url 'learning_goals:goal_create' %}?recurring=weekly" class="btn btn-sm btn-outline-primary">Hàng tuần</a>
+                                        <a href="{% url 'learning_goals:goal_create' %}?recurring=monthly" class="btn btn-sm btn-outline-primary">Hàng tháng</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Lợi ích</h5>
+                                    <p class="small">Mục tiêu lặp lại giúp duy trì thói quen học tập đều đặn và liên tục</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -210,6 +263,51 @@
                     {% else %}
                         <p class="text-muted text-center">Không có mục tiêu gần đến hạn nào.</p>
                     {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mục tiêu lặp lại -->
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-sync-alt me-2"></i> Mục Tiêu Lặp Lại</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> Mục tiêu lặp lại sẽ tự động tạo mục tiêu mới khi mục tiêu hiện tại hoàn thành. Đây là cách tuyệt vời để duy trì thói quen học tập đều đặn.
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title"><i class="fas fa-calendar-day text-primary"></i> Hàng ngày</h5>
+                                    <p class="card-text">Tự động tạo mục tiêu mới vào ngày tiếp theo</p>
+                                    <a href="{% url 'learning_goals:goal_create' %}?recurring=daily" class="btn btn-primary">Tạo mục tiêu hàng ngày</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title"><i class="fas fa-calendar-week text-success"></i> Hàng tuần</h5>
+                                    <p class="card-text">Tự động tạo mục tiêu mới vào tuần tiếp theo</p>
+                                    <a href="{% url 'learning_goals:goal_create' %}?recurring=weekly" class="btn btn-success">Tạo mục tiêu hàng tuần</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title"><i class="fas fa-calendar-alt text-warning"></i> Hàng tháng</h5>
+                                    <p class="card-text">Tự động tạo mục tiêu mới vào tháng tiếp theo</p>
+                                    <a href="{% url 'learning_goals:goal_create' %}?recurring=monthly" class="btn btn-warning">Tạo mục tiêu hàng tháng</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
