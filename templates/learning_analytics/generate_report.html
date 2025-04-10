@@ -1,0 +1,325 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Tạo báo cáo phân tích{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-section {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    
+    .report-preview {
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+    
+    .report-type-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .report-type-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .report-type-card.selected {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    .report-format-option {
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .report-format-option:hover {
+        transform: translateY(-5px);
+    }
+    
+    .report-format-option.selected {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-file-alt text-primary"></i> Tạo báo cáo phân tích
+            </h1>
+            <p class="lead">Tạo báo cáo phân tích dữ liệu học tập của bạn</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'learning_analytics:reports' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Quay lại danh sách báo cáo
+            </a>
+        </div>
+    </div>
+
+    <form method="post" action="{% url 'learning_analytics:generate_report' %}">
+        {% csrf_token %}
+        
+        <!-- Chọn loại báo cáo -->
+        <div class="form-section">
+            <h4 class="mb-3">1. Chọn loại báo cáo</h4>
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <div class="card report-type-card" data-report-type="daily">
+                        <div class="card-body text-center">
+                            <i class="fas fa-calendar-day fa-3x text-success mb-3"></i>
+                            <h5 class="card-title">Hàng ngày</h5>
+                            <p class="card-text">Báo cáo dữ liệu học tập trong một ngày</p>
+                            <input type="radio" name="report_type" value="daily" class="d-none" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <div class="card report-type-card" data-report-type="weekly">
+                        <div class="card-body text-center">
+                            <i class="fas fa-calendar-week fa-3x text-primary mb-3"></i>
+                            <h5 class="card-title">Hàng tuần</h5>
+                            <p class="card-text">Báo cáo dữ liệu học tập trong một tuần</p>
+                            <input type="radio" name="report_type" value="weekly" class="d-none">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <div class="card report-type-card" data-report-type="monthly">
+                        <div class="card-body text-center">
+                            <i class="fas fa-calendar-alt fa-3x text-info mb-3"></i>
+                            <h5 class="card-title">Hàng tháng</h5>
+                            <p class="card-text">Báo cáo dữ liệu học tập trong một tháng</p>
+                            <input type="radio" name="report_type" value="monthly" class="d-none">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <div class="card report-type-card" data-report-type="custom">
+                        <div class="card-body text-center">
+                            <i class="fas fa-sliders-h fa-3x text-secondary mb-3"></i>
+                            <h5 class="card-title">Tùy chỉnh</h5>
+                            <p class="card-text">Báo cáo dữ liệu học tập trong khoảng thời gian tùy chỉnh</p>
+                            <input type="radio" name="report_type" value="custom" class="d-none">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chọn khoảng thời gian -->
+        <div class="form-section">
+            <h4 class="mb-3">2. Chọn khoảng thời gian</h4>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="start_date" class="form-label">Ngày bắt đầu</label>
+                    {{ form.start_date }}
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="end_date" class="form-label">Ngày kết thúc</label>
+                    {{ form.end_date }}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chọn định dạng báo cáo -->
+        <div class="form-section">
+            <h4 class="mb-3">3. Chọn định dạng báo cáo</h4>
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <div class="card report-format-option" data-report-format="html">
+                        <div class="card-body text-center">
+                            <i class="fas fa-code fa-3x text-primary mb-3"></i>
+                            <h5 class="card-title">HTML</h5>
+                            <p class="card-text">Báo cáo dạng trang web</p>
+                            <input type="radio" name="report_format" value="html" class="d-none" checked>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <div class="card report-format-option" data-report-format="pdf">
+                        <div class="card-body text-center">
+                            <i class="fas fa-file-pdf fa-3x text-danger mb-3"></i>
+                            <h5 class="card-title">PDF</h5>
+                            <p class="card-text">Báo cáo dạng tài liệu PDF</p>
+                            <input type="radio" name="report_format" value="pdf" class="d-none">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <div class="card report-format-option" data-report-format="csv">
+                        <div class="card-body text-center">
+                            <i class="fas fa-file-csv fa-3x text-success mb-3"></i>
+                            <h5 class="card-title">CSV</h5>
+                            <p class="card-text">Báo cáo dạng bảng tính CSV</p>
+                            <input type="radio" name="report_format" value="csv" class="d-none">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <div class="card report-format-option" data-report-format="json">
+                        <div class="card-body text-center">
+                            <i class="fas fa-file-code fa-3x text-warning mb-3"></i>
+                            <h5 class="card-title">JSON</h5>
+                            <p class="card-text">Báo cáo dạng dữ liệu JSON</p>
+                            <input type="radio" name="report_format" value="json" class="d-none">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Thông tin báo cáo -->
+        <div class="form-section">
+            <h4 class="mb-3">4. Thông tin báo cáo</h4>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="title" class="form-label">Tiêu đề báo cáo</label>
+                    {{ form.title }}
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="subject" class="form-label">Chủ đề (tùy chọn)</label>
+                    {{ form.subject }}
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="topic" class="form-label">Chủ đề con (tùy chọn)</label>
+                    {{ form.topic }}
+                </div>
+                
+                <div class="col-12 mb-3">
+                    <label for="description" class="form-label">Mô tả báo cáo (tùy chọn)</label>
+                    {{ form.description }}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Nút tạo báo cáo -->
+        <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-file-alt"></i> Tạo báo cáo
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Xử lý chọn loại báo cáo
+        const reportTypeCards = document.querySelectorAll('.report-type-card');
+        reportTypeCards.forEach(card => {
+            card.addEventListener('click', function() {
+                // Bỏ chọn tất cả các thẻ
+                reportTypeCards.forEach(c => {
+                    c.classList.remove('selected');
+                    c.querySelector('input[type="radio"]').checked = false;
+                });
+                
+                // Chọn thẻ hiện tại
+                this.classList.add('selected');
+                this.querySelector('input[type="radio"]').checked = true;
+                
+                // Cập nhật khoảng thời gian dựa trên loại báo cáo
+                updateDateRange(this.dataset.reportType);
+            });
+        });
+        
+        // Xử lý chọn định dạng báo cáo
+        const reportFormatOptions = document.querySelectorAll('.report-format-option');
+        reportFormatOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                // Bỏ chọn tất cả các thẻ
+                reportFormatOptions.forEach(o => {
+                    o.classList.remove('selected');
+                    o.querySelector('input[type="radio"]').checked = false;
+                });
+                
+                // Chọn thẻ hiện tại
+                this.classList.add('selected');
+                this.querySelector('input[type="radio"]').checked = true;
+            });
+        });
+        
+        // Chọn HTML làm định dạng mặc định
+        document.querySelector('.report-format-option[data-report-format="html"]').classList.add('selected');
+        
+        // Cập nhật khoảng thời gian dựa trên loại báo cáo
+        function updateDateRange(reportType) {
+            const startDateInput = document.getElementById('{{ form.start_date.id_for_label }}');
+            const endDateInput = document.getElementById('{{ form.end_date.id_for_label }}');
+            
+            const today = new Date();
+            const endDate = new Date(today);
+            let startDate = new Date(today);
+            
+            switch (reportType) {
+                case 'daily':
+                    // Ngày hiện tại
+                    break;
+                    
+                case 'weekly':
+                    // 7 ngày trước đến hiện tại
+                    startDate.setDate(today.getDate() - 6);
+                    break;
+                    
+                case 'monthly':
+                    // 30 ngày trước đến hiện tại
+                    startDate.setDate(today.getDate() - 29);
+                    break;
+                    
+                case 'custom':
+                    // Không thay đổi
+                    return;
+            }
+            
+            // Định dạng ngày thành YYYY-MM-DD
+            startDateInput.value = startDate.toISOString().split('T')[0];
+            endDateInput.value = endDate.toISOString().split('T')[0];
+        }
+        
+        // Xử lý thay đổi chủ đề
+        const subjectSelect = document.getElementById('{{ form.subject.id_for_label }}');
+        const topicSelect = document.getElementById('{{ form.topic.id_for_label }}');
+        
+        subjectSelect.addEventListener('change', function() {
+            const subjectId = this.value;
+            
+            // Nếu không chọn chủ đề, xóa danh sách chủ đề con
+            if (!subjectId) {
+                topicSelect.innerHTML = '<option value="">-- Chọn chủ đề con --</option>';
+                return;
+            }
+            
+            // Lấy danh sách chủ đề con
+            fetch(`{% url 'learning_analytics:get_topics' %}?subject=${subjectId}`)
+                .then(response => response.text())
+                .then(html => {
+                    topicSelect.innerHTML = html;
+                });
+        });
+        
+        // Chọn loại báo cáo mặc định là hàng tuần
+        document.querySelector('.report-type-card[data-report-type="weekly"]').click();
+    });
+</script>
+{% endblock %}

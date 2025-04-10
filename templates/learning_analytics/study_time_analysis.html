@@ -1,0 +1,281 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Phân tích thời gian học tập{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chart-container {
+        height: 400px;
+        width: 100%;
+        margin-bottom: 30px;
+    }
+    
+    .metric-card {
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .metric-label {
+        font-size: 1rem;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-clock text-primary"></i> Phân tích thời gian học tập
+            </h1>
+            <p class="lead">Phân tích chi tiết về thời gian học tập của bạn</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'learning_analytics:dashboard' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Quay lại bảng điều khiển
+            </a>
+        </div>
+    </div>
+
+    <!-- Thông tin tổng quan -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-4">
+            <div class="card metric-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-clock fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Tổng thời gian học tập</h5>
+                    <div class="metric-value">{{ study_time_data.total_study_time|floatformat:1 }}</div>
+                    <p class="card-text metric-label">giờ</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card metric-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-calendar-day fa-3x text-success mb-3"></i>
+                    <h5 class="card-title">Trung bình hàng ngày</h5>
+                    <div class="metric-value">{{ study_time_data.daily_average|floatformat:1 }}</div>
+                    <p class="card-text metric-label">giờ/ngày</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card metric-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-calendar-week fa-3x text-info mb-3"></i>
+                    <h5 class="card-title">Trung bình hàng tuần</h5>
+                    <div class="metric-value">{{ study_time_data.weekly_average|floatformat:1 }}</div>
+                    <p class="card-text metric-label">giờ/tuần</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card metric-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-calendar-alt fa-3x text-warning mb-3"></i>
+                    <h5 class="card-title">Trung bình hàng tháng</h5>
+                    <div class="metric-value">{{ study_time_data.monthly_average|floatformat:1 }}</div>
+                    <p class="card-text metric-label">giờ/tháng</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Biểu đồ thời gian học tập theo ngày -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-line"></i> Thời gian học tập theo ngày</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="study-time-by-day-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Biểu đồ thời gian học tập theo chủ đề -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Thời gian học tập theo chủ đề</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="study-time-by-subject-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-list"></i> Chi tiết thời gian học tập theo chủ đề</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Chủ đề</th>
+                                    <th>Thời gian (giờ)</th>
+                                    <th>Phần trăm</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for subject in study_time_data.study_time_by_subject %}
+                                <tr>
+                                    <td>{{ subject.subject_name }}</td>
+                                    <td>{{ subject.study_time|floatformat:1 }}</td>
+                                    <td>{{ subject.percentage|floatformat:1 }}%</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center">Chưa có dữ liệu</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Dữ liệu thời gian học tập theo ngày
+        const studyTimeByDayData = {
+            labels: [
+                {% for day in study_time_data.study_time_by_day %}
+                    "{{ day.date }}",
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Thời gian học tập (giờ)',
+                data: [
+                    {% for day in study_time_data.study_time_by_day %}
+                        {{ day.study_time }},
+                    {% endfor %}
+                ],
+                backgroundColor: 'rgba(0, 123, 255, 0.5)',
+                borderColor: 'rgba(0, 123, 255, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        // Biểu đồ thời gian học tập theo ngày
+        const studyTimeByDayChart = document.getElementById('study-time-by-day-chart');
+        if (studyTimeByDayChart) {
+            new Chart(studyTimeByDayChart, {
+                type: 'bar',
+                data: studyTimeByDayData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Thời gian (giờ)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Ngày'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Dữ liệu thời gian học tập theo chủ đề
+        const studyTimeBySubjectData = {
+            labels: [
+                {% for subject in study_time_data.study_time_by_subject %}
+                    "{{ subject.subject_name }}",
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Thời gian học tập (giờ)',
+                data: [
+                    {% for subject in study_time_data.study_time_by_subject %}
+                        {{ subject.study_time }},
+                    {% endfor %}
+                ],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.7)',
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(255, 206, 86, 0.7)',
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(153, 102, 255, 0.7)',
+                    'rgba(255, 159, 64, 0.7)',
+                    'rgba(199, 199, 199, 0.7)',
+                    'rgba(83, 102, 255, 0.7)',
+                    'rgba(40, 159, 64, 0.7)',
+                    'rgba(210, 199, 199, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)',
+                    'rgba(199, 199, 199, 1)',
+                    'rgba(83, 102, 255, 1)',
+                    'rgba(40, 159, 64, 1)',
+                    'rgba(210, 199, 199, 1)'
+                ],
+                borderWidth: 1
+            }]
+        };
+
+        // Biểu đồ thời gian học tập theo chủ đề
+        const studyTimeBySubjectChart = document.getElementById('study-time-by-subject-chart');
+        if (studyTimeBySubjectChart) {
+            new Chart(studyTimeBySubjectChart, {
+                type: 'pie',
+                data: studyTimeBySubjectData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

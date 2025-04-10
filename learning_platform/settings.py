@@ -97,7 +97,7 @@ INSTALLED_APPS = [
     "personalization",  # Ứng dụng cá nhân hóa
     "ai_assistant",  # Ứng dụng trợ lý học tập AI
     "learning_chatbot",  # Ứng dụng chatbot hỗ trợ học tập
-    "speech_recognition_app",  # Ứng dụng nhận diện giọng nói
+    "learning_analytics",  # Ứng dụng phân tích dữ liệu học tập
     "ocr_app",  # Ứng dụng nhận dạng ký tự quang học
     "note_integration_app",  # Ứng dụng tích hợp công cụ ghi chú
 ]

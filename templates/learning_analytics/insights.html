@@ -1,0 +1,227 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Phân tích sâu về học tập{% endblock %}
+
+{% block extra_css %}
+<style>
+    .insight-card {
+        transition: all 0.3s ease;
+        margin-bottom: 20px;
+        border-left: 4px solid #007bff;
+    }
+    
+    .insight-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .insight-card.strength {
+        border-left-color: #28a745;
+    }
+    
+    .insight-card.weakness {
+        border-left-color: #dc3545;
+    }
+    
+    .insight-card.pattern {
+        border-left-color: #fd7e14;
+    }
+    
+    .insight-card.improvement {
+        border-left-color: #17a2b8;
+    }
+    
+    .insight-card.milestone {
+        border-left-color: #6f42c1;
+    }
+    
+    .insight-type-icon {
+        font-size: 2rem;
+        margin-right: 15px;
+    }
+    
+    .insight-type-badge {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .filter-section {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-lightbulb text-primary"></i> Phân tích sâu về học tập
+            </h1>
+            <p class="lead">Phân tích sâu về học tập của bạn, bao gồm điểm mạnh, điểm yếu, mẫu học tập, cải thiện và cột mốc</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'learning_analytics:dashboard' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Quay lại bảng điều khiển
+            </a>
+        </div>
+    </div>
+
+    <!-- Bộ lọc -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="filter-section">
+                <div class="row">
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        <label for="insight-type-filter" class="form-label">Lọc theo loại phân tích:</label>
+                        <select id="insight-type-filter" class="form-select">
+                            <option value="all">Tất cả</option>
+                            <option value="strength">Điểm mạnh</option>
+                            <option value="weakness">Điểm yếu</option>
+                            <option value="pattern">Mẫu học tập</option>
+                            <option value="improvement">Cải thiện</option>
+                            <option value="milestone">Cột mốc</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="subject-filter" class="form-label">Lọc theo chủ đề:</label>
+                        <select id="subject-filter" class="form-select">
+                            <option value="all">Tất cả</option>
+                            {% for subject in subject_list %}
+                                <option value="{{ subject.id }}">{{ subject.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Danh sách phân tích sâu -->
+    <div class="row">
+        <div class="col-12">
+            <div id="insights-container">
+                {% if insights %}
+                    {% for insight in insights %}
+                        <div class="card insight-card {{ insight.insight_type }}" 
+                             data-type="{{ insight.insight_type }}" 
+                             data-subject="{{ insight.subject_id|default:'none' }}">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    {% if insight.insight_type == 'strength' %}
+                                        <i class="fas fa-trophy insight-type-icon text-success"></i>
+                                    {% elif insight.insight_type == 'weakness' %}
+                                        <i class="fas fa-exclamation-triangle insight-type-icon text-danger"></i>
+                                    {% elif insight.insight_type == 'pattern' %}
+                                        <i class="fas fa-chart-line insight-type-icon text-warning"></i>
+                                    {% elif insight.insight_type == 'improvement' %}
+                                        <i class="fas fa-arrow-up insight-type-icon text-info"></i>
+                                    {% elif insight.insight_type == 'milestone' %}
+                                        <i class="fas fa-flag-checkered insight-type-icon text-purple"></i>
+                                    {% endif %}
+                                    
+                                    <div>
+                                        <h5 class="card-title mb-1">{{ insight.title }}</h5>
+                                        <span class="badge insight-type-badge 
+                                            {% if insight.insight_type == 'strength' %}bg-success
+                                            {% elif insight.insight_type == 'weakness' %}bg-danger
+                                            {% elif insight.insight_type == 'pattern' %}bg-warning
+                                            {% elif insight.insight_type == 'improvement' %}bg-info
+                                            {% elif insight.insight_type == 'milestone' %}bg-purple{% endif %}">
+                                            {% if insight.insight_type == 'strength' %}Điểm mạnh
+                                            {% elif insight.insight_type == 'weakness' %}Điểm yếu
+                                            {% elif insight.insight_type == 'pattern' %}Mẫu học tập
+                                            {% elif insight.insight_type == 'improvement' %}Cải thiện
+                                            {% elif insight.insight_type == 'milestone' %}Cột mốc{% endif %}
+                                        </span>
+                                        
+                                        {% if insight.subject_name %}
+                                            <span class="badge bg-secondary ms-2">{{ insight.subject_name }}</span>
+                                        {% endif %}
+                                        
+                                        {% if insight.is_highlighted %}
+                                            <span class="badge bg-primary ms-2">Nổi bật</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <p class="card-text">{{ insight.description }}</p>
+                                
+                                {% if insight.insight_type == 'strength' or insight.insight_type == 'weakness' %}
+                                    {% if insight.subject_id %}
+                                        <div class="mt-3">
+                                            <a href="{% url 'content:subject_detail' insight.subject_id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-book"></i> Xem chủ đề
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> Chưa có phân tích sâu nào. Hãy tiếp tục học tập để nhận phân tích chi tiết hơn.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Lọc phân tích sâu theo loại và chủ đề
+        function filterInsights() {
+            const typeFilter = document.getElementById('insight-type-filter').value;
+            const subjectFilter = document.getElementById('subject-filter').value;
+            
+            const insights = document.querySelectorAll('.insight-card');
+            
+            insights.forEach(insight => {
+                const type = insight.dataset.type;
+                const subject = insight.dataset.subject;
+                
+                const typeMatch = typeFilter === 'all' || type === typeFilter;
+                const subjectMatch = subjectFilter === 'all' || subject === subjectFilter;
+                
+                if (typeMatch && subjectMatch) {
+                    insight.style.display = 'block';
+                } else {
+                    insight.style.display = 'none';
+                }
+            });
+            
+            // Hiển thị thông báo nếu không có phân tích nào phù hợp
+            const visibleInsights = document.querySelectorAll('.insight-card[style="display: block"]');
+            const insightsContainer = document.getElementById('insights-container');
+            
+            if (visibleInsights.length === 0 && insights.length > 0) {
+                // Kiểm tra xem đã có thông báo chưa
+                if (!document.querySelector('.no-insights-message')) {
+                    const noInsightsMessage = document.createElement('div');
+                    noInsightsMessage.className = 'alert alert-info no-insights-message';
+                    noInsightsMessage.innerHTML = '<i class="fas fa-info-circle me-2"></i> Không có phân tích nào phù hợp với bộ lọc đã chọn.';
+                    insightsContainer.appendChild(noInsightsMessage);
+                }
+            } else {
+                // Xóa thông báo nếu có phân tích phù hợp
+                const noInsightsMessage = document.querySelector('.no-insights-message');
+                if (noInsightsMessage) {
+                    noInsightsMessage.remove();
+                }
+            }
+        }
+        
+        // Đăng ký sự kiện cho các bộ lọc
+        document.getElementById('insight-type-filter').addEventListener('change', filterInsights);
+        document.getElementById('subject-filter').addEventListener('change', filterInsights);
+    });
+</script>
+{% endblock %}

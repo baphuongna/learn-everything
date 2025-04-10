@@ -1,0 +1,418 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Phân tích phân bố thời gian theo chủ đề{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chart-container {
+        height: 400px;
+        width: 100%;
+        margin-bottom: 30px;
+    }
+    
+    .metric-card {
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .progress {
+        height: 20px;
+    }
+    
+    .subject-card {
+        border-left: 4px solid #007bff;
+        transition: all 0.3s ease;
+    }
+    
+    .subject-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-chart-pie text-primary"></i> Phân tích phân bố thời gian theo chủ đề
+            </h1>
+            <p class="lead">Phân tích chi tiết về phân bố thời gian học tập của bạn theo chủ đề</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'learning_analytics:dashboard' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Quay lại bảng điều khiển
+            </a>
+        </div>
+    </div>
+
+    <!-- Biểu đồ phân bố thời gian theo chủ đề -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Phân bố thời gian học tập theo chủ đề</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="study-time-by-subject-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Thời gian học tập theo chủ đề</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="study-time-bar-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Biểu đồ phân bố bài kiểm tra và flashcard theo chủ đề -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-tasks"></i> Điểm bài kiểm tra theo chủ đề</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="quiz-scores-by-subject-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-layer-group"></i> Tỷ lệ ghi nhớ flashcard theo chủ đề</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="flashcard-retention-by-subject-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bảng tổng hợp dữ liệu theo chủ đề -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-table"></i> Tổng hợp dữ liệu theo chủ đề</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Chủ đề</th>
+                                    <th>Thời gian học tập (giờ)</th>
+                                    <th>Phần trăm thời gian</th>
+                                    <th>Điểm bài kiểm tra</th>
+                                    <th>Tỷ lệ ghi nhớ flashcard</th>
+                                    <th>Điểm tổng hợp</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for subject in subject_distribution_data.combined_data %}
+                                <tr>
+                                    <td>{{ subject.subject_name }}</td>
+                                    <td>{{ subject.study_time|floatformat:1 }}</td>
+                                    <td>{{ subject.study_time_percentage|floatformat:1 }}%</td>
+                                    <td>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-primary" role="progressbar" style="width: {{ subject.quiz_score }}%" aria-valuenow="{{ subject.quiz_score }}" aria-valuemin="0" aria-valuemax="100">{{ subject.quiz_score|floatformat:1 }}%</div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ subject.flashcard_retention }}%" aria-valuenow="{{ subject.flashcard_retention }}" aria-valuemin="0" aria-valuemax="100">{{ subject.flashcard_retention|floatformat:1 }}%</div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-info" role="progressbar" style="width: {{ subject.composite_score }}%" aria-valuenow="{{ subject.composite_score }}" aria-valuemin="0" aria-valuemax="100">{{ subject.composite_score|floatformat:1 }}%</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">Chưa có dữ liệu</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thẻ chủ đề -->
+    <div class="row">
+        <div class="col-12 mb-4">
+            <h4 class="mb-3">Chi tiết theo chủ đề</h4>
+        </div>
+        
+        {% for subject in subject_distribution_data.combined_data %}
+        <div class="col-md-6 mb-4">
+            <div class="card subject-card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ subject.subject_name }}</h5>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="mb-1">Thời gian học tập:</p>
+                            <h6>{{ subject.study_time|floatformat:1 }} giờ ({{ subject.study_time_percentage|floatformat:1 }}%)</h6>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1">Điểm tổng hợp:</p>
+                            <h6>{{ subject.composite_score|floatformat:1 }}%</h6>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1">Điểm bài kiểm tra:</p>
+                            <div class="progress mb-2">
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ subject.quiz_score }}%" aria-valuenow="{{ subject.quiz_score }}" aria-valuemin="0" aria-valuemax="100">{{ subject.quiz_score|floatformat:1 }}%</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1">Tỷ lệ ghi nhớ flashcard:</p>
+                            <div class="progress mb-2">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ subject.flashcard_retention }}%" aria-valuenow="{{ subject.flashcard_retention }}" aria-valuemin="0" aria-valuemax="100">{{ subject.flashcard_retention|floatformat:1 }}%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Dữ liệu phân bố thời gian theo chủ đề
+        const studyTimeBySubjectData = {
+            labels: [
+                {% for subject in subject_distribution_data.study_time_by_subject %}
+                    "{{ subject.subject_name }}",
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Thời gian học tập (giờ)',
+                data: [
+                    {% for subject in subject_distribution_data.study_time_by_subject %}
+                        {{ subject.study_time }},
+                    {% endfor %}
+                ],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.7)',
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(255, 206, 86, 0.7)',
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(153, 102, 255, 0.7)',
+                    'rgba(255, 159, 64, 0.7)',
+                    'rgba(199, 199, 199, 0.7)',
+                    'rgba(83, 102, 255, 0.7)',
+                    'rgba(40, 159, 64, 0.7)',
+                    'rgba(210, 199, 199, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)',
+                    'rgba(199, 199, 199, 1)',
+                    'rgba(83, 102, 255, 1)',
+                    'rgba(40, 159, 64, 1)',
+                    'rgba(210, 199, 199, 1)'
+                ],
+                borderWidth: 1
+            }]
+        };
+
+        // Biểu đồ phân bố thời gian theo chủ đề
+        const studyTimeBySubjectChart = document.getElementById('study-time-by-subject-chart');
+        if (studyTimeBySubjectChart) {
+            new Chart(studyTimeBySubjectChart, {
+                type: 'pie',
+                data: studyTimeBySubjectData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Biểu đồ thời gian học tập theo chủ đề (dạng cột)
+        const studyTimeBarChart = document.getElementById('study-time-bar-chart');
+        if (studyTimeBarChart) {
+            new Chart(studyTimeBarChart, {
+                type: 'bar',
+                data: studyTimeBySubjectData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Thời gian (giờ)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Chủ đề'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Dữ liệu điểm bài kiểm tra theo chủ đề
+        const quizScoresBySubjectData = {
+            labels: [
+                {% for subject in subject_distribution_data.quiz_attempts_by_subject %}
+                    "{{ subject.subject_name }}",
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Điểm bài kiểm tra (%)',
+                data: [
+                    {% for subject in subject_distribution_data.quiz_attempts_by_subject %}
+                        {{ subject.score }},
+                    {% endfor %}
+                ],
+                backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        // Biểu đồ điểm bài kiểm tra theo chủ đề
+        const quizScoresBySubjectChart = document.getElementById('quiz-scores-by-subject-chart');
+        if (quizScoresBySubjectChart) {
+            new Chart(quizScoresBySubjectChart, {
+                type: 'bar',
+                data: quizScoresBySubjectData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Điểm (%)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Chủ đề'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Dữ liệu tỷ lệ ghi nhớ flashcard theo chủ đề
+        const flashcardRetentionBySubjectData = {
+            labels: [
+                {% for subject in subject_distribution_data.flashcard_reviews_by_subject %}
+                    "{{ subject.subject_name }}",
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Tỷ lệ ghi nhớ (%)',
+                data: [
+                    {% for subject in subject_distribution_data.flashcard_reviews_by_subject %}
+                        {{ subject.retention_rate }},
+                    {% endfor %}
+                ],
+                backgroundColor: 'rgba(40, 167, 69, 0.7)',
+                borderColor: 'rgba(40, 167, 69, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        // Biểu đồ tỷ lệ ghi nhớ flashcard theo chủ đề
+        const flashcardRetentionBySubjectChart = document.getElementById('flashcard-retention-by-subject-chart');
+        if (flashcardRetentionBySubjectChart) {
+            new Chart(flashcardRetentionBySubjectChart, {
+                type: 'bar',
+                data: flashcardRetentionBySubjectData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Tỷ lệ ghi nhớ (%)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Chủ đề'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

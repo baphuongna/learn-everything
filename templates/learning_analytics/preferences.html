@@ -1,0 +1,103 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Tùy chọn phân tích dữ liệu học tập{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-cog text-primary"></i> Tùy chọn phân tích dữ liệu học tập
+            </h1>
+            <p class="lead">Tùy chỉnh cách hiển thị và phân tích dữ liệu học tập của bạn</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'learning_analytics:dashboard' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Quay lại bảng điều khiển
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-sliders-h"></i> Tùy chọn hiển thị</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <h6 class="mb-3">Hiển thị trên bảng điều khiển</h6>
+                            
+                            <div class="form-check mb-2">
+                                {{ form.show_study_time }}
+                                <label class="form-check-label" for="{{ form.show_study_time.id_for_label }}">
+                                    Thời gian học tập
+                                </label>
+                            </div>
+                            
+                            <div class="form-check mb-2">
+                                {{ form.show_quiz_performance }}
+                                <label class="form-check-label" for="{{ form.show_quiz_performance.id_for_label }}">
+                                    Hiệu suất bài kiểm tra
+                                </label>
+                            </div>
+                            
+                            <div class="form-check mb-2">
+                                {{ form.show_flashcard_performance }}
+                                <label class="form-check-label" for="{{ form.show_flashcard_performance.id_for_label }}">
+                                    Hiệu suất flashcard
+                                </label>
+                            </div>
+                            
+                            <div class="form-check mb-2">
+                                {{ form.show_subject_distribution }}
+                                <label class="form-check-label" for="{{ form.show_subject_distribution.id_for_label }}">
+                                    Phân bố thời gian theo chủ đề
+                                </label>
+                            </div>
+                            
+                            <div class="form-check mb-2">
+                                {{ form.show_learning_patterns }}
+                                <label class="form-check-label" for="{{ form.show_learning_patterns.id_for_label }}">
+                                    Mẫu học tập
+                                </label>
+                            </div>
+                            
+                            <div class="form-check mb-2">
+                                {{ form.show_recommendations }}
+                                <label class="form-check-label" for="{{ form.show_recommendations.id_for_label }}">
+                                    Đề xuất học tập
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h6 class="mb-3">Cài đặt khác</h6>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.dashboard_refresh_rate.id_for_label }}" class="form-label">
+                                    Tần suất làm mới bảng điều khiển (giờ)
+                                </label>
+                                {{ form.dashboard_refresh_rate }}
+                                <div class="form-text">
+                                    Đặt thời gian làm mới dữ liệu trên bảng điều khiển. Giá trị nhỏ hơn sẽ cập nhật dữ liệu thường xuyên hơn.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Lưu tùy chọn
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

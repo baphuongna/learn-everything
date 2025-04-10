@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .content {
+            padding: 20px;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 15px;
+            text-align: center;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        .report-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #007bff;
+        }
+        .report-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .report-date {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+        .report-description {
+            margin-top: 10px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 15px;
+        }
+        .message {
+            border-left: 4px solid #6c757d;
+            padding-left: 15px;
+            margin: 20px 0;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Báo cáo phân tích học tập</h1>
+    </div>
+    
+    <div class="content">
+        <p>Xin chào,</p>
+        
+        <p>{{ user.get_full_name|default:user.username }} đã chia sẻ một báo cáo phân tích học tập với bạn từ nền tảng Learn Everything.</p>
+        
+        {% if message %}
+        <div class="message">
+            <p>{{ message }}</p>
+        </div>
+        {% endif %}
+        
+        <div class="report-info">
+            <div class="report-title">{{ report.title }}</div>
+            <div class="report-date">Thời gian: {{ report.start_date|date:"d/m/Y" }} - {{ report.end_date|date:"d/m/Y" }}</div>
+            {% if report.description %}
+            <div class="report-description">{{ report.description }}</div>
+            {% endif %}
+        </div>
+        
+        <p>Báo cáo này chứa thông tin phân tích về:</p>
+        <ul>
+            <li>Thời gian học tập</li>
+            <li>Hiệu suất bài kiểm tra</li>
+            <li>Hiệu suất flashcard</li>
+            <li>Phân bố thời gian theo chủ đề</li>
+            <li>Mẫu học tập</li>
+            <li>Phân tích sâu và đề xuất học tập</li>
+        </ul>
+        
+        {% if report.file_path %}
+        <p>Báo cáo đã được đính kèm trong email này.</p>
+        {% endif %}
+        
+        <p>Để biết thêm thông tin, vui lòng truy cập nền tảng Learn Everything.</p>
+        
+        <a href="{{ site_url }}" class="button">Truy cập Learn Everything</a>
+    </div>
+    
+    <div class="footer">
+        <p>© Learn Everything - Nền tảng học tập thông minh</p>
+        <p>Email này được gửi tự động, vui lòng không trả lời.</p>
+    </div>
+</body>
+</html>

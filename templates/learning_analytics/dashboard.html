@@ -1,0 +1,363 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Phân tích dữ liệu học tập{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-card {
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .dashboard-icon {
+        font-size: 2.5rem;
+        color: #007bff;
+        margin-bottom: 15px;
+    }
+
+    .metric-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .metric-label {
+        font-size: 1rem;
+        color: #6c757d;
+    }
+
+    .chart-container {
+        height: 300px;
+        width: 100%;
+    }
+
+    .insight-card {
+        border-left: 4px solid #007bff;
+    }
+
+    .insight-card.strength {
+        border-left-color: #28a745;
+    }
+
+    .insight-card.weakness {
+        border-left-color: #dc3545;
+    }
+
+    .insight-card.pattern {
+        border-left-color: #fd7e14;
+    }
+
+    .insight-card.improvement {
+        border-left-color: #17a2b8;
+    }
+
+    .insight-card.milestone {
+        border-left-color: #6f42c1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-chart-line text-primary"></i> Phân tích dữ liệu học tập
+            </h1>
+            <p class="lead">Theo dõi tiến độ học tập và nhận phân tích chi tiết về hiệu suất học tập của bạn</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'learning_analytics:preferences' %}" class="btn btn-outline-primary me-2">
+                <i class="fas fa-cog"></i> Tùy chọn
+            </a>
+            <a href="{% url 'learning_analytics:reports' %}" class="btn btn-primary">
+                <i class="fas fa-file-alt"></i> Báo cáo
+            </a>
+        </div>
+    </div>
+
+    <!-- Thông tin tổng quan -->
+    <div class="row mb-4">
+        {% if dashboard_data.preferences.show_study_time %}
+            <div class="col-md-4 mb-4">
+                <div class="card dashboard-card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-clock dashboard-icon"></i>
+                        <h5 class="card-title">Thời gian học tập</h5>
+                        <div class="metric-value">{{ dashboard_data.study_time.total_study_time|default:"0" }} giờ</div>
+                        <p class="card-text metric-label">Tổng thời gian học tập</p>
+                        <a href="{% url 'learning_analytics:study_time_analysis' %}" class="btn btn-outline-primary mt-3">
+                            <i class="fas fa-chart-bar"></i> Xem chi tiết
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if dashboard_data.preferences.show_quiz_performance %}
+            <div class="col-md-4 mb-4">
+                <div class="card dashboard-card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-tasks dashboard-icon"></i>
+                        <h5 class="card-title">Hiệu suất bài kiểm tra</h5>
+                        <div class="metric-value">{{ dashboard_data.quiz_performance.average_score|default:"0" }}%</div>
+                        <p class="card-text metric-label">Điểm trung bình</p>
+                        <a href="{% url 'learning_analytics:quiz_performance_analysis' %}" class="btn btn-outline-primary mt-3">
+                            <i class="fas fa-chart-bar"></i> Xem chi tiết
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if dashboard_data.preferences.show_flashcard_performance %}
+            <div class="col-md-4 mb-4">
+                <div class="card dashboard-card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-layer-group dashboard-icon"></i>
+                        <h5 class="card-title">Hiệu suất flashcard</h5>
+                        <div class="metric-value">{{ dashboard_data.flashcard_performance.retention_rate|default:"0" }}%</div>
+                        <p class="card-text metric-label">Tỷ lệ ghi nhớ</p>
+                        <a href="{% url 'learning_analytics:flashcard_performance_analysis' %}" class="btn btn-outline-primary mt-3">
+                            <i class="fas fa-chart-bar"></i> Xem chi tiết
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Biểu đồ và phân tích -->
+    <div class="row mb-4">
+        {% if dashboard_data.preferences.show_subject_distribution %}
+            <div class="col-md-6 mb-4">
+                <div class="card dashboard-card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-pie-chart"></i> Phân bố thời gian theo chủ đề</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if dashboard_data.subject_distribution.study_time_by_subject %}
+                            <div class="chart-container">
+                                <!-- Biểu đồ phân bố thời gian theo chủ đề sẽ được thêm vào bằng JavaScript -->
+                                <div id="subject-distribution-chart"></div>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i> Chưa có dữ liệu phân bố thời gian theo chủ đề. Hãy học nhiều chủ đề khác nhau để xem phân tích chi tiết hơn.
+                            </div>
+                        {% endif %}
+                        <div class="text-center mt-3">
+                            <a href="{% url 'learning_analytics:subject_distribution_analysis' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-chart-bar"></i> Xem chi tiết
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if dashboard_data.preferences.show_learning_patterns %}
+            <div class="col-md-6 mb-4">
+                <div class="card dashboard-card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> Mẫu học tập</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if dashboard_data.learning_patterns.study_time_by_day_of_week %}
+                            <div class="chart-container">
+                                <!-- Biểu đồ mẫu học tập sẽ được thêm vào bằng JavaScript -->
+                                <div id="learning-patterns-chart"></div>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i> Chưa có dữ liệu mẫu học tập. Hãy học tập đều đặn hơn để xem phân tích chi tiết hơn.
+                            </div>
+                        {% endif %}
+                        <div class="text-center mt-3">
+                            <a href="{% url 'learning_analytics:learning_patterns_analysis' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-chart-bar"></i> Xem chi tiết
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Phân tích sâu và đề xuất -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card dashboard-card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb"></i> Phân tích sâu</h5>
+                </div>
+                <div class="card-body">
+                    {% if dashboard_data.insights %}
+                        {% for insight in dashboard_data.insights|slice:":3" %}
+                            <div class="card mb-3 insight-card {{ insight.insight_type }}">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ insight.title }}</h6>
+                                    <p class="card-text">{{ insight.description }}</p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        <div class="text-center mt-3">
+                            <a href="{% url 'learning_analytics:insights' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-search"></i> Xem tất cả phân tích
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-info-circle fa-3x text-muted mb-3"></i>
+                            <p>Chưa có phân tích sâu nào. Hãy tiếp tục học tập để nhận phân tích chi tiết hơn.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if dashboard_data.preferences.show_recommendations %}
+            <div class="col-md-6 mb-4">
+                <div class="card dashboard-card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-bullseye"></i> Đề xuất học tập</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if dashboard_data.recommendations %}
+                            {% for recommendation in dashboard_data.recommendations|slice:":3" %}
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ recommendation.title }}</h6>
+                                        <p class="card-text">{{ recommendation.description }}</p>
+                                        <div class="d-flex justify-content-end">
+                                            <button class="btn btn-sm btn-outline-success me-2"
+                                                    hx-post="{% url 'learning_analytics:complete_recommendation' recommendation_id=recommendation.id %}"
+                                                    hx-swap="outerHTML">
+                                                <i class="fas fa-check"></i> Hoàn thành
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary"
+                                                    hx-post="{% url 'learning_analytics:dismiss_recommendation' recommendation_id=recommendation.id %}"
+                                                    hx-swap="outerHTML">
+                                                <i class="fas fa-times"></i> Bỏ qua
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                            <div class="text-center mt-3">
+                                <a href="{% url 'learning_analytics:recommendations' %}" class="btn btn-outline-primary">
+                                    <i class="fas fa-list"></i> Xem tất cả đề xuất
+                                </a>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-info-circle fa-3x text-muted mb-3"></i>
+                                <p>Chưa có đề xuất học tập nào. Hãy tiếp tục học tập để nhận đề xuất phù hợp.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Biểu đồ phân bố thời gian theo chủ đề
+        const subjectDistributionChart = document.getElementById('subject-distribution-chart');
+        if (subjectDistributionChart) {
+            new Chart(subjectDistributionChart, {
+                type: 'pie',
+                data: {
+                    labels: [
+                        {% for subject in dashboard_data.subject_distribution.study_time_by_subject %}
+                            "{{ subject.subject_name }}",
+                        {% endfor %}
+                    ],
+                    datasets: [{
+                        data: [
+                            {% for subject in dashboard_data.subject_distribution.study_time_by_subject %}
+                                {{ subject.study_time }},
+                            {% endfor %}
+                        ],
+                        backgroundColor: [
+                            '#007bff',
+                            '#28a745',
+                            '#fd7e14',
+                            '#dc3545',
+                            '#6f42c1',
+                            '#17a2b8',
+                            '#6c757d',
+                            '#ffc107',
+                            '#20c997',
+                            '#e83e8c'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Biểu đồ mẫu học tập
+        const learningPatternsChart = document.getElementById('learning-patterns-chart');
+        if (learningPatternsChart) {
+            new Chart(learningPatternsChart, {
+                type: 'bar',
+                data: {
+                    labels: [
+                        {% for day in dashboard_data.learning_patterns.study_time_by_day_of_week %}
+                            "{{ day.day }}",
+                        {% endfor %}
+                    ],
+                    datasets: [{
+                        label: 'Thời gian học tập (giờ)',
+                        data: [
+                            {% for day in dashboard_data.learning_patterns.study_time_by_day_of_week %}
+                                {{ day.study_time }},
+                            {% endfor %}
+                        ],
+                        backgroundColor: '#007bff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Thời gian (giờ)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Ngày trong tuần'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

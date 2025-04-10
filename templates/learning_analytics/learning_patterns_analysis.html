@@ -1,0 +1,317 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Phân tích mẫu học tập{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chart-container {
+        height: 400px;
+        width: 100%;
+        margin-bottom: 30px;
+    }
+    
+    .metric-card {
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .metric-label {
+        font-size: 1rem;
+        color: #6c757d;
+    }
+    
+    .progress {
+        height: 20px;
+    }
+    
+    .habit-card {
+        border-left: 4px solid #007bff;
+        transition: all 0.3s ease;
+    }
+    
+    .habit-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-calendar-alt text-primary"></i> Phân tích mẫu học tập
+            </h1>
+            <p class="lead">Phân tích chi tiết về mẫu học tập và thói quen học tập của bạn</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'learning_analytics:dashboard' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Quay lại bảng điều khiển
+            </a>
+        </div>
+    </div>
+
+    <!-- Thông tin tổng quan -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-4">
+            <div class="card metric-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-sync-alt fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Điểm đều đặn</h5>
+                    <div class="metric-value">{{ learning_patterns_data.consistency_score|floatformat:1 }}%</div>
+                    <div class="progress mt-2">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ learning_patterns_data.consistency_score }}%"></div>
+                    </div>
+                    <p class="card-text mt-2">Điểm đều đặn đo lường mức độ đều đặn trong học tập của bạn.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card metric-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-bullseye fa-3x text-success mb-3"></i>
+                    <h5 class="card-title">Điểm tập trung</h5>
+                    <div class="metric-value">{{ learning_patterns_data.focus_score|floatformat:1 }}%</div>
+                    <div class="progress mt-2">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ learning_patterns_data.focus_score }}%"></div>
+                    </div>
+                    <p class="card-text mt-2">Điểm tập trung đo lường khả năng tập trung trong các phiên học tập của bạn.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Biểu đồ thời gian học tập theo giờ trong ngày -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-clock"></i> Thời gian học tập theo giờ trong ngày</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="study-time-by-hour-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Biểu đồ thời gian học tập theo ngày trong tuần -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-calendar-week"></i> Thời gian học tập theo ngày trong tuần</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="study-time-by-day-of-week-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> Thời gian học tập theo tháng</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="study-time-by-month-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thói quen học tập -->
+    <div class="row">
+        <div class="col-12 mb-4">
+            <h4 class="mb-3">Thói quen học tập</h4>
+        </div>
+        
+        {% for habit in learning_patterns_data.habits %}
+        <div class="col-md-6 mb-4">
+            <div class="card habit-card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-lightbulb text-warning me-2"></i> {{ habit }}</h5>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                Chưa có đủ dữ liệu để phân tích thói quen học tập. Hãy tiếp tục học tập để nhận phân tích chi tiết hơn.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Dữ liệu thời gian học tập theo giờ trong ngày
+        const studyTimeByHourData = {
+            labels: [
+                {% for hour in learning_patterns_data.study_time_by_hour %}
+                    "{{ hour.hour }}:00",
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Thời gian học tập (giờ)',
+                data: [
+                    {% for hour in learning_patterns_data.study_time_by_hour %}
+                        {{ hour.study_time }},
+                    {% endfor %}
+                ],
+                backgroundColor: 'rgba(0, 123, 255, 0.5)',
+                borderColor: 'rgba(0, 123, 255, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        // Biểu đồ thời gian học tập theo giờ trong ngày
+        const studyTimeByHourChart = document.getElementById('study-time-by-hour-chart');
+        if (studyTimeByHourChart) {
+            new Chart(studyTimeByHourChart, {
+                type: 'bar',
+                data: studyTimeByHourData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Thời gian (giờ)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Giờ trong ngày'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Dữ liệu thời gian học tập theo ngày trong tuần
+        const studyTimeByDayOfWeekData = {
+            labels: [
+                {% for day in learning_patterns_data.study_time_by_day_of_week %}
+                    "{{ day.day }}",
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Thời gian học tập (giờ)',
+                data: [
+                    {% for day in learning_patterns_data.study_time_by_day_of_week %}
+                        {{ day.study_time }},
+                    {% endfor %}
+                ],
+                backgroundColor: 'rgba(40, 167, 69, 0.5)',
+                borderColor: 'rgba(40, 167, 69, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        // Biểu đồ thời gian học tập theo ngày trong tuần
+        const studyTimeByDayOfWeekChart = document.getElementById('study-time-by-day-of-week-chart');
+        if (studyTimeByDayOfWeekChart) {
+            new Chart(studyTimeByDayOfWeekChart, {
+                type: 'bar',
+                data: studyTimeByDayOfWeekData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Thời gian (giờ)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Ngày trong tuần'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Dữ liệu thời gian học tập theo tháng
+        const studyTimeByMonthData = {
+            labels: [
+                {% for month in learning_patterns_data.study_time_by_month %}
+                    "{{ month.month }}",
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Thời gian học tập (giờ)',
+                data: [
+                    {% for month in learning_patterns_data.study_time_by_month %}
+                        {{ month.study_time }},
+                    {% endfor %}
+                ],
+                backgroundColor: 'rgba(255, 193, 7, 0.5)',
+                borderColor: 'rgba(255, 193, 7, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        // Biểu đồ thời gian học tập theo tháng
+        const studyTimeByMonthChart = document.getElementById('study-time-by-month-chart');
+        if (studyTimeByMonthChart) {
+            new Chart(studyTimeByMonthChart, {
+                type: 'bar',
+                data: studyTimeByMonthData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Thời gian (giờ)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Tháng'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

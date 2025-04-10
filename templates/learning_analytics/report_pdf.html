@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ title }}</title>
+    <style>
+        @page {
+            size: a4 portrait;
+            margin: 2cm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.5;
+            color: #333;
+        }
+        h1 {
+            font-size: 24px;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+        h2 {
+            font-size: 18px;
+            color: #007bff;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        h3 {
+            font-size: 16px;
+            color: #333;
+            margin-top: 15px;
+            margin-bottom: 5px;
+        }
+        p {
+            margin-bottom: 10px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 10px;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .metric {
+            margin-bottom: 15px;
+        }
+        .metric-title {
+            font-weight: bold;
+        }
+        .metric-value {
+            font-size: 14px;
+            color: #007bff;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .insight {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-left: 3px solid #007bff;
+            background-color: #f8f9fa;
+        }
+        .insight.strength {
+            border-left-color: #28a745;
+        }
+        .insight.weakness {
+            border-left-color: #dc3545;
+        }
+        .insight.pattern {
+            border-left-color: #fd7e14;
+        }
+        .insight.improvement {
+            border-left-color: #17a2b8;
+        }
+        .insight.milestone {
+            border-left-color: #6f42c1;
+        }
+        .recommendation {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-left: 3px solid #007bff;
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ title }}</h1>
+        <p>{{ description }}</p>
+        <p>Thời gian: {{ start_date|date:"d/m/Y" }} - {{ end_date|date:"d/m/Y" }}</p>
+    </div>
+
+    <!-- Thời gian học tập -->
+    <div class="section">
+        <h2>Thời gian học tập</h2>
+
+        <div class="metric">
+            <span class="metric-title">Tổng thời gian học tập:</span>
+            <span class="metric-value">{{ report_data.study_time.total_study_time|floatformat:1 }} giờ</span>
+        </div>
+
+        <div class="metric">
+            <span class="metric-title">Trung bình hàng ngày:</span>
+            <span class="metric-value">{{ report_data.study_time.daily_average|floatformat:1 }} giờ/ngày</span>
+        </div>
+
+        <div class="metric">
+            <span class="metric-title">Trung bình hàng tuần:</span>
+            <span class="metric-value">{{ report_data.study_time.weekly_average|floatformat:1 }} giờ/tuần</span>
+        </div>
+
+        <div class="metric">
+            <span class="metric-title">Trung bình hàng tháng:</span>
+            <span class="metric-value">{{ report_data.study_time.monthly_average|floatformat:1 }} giờ/tháng</span>
+        </div>
+
+        {% if has_charts and charts.study_time_chart %}
+        <h3>Biểu đồ thời gian học tập theo ngày</h3>
+        <div class="chart">
+            <img src="data:image/png;base64,{{ charts.study_time_chart }}" alt="Biểu đồ thời gian học tập theo ngày" style="max-width: 100%;">
+        </div>
+        {% endif %}
+
+        <h3>Thời gian học tập theo chủ đề</h3>
+
+        {% if has_charts and charts.subject_distribution_chart %}
+        <div class="chart">
+            <img src="data:image/png;base64,{{ charts.subject_distribution_chart }}" alt="Biểu đồ phân bố thời gian theo chủ đề" style="max-width: 100%;">
+        </div>
+        {% endif %}
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Chủ đề</th>
+                    <th>Thời gian (giờ)</th>
+                    <th>Phần trăm</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for subject in report_data.study_time.study_time_by_subject %}
+                <tr>
+                    <td>{{ subject.subject_name }}</td>
+                    <td>{{ subject.study_time|floatformat:1 }}</td>
+                    <td>{{ subject.percentage|floatformat:1 }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Hiệu suất bài kiểm tra -->
+    <div class="section">
+        <h2>Hiệu suất bài kiểm tra</h2>
+
+        <div class="metric">
+            <span class="metric-title">Điểm trung bình:</span>
+            <span class="metric-value">{{ report_data.quiz_performance.average_score|floatformat:1 }}%</span>
+        </div>
+
+        <div class="metric">
+            <span class="metric-title">Tổng số bài kiểm tra:</span>
+            <span class="metric-value">{{ report_data.quiz_performance.total_quizzes }}</span>
+        </div>
+
+        <div class="metric">
+            <span class="metric-title">Tổng số câu hỏi:</span>
+            <span class="metric-value">{{ report_data.quiz_performance.total_questions }}</span>
+        </div>
+
+        <div class="metric">
+            <span class="metric-title">Câu trả lời đúng:</span>
+            <span class="metric-value">{{ report_data.quiz_performance.correct_answers }}</span>
+        </div>
+
+        {% if has_charts and charts.quiz_scores_chart %}
+        <h3>Biểu đồ điểm bài kiểm tra theo thời gian</h3>
+        <div class="chart">
+            <img src="data:image/png;base64,{{ charts.quiz_scores_chart }}" alt="Biểu đồ điểm bài kiểm tra theo thời gian" style="max-width: 100%;">
+        </div>
+        {% endif %}
+
+        <h3>Điểm bài kiểm tra theo chủ đề</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Chủ đề</th>
+                    <th>Điểm trung bình</th>
+                    <th>Số bài kiểm tra</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for subject in report_data.quiz_performance.quiz_scores_by_subject %}
+                <tr>
+                    <td>{{ subject.subject_name }}</td>
+                    <td>{{ subject.score|floatformat:1 }}%</td>
+                    <td>{{ subject.total_quizzes }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Hiệu suất flashcard -->
+    <div class="section">
+        <h2>Hiệu suất flashcard</h2>
+
+        <div class="metric">
+            <span class="metric-title">Tỷ lệ ghi nhớ:</span>
+            <span class="metric-value">{{ report_data.flashcard_performance.retention_rate|floatformat:1 }}%</span>
+        </div>
+
+        <div class="metric">
+            <span class="metric-title">Tổng số thẻ:</span>
+            <span class="metric-value">{{ report_data.flashcard_performance.total_cards }}</span>
+        </div>
+
+        <div class="metric">
+            <span class="metric-title">Thẻ đã thành thạo:</span>
+            <span class="metric-value">{{ report_data.flashcard_performance.mastered_cards }}</span>
+        </div>
+
+        <div class="metric">
+            <span class="metric-title">Thẻ đang học:</span>
+            <span class="metric-value">{{ report_data.flashcard_performance.learning_cards }}</span>
+        </div>
+
+        <h3>Tỷ lệ ghi nhớ theo chủ đề</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Chủ đề</th>
+                    <th>Tỷ lệ ghi nhớ</th>
+                    <th>Thẻ đã thành thạo</th>
+                    <th>Tổng số thẻ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for subject in report_data.flashcard_performance.retention_by_subject %}
+                <tr>
+                    <td>{{ subject.subject_name }}</td>
+                    <td>{{ subject.retention_rate|floatformat:1 }}%</td>
+                    <td>{{ subject.mastered_cards }}</td>
+                    <td>{{ subject.total_cards }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Phân tích sâu -->
+    <div class="section">
+        <h2>Phân tích sâu</h2>
+
+        {% for insight in report_data.insights %}
+            <div class="insight {{ insight.insight_type }}">
+                <h3>{{ insight.title }}</h3>
+                <p>{{ insight.description }}</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Đề xuất học tập -->
+    <div class="section">
+        <h2>Đề xuất học tập</h2>
+
+        {% for recommendation in report_data.recommendations %}
+            <div class="recommendation">
+                <h3>{{ recommendation.title }}</h3>
+                <p>{{ recommendation.description }}</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="footer">
+        <p>Báo cáo được tạo lúc: {{ generated_at|date:"H:i d/m/Y" }}</p>
+        <p>© Learn Everything - Nền tảng học tập thông minh</p>
+    </div>
+</body>
+</html>

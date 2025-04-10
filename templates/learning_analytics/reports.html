@@ -1,0 +1,248 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Báo cáo phân tích{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-card {
+        transition: all 0.3s ease;
+        margin-bottom: 20px;
+    }
+    
+    .report-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .report-type-badge {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .report-format-badge {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .report-actions {
+        display: flex;
+        justify-content: flex-end;
+    }
+    
+    .report-actions a {
+        margin-left: 10px;
+    }
+    
+    .filter-section {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-file-alt text-primary"></i> Báo cáo phân tích
+            </h1>
+            <p class="lead">Danh sách báo cáo phân tích dữ liệu học tập của bạn</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'learning_analytics:generate_report' %}" class="btn btn-primary me-2">
+                <i class="fas fa-plus"></i> Tạo báo cáo mới
+            </a>
+            <a href="{% url 'learning_analytics:dashboard' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Quay lại bảng điều khiển
+            </a>
+        </div>
+    </div>
+
+    <!-- Bộ lọc -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="filter-section">
+                <div class="row">
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <label for="report-type-filter" class="form-label">Lọc theo loại báo cáo:</label>
+                        <select id="report-type-filter" class="form-select">
+                            <option value="all">Tất cả</option>
+                            <option value="daily">Hàng ngày</option>
+                            <option value="weekly">Hàng tuần</option>
+                            <option value="monthly">Hàng tháng</option>
+                            <option value="custom">Tùy chỉnh</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <label for="report-format-filter" class="form-label">Lọc theo định dạng:</label>
+                        <select id="report-format-filter" class="form-select">
+                            <option value="all">Tất cả</option>
+                            <option value="html">HTML</option>
+                            <option value="pdf">PDF</option>
+                            <option value="csv">CSV</option>
+                            <option value="json">JSON</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="date-filter" class="form-label">Lọc theo thời gian:</label>
+                        <select id="date-filter" class="form-select">
+                            <option value="all">Tất cả</option>
+                            <option value="week">7 ngày qua</option>
+                            <option value="month">30 ngày qua</option>
+                            <option value="quarter">3 tháng qua</option>
+                            <option value="year">1 năm qua</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Danh sách báo cáo -->
+    <div class="row">
+        <div class="col-12">
+            <div id="reports-container">
+                {% if reports %}
+                    {% for report in reports %}
+                        <div class="card report-card" 
+                             data-type="{{ report.report_type }}" 
+                             data-format="{{ report.report_format }}"
+                             data-date="{{ report.created_at|date:'Y-m-d' }}">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <h5 class="card-title mb-1">{{ report.title }}</h5>
+                                        <div>
+                                            <span class="badge report-type-badge 
+                                                {% if report.report_type == 'daily' %}bg-success
+                                                {% elif report.report_type == 'weekly' %}bg-primary
+                                                {% elif report.report_type == 'monthly' %}bg-info
+                                                {% else %}bg-secondary{% endif %}">
+                                                {% if report.report_type == 'daily' %}Hàng ngày
+                                                {% elif report.report_type == 'weekly' %}Hàng tuần
+                                                {% elif report.report_type == 'monthly' %}Hàng tháng
+                                                {% else %}Tùy chỉnh{% endif %}
+                                            </span>
+                                            
+                                            <span class="badge report-format-badge 
+                                                {% if report.report_format == 'html' %}bg-primary
+                                                {% elif report.report_format == 'pdf' %}bg-danger
+                                                {% elif report.report_format == 'csv' %}bg-success
+                                                {% else %}bg-warning{% endif %}">
+                                                {{ report.report_format|upper }}
+                                            </span>
+                                            
+                                            <span class="text-muted ms-2">
+                                                <i class="fas fa-calendar-alt"></i> {{ report.start_date|date:"d/m/Y" }} - {{ report.end_date|date:"d/m/Y" }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="report-actions">
+                                        <a href="{% url 'learning_analytics:report_detail' report_id=report.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> Xem
+                                        </a>
+                                        
+                                        <a href="{% url 'learning_analytics:download_report' report_id=report.id %}" class="btn btn-sm btn-outline-success">
+                                            <i class="fas fa-download"></i> Tải xuống
+                                        </a>
+                                    </div>
+                                </div>
+                                
+                                {% if report.description %}
+                                    <p class="card-text">{{ report.description }}</p>
+                                {% endif %}
+                                
+                                <div class="text-muted small">
+                                    <i class="fas fa-clock"></i> Tạo lúc: {{ report.created_at|date:"H:i d/m/Y" }}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> Chưa có báo cáo nào. Hãy tạo báo cáo mới để phân tích dữ liệu học tập của bạn.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Lọc báo cáo theo loại, định dạng và thời gian
+        function filterReports() {
+            const typeFilter = document.getElementById('report-type-filter').value;
+            const formatFilter = document.getElementById('report-format-filter').value;
+            const dateFilter = document.getElementById('date-filter').value;
+            
+            const reports = document.querySelectorAll('.report-card');
+            
+            reports.forEach(report => {
+                const type = report.dataset.type;
+                const format = report.dataset.format;
+                const date = new Date(report.dataset.date);
+                const now = new Date();
+                
+                const typeMatch = typeFilter === 'all' || type === typeFilter;
+                const formatMatch = formatFilter === 'all' || format === formatFilter;
+                
+                // Tính toán khoảng thời gian
+                let dateMatch = true;
+                if (dateFilter !== 'all') {
+                    const diffTime = Math.abs(now - date);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    if (dateFilter === 'week' && diffDays > 7) {
+                        dateMatch = false;
+                    } else if (dateFilter === 'month' && diffDays > 30) {
+                        dateMatch = false;
+                    } else if (dateFilter === 'quarter' && diffDays > 90) {
+                        dateMatch = false;
+                    } else if (dateFilter === 'year' && diffDays > 365) {
+                        dateMatch = false;
+                    }
+                }
+                
+                if (typeMatch && formatMatch && dateMatch) {
+                    report.style.display = 'block';
+                } else {
+                    report.style.display = 'none';
+                }
+            });
+            
+            // Hiển thị thông báo nếu không có báo cáo nào phù hợp
+            const visibleReports = document.querySelectorAll('.report-card[style="display: block"]');
+            const reportsContainer = document.getElementById('reports-container');
+            
+            if (visibleReports.length === 0 && reports.length > 0) {
+                // Kiểm tra xem đã có thông báo chưa
+                if (!document.querySelector('.no-reports-message')) {
+                    const noReportsMessage = document.createElement('div');
+                    noReportsMessage.className = 'alert alert-info no-reports-message';
+                    noReportsMessage.innerHTML = '<i class="fas fa-info-circle me-2"></i> Không có báo cáo nào phù hợp với bộ lọc đã chọn.';
+                    reportsContainer.appendChild(noReportsMessage);
+                }
+            } else {
+                // Xóa thông báo nếu có báo cáo phù hợp
+                const noReportsMessage = document.querySelector('.no-reports-message');
+                if (noReportsMessage) {
+                    noReportsMessage.remove();
+                }
+            }
+        }
+        
+        // Đăng ký sự kiện cho các bộ lọc
+        document.getElementById('report-type-filter').addEventListener('change', filterReports);
+        document.getElementById('report-format-filter').addEventListener('change', filterReports);
+        document.getElementById('date-filter').addEventListener('change', filterReports);
+    });
+</script>
+{% endblock %}

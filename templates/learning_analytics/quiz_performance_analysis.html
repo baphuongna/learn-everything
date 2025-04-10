@@ -1,0 +1,307 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Phân tích hiệu suất bài kiểm tra{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chart-container {
+        height: 400px;
+        width: 100%;
+        margin-bottom: 30px;
+    }
+    
+    .metric-card {
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .metric-label {
+        font-size: 1rem;
+        color: #6c757d;
+    }
+    
+    .progress {
+        height: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-tasks text-primary"></i> Phân tích hiệu suất bài kiểm tra
+            </h1>
+            <p class="lead">Phân tích chi tiết về hiệu suất làm bài kiểm tra của bạn</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'learning_analytics:dashboard' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Quay lại bảng điều khiển
+            </a>
+        </div>
+    </div>
+
+    <!-- Thông tin tổng quan -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-4">
+            <div class="card metric-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-percentage fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Điểm trung bình</h5>
+                    <div class="metric-value">{{ quiz_performance_data.average_score|floatformat:1 }}%</div>
+                    <div class="progress mt-2">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ quiz_performance_data.average_score }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card metric-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-clipboard-list fa-3x text-success mb-3"></i>
+                    <h5 class="card-title">Tổng số bài kiểm tra</h5>
+                    <div class="metric-value">{{ quiz_performance_data.total_quizzes }}</div>
+                    <p class="card-text metric-label">bài kiểm tra</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card metric-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-question-circle fa-3x text-info mb-3"></i>
+                    <h5 class="card-title">Tổng số câu hỏi</h5>
+                    <div class="metric-value">{{ quiz_performance_data.total_questions }}</div>
+                    <p class="card-text metric-label">câu hỏi</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card metric-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-check-circle fa-3x text-warning mb-3"></i>
+                    <h5 class="card-title">Câu trả lời đúng</h5>
+                    <div class="metric-value">{{ quiz_performance_data.correct_answers }}</div>
+                    <p class="card-text metric-label">câu trả lời</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Biểu đồ điểm bài kiểm tra theo thời gian -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-line"></i> Điểm bài kiểm tra theo thời gian</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="quiz-scores-over-time-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Biểu đồ điểm bài kiểm tra theo chủ đề -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Điểm bài kiểm tra theo chủ đề</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="quiz-scores-by-subject-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-list"></i> Chi tiết điểm bài kiểm tra theo chủ đề</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Chủ đề</th>
+                                    <th>Điểm trung bình</th>
+                                    <th>Số bài kiểm tra</th>
+                                    <th>Câu đúng/Tổng số</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for subject in quiz_performance_data.quiz_scores_by_subject %}
+                                <tr>
+                                    <td>{{ subject.subject_name }}</td>
+                                    <td>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-primary" role="progressbar" style="width: {{ subject.score }}%" aria-valuenow="{{ subject.score }}" aria-valuemin="0" aria-valuemax="100">{{ subject.score|floatformat:1 }}%</div>
+                                        </div>
+                                    </td>
+                                    <td>{{ subject.total_quizzes }}</td>
+                                    <td>{{ subject.correct_answers }}/{{ subject.total_questions }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">Chưa có dữ liệu</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Dữ liệu điểm bài kiểm tra theo thời gian
+        const quizScoresOverTimeData = {
+            labels: [
+                {% for day in quiz_performance_data.quiz_scores_over_time %}
+                    "{{ day.date }}",
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Điểm bài kiểm tra (%)',
+                data: [
+                    {% for day in quiz_performance_data.quiz_scores_over_time %}
+                        {{ day.score }},
+                    {% endfor %}
+                ],
+                backgroundColor: 'rgba(0, 123, 255, 0.5)',
+                borderColor: 'rgba(0, 123, 255, 1)',
+                borderWidth: 1,
+                fill: false,
+                tension: 0.1
+            }]
+        };
+
+        // Biểu đồ điểm bài kiểm tra theo thời gian
+        const quizScoresOverTimeChart = document.getElementById('quiz-scores-over-time-chart');
+        if (quizScoresOverTimeChart) {
+            new Chart(quizScoresOverTimeChart, {
+                type: 'line',
+                data: quizScoresOverTimeData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Điểm (%)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Ngày'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Dữ liệu điểm bài kiểm tra theo chủ đề
+        const quizScoresBySubjectData = {
+            labels: [
+                {% for subject in quiz_performance_data.quiz_scores_by_subject %}
+                    "{{ subject.subject_name }}",
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Điểm bài kiểm tra (%)',
+                data: [
+                    {% for subject in quiz_performance_data.quiz_scores_by_subject %}
+                        {{ subject.score }},
+                    {% endfor %}
+                ],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.7)',
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(255, 206, 86, 0.7)',
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(153, 102, 255, 0.7)',
+                    'rgba(255, 159, 64, 0.7)',
+                    'rgba(199, 199, 199, 0.7)',
+                    'rgba(83, 102, 255, 0.7)',
+                    'rgba(40, 159, 64, 0.7)',
+                    'rgba(210, 199, 199, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)',
+                    'rgba(199, 199, 199, 1)',
+                    'rgba(83, 102, 255, 1)',
+                    'rgba(40, 159, 64, 1)',
+                    'rgba(210, 199, 199, 1)'
+                ],
+                borderWidth: 1
+            }]
+        };
+
+        // Biểu đồ điểm bài kiểm tra theo chủ đề
+        const quizScoresBySubjectChart = document.getElementById('quiz-scores-by-subject-chart');
+        if (quizScoresBySubjectChart) {
+            new Chart(quizScoresBySubjectChart, {
+                type: 'bar',
+                data: quizScoresBySubjectData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Điểm (%)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Chủ đề'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

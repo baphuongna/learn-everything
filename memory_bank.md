@@ -39,9 +39,6 @@ learning_platform/
 ├── personalization/     # Tính năng cá nhân hóa
 ├── ai_assistant/        # Trợ lý học tập AI
 ├── learning_chatbot/    # Chatbot hỗ trợ học tập
-├── speech_recognition_app/ # Nhận diện giọng nói
-├── ocr_app/             # Nhận dạng ký tự quang học (OCR)
-├── note_integration_app/ # Tích hợp công cụ ghi chú
 ├── learning_platform/   # Cấu hình chính của dự án
 ├── static/              # Tài nguyên tĩnh (CSS, JS, hình ảnh)
 ├── templates/           # Templates HTML
@@ -431,43 +428,51 @@ learning_platform/
 #### 8.1.4. Tích hợp công nghệ mới
 - **Trợ lý học tập AI**: Trợ lý AI cá nhân hóa giúp trả lời câu hỏi ✓
   - **Đã phát triển**: Tạo và quản lý cuộc trò chuyện, tích hợp với nội dung học tập, đánh giá câu trả lời
-- **Nhận diện giọng nói**: Luyện phát âm cho học ngôn ngữ ✓
-  - **Đã phát triển**: Tích hợp SpeechRecognition và Whisper
-  - **Đã phát triển**: Xây dựng giao diện thu âm và phản hồi
-  - **Đã hoàn thành**: Tạo hệ thống đánh giá phát âm với phản hồi chi tiết
+- **Nhận diện giọng nói**: Luyện phát âm cho học ngôn ngữ
+  - **Đã lên kế hoạch**: Tích hợp SpeechRecognition và Whisper
+  - **Đã lên kế hoạch**: Xây dựng giao diện thu âm và phản hồi
+  - **Đã lên kế hoạch**: Tạo hệ thống đánh giá phát âm với phản hồi chi tiết
 - **Chatbot hỗ trợ học tập**: Hỗ trợ 24/7 cho các câu hỏi thường gặp ✓
   - **Đã phát triển**: Tìm kiếm câu hỏi, phản hồi câu trả lời, danh mục câu hỏi, câu hỏi phổ biến
-- **Tự động tạo flashcard**: Trích xuất từ khóa và định nghĩa từ nội dung bài học ✓
-  - **Đã phát triển**: Tích hợp thư viện NLP như NLTK và spaCy
-  - **Đã phát triển**: Xây dựng thuật toán trích xuất từ khóa và định nghĩa
-  - **Đã hoàn thành**: Tạo giao diện tạo flashcard tự động từ văn bản sử dụng NLP và AI
+- **Tự động tạo flashcard**: Trích xuất từ khóa và định nghĩa từ nội dung bài học
+  - **Đã lên kế hoạch**: Tích hợp thư viện NLP như NLTK và spaCy
+  - **Đã lên kế hoạch**: Xây dựng thuật toán trích xuất từ khóa và định nghĩa
+  - **Đã lên kế hoạch**: Tạo giao diện tạo flashcard tự động từ văn bản sử dụng NLP và AI
 - **Tự động tạo câu hỏi kiểm tra**: Phân tích nội dung bài học để tạo câu hỏi ✓
   - **Đã phát triển**: Tạo câu hỏi trắc nghiệm, đúng/sai từ nội dung bài học, sử dụng NLTK
-- **Công nghệ OCR**: Nhập nội dung từ hình ảnh và tài liệu quét ✓
-  - **Đã phát triển**: Tích hợp Tesseract và EasyOCR
-  - **Đã phát triển**: Xây dựng giao diện tải lên và xử lý hình ảnh
+- **Công nghệ OCR**: Nhập nội dung từ hình ảnh và tài liệu quét
+  - **Đã lên kế hoạch**: Tích hợp Tesseract và EasyOCR
+  - **Đã lên kế hoạch**: Xây dựng giao diện tải lên và xử lý hình ảnh
   - **Đã lên kế hoạch**: Tạo hệ thống chuyển đổi OCR sang nội dung học tập
-- **Tích hợp công cụ ghi chú**: Đồng bộ hóa với Notion, Evernote, OneNote ✓
-  - **Đã phát triển**: Tích hợp API của Notion và Microsoft Graph (OneNote)
-  - **Đã phát triển**: Xây dựng giao diện kết nối và đồng bộ hóa
+- **Tích hợp công cụ ghi chú**: Đồng bộ hóa với Notion, Evernote, OneNote
+  - **Đã lên kế hoạch**: Tích hợp API của Notion và Microsoft Graph (OneNote)
+  - **Đã lên kế hoạch**: Xây dựng giao diện kết nối và đồng bộ hóa
   - **Đã lên kế hoạch**: Tạo hệ thống chuyển đổi giữa các định dạng ghi chú
 
 #### 8.1.5. Tính năng phân tích và báo cáo
 - **Biểu đồ tiến độ học tập**: Biểu đồ trực quan về tiến độ học tập theo thời gian ✓
   - **Đã phát triển**: Biểu đồ tiến độ thực tế và dự kiến, so sánh tiến độ theo thời gian
-- **Phân tích thời gian học tập**: Thống kê thời gian học tập theo ngày, tuần, tháng
+- **Phân tích thời gian học tập**: Thống kê thời gian học tập theo ngày, tuần, tháng ✓
   - **Đã phát triển**: Biểu đồ so sánh việc sử dụng các tính năng học tập nâng cao, biểu đồ tiến độ dự án theo thời gian, biểu đồ điểm thi đấu theo thời gian
-- **Báo cáo định kỳ**: Báo cáo hàng tuần/hàng tháng về tiến độ
+  - **Đã phát triển**: Phân tích thời gian học tập theo ngày, tuần, tháng với biểu đồ trực quan
+- **Báo cáo định kỳ**: Báo cáo hàng tuần/hàng tháng về tiến độ ✓
+  - **Đã phát triển**: Tạo báo cáo theo ngày, tuần, tháng hoặc khoảng thời gian tùy chỉnh
 - **Dự đoán thời gian học tập**: Ước tính thời gian cần thiết để hoàn thành mục tiêu
-- **Phân tích mẫu quên**: Theo dõi các khái niệm thường bị quên
-- **Thống kê chi tiết**: Tỷ lệ đúng/sai trong các bài kiểm tra
-- **Xuất báo cáo**: Xuất báo cáo dưới dạng PDF, Excel
+- **Phân tích mẫu quên**: Theo dõi các khái niệm thường bị quên ✓
+  - **Đã phát triển**: Phân tích hiệu suất flashcard và xác định các chủ đề cần ôn tập thêm
+- **Thống kê chi tiết**: Tỷ lệ đúng/sai trong các bài kiểm tra ✓
+  - **Đã phát triển**: Phân tích hiệu suất bài kiểm tra theo chủ đề và thời gian
+- **Xuất báo cáo**: Xuất báo cáo dưới dạng PDF, Excel ✓
+  - **Đã phát triển**: Xuất báo cáo dạng PDF với biểu đồ trực quan sử dụng xhtml2pdf và matplotlib
+  - **Đã phát triển**: Xuất báo cáo dạng CSV để phân tích trong Excel hoặc các công cụ khác
 - **Biểu đồ thống kê mục tiêu**: Thống kê mục tiêu theo danh mục và trạng thái ✓
   - **Đã phát triển**: Thống kê mục tiêu theo danh mục, trạng thái và tiến độ
 - **Biểu đồ hoàn thành mục tiêu**: Theo dõi tỷ lệ hoàn thành mục tiêu theo thời gian ✓
   - **Đã phát triển**: Biểu đồ hoàn thành mục tiêu theo ngày, tuần, tháng
 - **Chuỗi ngày liên tiếp**: Theo dõi chuỗi ngày liên tiếp hoàn thành mục tiêu ✓
   - **Đã phát triển**: Tính toán chuỗi ngày hiện tại và chuỗi dài nhất
+- **Chia sẻ báo cáo**: Chia sẻ báo cáo phân tích với người khác ✓
+  - **Đã phát triển**: Chia sẻ báo cáo qua email với tùy chọn đính kèm file
 
 #### 8.1.6. Tính năng tiện ích và trải nghiệm người dùng
 - **Ứng dụng di động**: Phiên bản iOS và Android
@@ -528,4 +533,27 @@ learning_platform/
 
 ---
 
-*Memory Bank được tạo bởi [Tên của bạn] - Cập nhật lần cuối: 20/05/2024*
+*Memory Bank được tạo bởi [Tên của bạn] - Cập nhật lần cuối: 25/05/2024*
+
+## 10. Cập nhật mới nhất
+
+### 10.1. Tính năng phân tích và báo cáo
+
+- **Đã triển khai**: Phân tích thời gian học tập theo ngày, tuần, tháng với biểu đồ trực quan
+- **Đã triển khai**: Tạo báo cáo theo ngày, tuần, tháng hoặc khoảng thời gian tùy chỉnh
+- **Đã triển khai**: Phân tích hiệu suất flashcard và xác định các chủ đề cần ôn tập thêm
+- **Đã triển khai**: Phân tích hiệu suất bài kiểm tra theo chủ đề và thời gian
+- **Đã triển khai**: Xuất báo cáo dạng PDF với biểu đồ trực quan sử dụng xhtml2pdf và matplotlib
+- **Đã triển khai**: Xuất báo cáo dạng CSV để phân tích trong Excel hoặc các công cụ khác
+- **Đã triển khai**: Chia sẻ báo cáo qua email với tùy chọn đính kèm file
+
+### 10.2. Cải thiện giao diện người dùng
+
+- **Đã triển khai**: Cải thiện giao diện người dùng cho các trang phân tích
+- **Đã triển khai**: Thêm thông báo khi không có dữ liệu để cải thiện trải nghiệm người dùng
+- **Đã triển khai**: Tạo template cho báo cáo PDF và email chia sẻ báo cáo
+
+### 10.3. Thư viện mới đã cài đặt
+
+- **xhtml2pdf**: Xuất báo cáo dạng PDF
+- **matplotlib**: Tạo biểu đồ cho báo cáo PDF

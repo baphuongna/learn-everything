@@ -1,0 +1,263 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Đề xuất học tập{% endblock %}
+
+{% block extra_css %}
+<style>
+    .recommendation-card {
+        transition: all 0.3s ease;
+        margin-bottom: 20px;
+    }
+    
+    .recommendation-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .recommendation-card.high {
+        border-left: 4px solid #dc3545;
+    }
+    
+    .recommendation-card.medium {
+        border-left: 4px solid #fd7e14;
+    }
+    
+    .recommendation-card.low {
+        border-left: 4px solid #28a745;
+    }
+    
+    .priority-badge {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .priority-badge.high {
+        background-color: #dc3545;
+    }
+    
+    .priority-badge.medium {
+        background-color: #fd7e14;
+    }
+    
+    .priority-badge.low {
+        background-color: #28a745;
+    }
+    
+    .recommendation-type-icon {
+        font-size: 2rem;
+        margin-right: 15px;
+    }
+    
+    .recommendation-actions {
+        display: flex;
+        justify-content: flex-end;
+    }
+    
+    .recommendation-actions button {
+        margin-left: 10px;
+    }
+    
+    .filter-section {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-bullseye text-primary"></i> Đề xuất học tập
+            </h1>
+            <p class="lead">Đề xuất học tập được cá nhân hóa dựa trên hiệu suất học tập của bạn</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'learning_analytics:dashboard' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Quay lại bảng điều khiển
+            </a>
+        </div>
+    </div>
+
+    <!-- Bộ lọc -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="filter-section">
+                <div class="row">
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <label for="priority-filter" class="form-label">Lọc theo độ ưu tiên:</label>
+                        <select id="priority-filter" class="form-select">
+                            <option value="all">Tất cả</option>
+                            <option value="high">Cao</option>
+                            <option value="medium">Trung bình</option>
+                            <option value="low">Thấp</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <label for="type-filter" class="form-label">Lọc theo loại:</label>
+                        <select id="type-filter" class="form-select">
+                            <option value="all">Tất cả</option>
+                            <option value="lesson">Bài học</option>
+                            <option value="quiz">Bài kiểm tra</option>
+                            <option value="flashcard">Flashcard</option>
+                            <option value="study_habit">Thói quen học tập</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="subject-filter" class="form-label">Lọc theo chủ đề:</label>
+                        <select id="subject-filter" class="form-select">
+                            <option value="all">Tất cả</option>
+                            {% for subject in subject_list %}
+                                <option value="{{ subject.id }}">{{ subject.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Danh sách đề xuất -->
+    <div class="row">
+        <div class="col-12">
+            <div id="recommendations-container">
+                {% if recommendations %}
+                    {% for recommendation in recommendations %}
+                        <div class="card recommendation-card {{ recommendation.priority }}" 
+                             data-priority="{{ recommendation.priority }}" 
+                             data-type="{{ recommendation.recommendation_type }}" 
+                             data-subject="{{ recommendation.subject_id|default:'none' }}">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    {% if recommendation.recommendation_type == 'lesson' %}
+                                        <i class="fas fa-book recommendation-type-icon text-primary"></i>
+                                    {% elif recommendation.recommendation_type == 'quiz' %}
+                                        <i class="fas fa-tasks recommendation-type-icon text-success"></i>
+                                    {% elif recommendation.recommendation_type == 'flashcard' %}
+                                        <i class="fas fa-layer-group recommendation-type-icon text-info"></i>
+                                    {% elif recommendation.recommendation_type == 'study_habit' %}
+                                        <i class="fas fa-brain recommendation-type-icon text-warning"></i>
+                                    {% endif %}
+                                    
+                                    <div>
+                                        <h5 class="card-title mb-1">{{ recommendation.title }}</h5>
+                                        <span class="badge priority-badge {{ recommendation.priority }}">
+                                            {% if recommendation.priority == 'high' %}
+                                                Ưu tiên cao
+                                            {% elif recommendation.priority == 'medium' %}
+                                                Ưu tiên trung bình
+                                            {% else %}
+                                                Ưu tiên thấp
+                                            {% endif %}
+                                        </span>
+                                        
+                                        {% if recommendation.subject_name %}
+                                            <span class="badge bg-secondary ms-2">{{ recommendation.subject_name }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <p class="card-text">{{ recommendation.description }}</p>
+                                
+                                <div class="recommendation-actions mt-3">
+                                    {% if recommendation.recommendation_type == 'lesson' %}
+                                        <a href="{% url 'content:lesson_detail' recommendation.lesson_id %}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-book"></i> Học bài
+                                        </a>
+                                    {% elif recommendation.recommendation_type == 'quiz' %}
+                                        <a href="{% url 'quizzes:take_quiz' recommendation.quiz_id %}" class="btn btn-sm btn-success">
+                                            <i class="fas fa-tasks"></i> Làm bài kiểm tra
+                                        </a>
+                                    {% elif recommendation.recommendation_type == 'flashcard' %}
+                                        <a href="{% url 'flashcards:study_set' recommendation.flashcard_set_id %}" class="btn btn-sm btn-info text-white">
+                                            <i class="fas fa-layer-group"></i> Ôn tập flashcard
+                                        </a>
+                                    {% endif %}
+                                    
+                                    <button class="btn btn-sm btn-outline-success me-2"
+                                            hx-post="{% url 'learning_analytics:complete_recommendation' recommendation_id=recommendation.id %}"
+                                            hx-swap="outerHTML"
+                                            hx-target="closest .recommendation-card">
+                                        <i class="fas fa-check"></i> Hoàn thành
+                                    </button>
+                                    
+                                    <button class="btn btn-sm btn-outline-secondary"
+                                            hx-post="{% url 'learning_analytics:dismiss_recommendation' recommendation_id=recommendation.id %}"
+                                            hx-swap="outerHTML"
+                                            hx-target="closest .recommendation-card">
+                                        <i class="fas fa-times"></i> Bỏ qua
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> Chưa có đề xuất học tập nào. Hãy tiếp tục học tập để nhận đề xuất phù hợp.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Lọc đề xuất theo độ ưu tiên, loại và chủ đề
+        function filterRecommendations() {
+            const priorityFilter = document.getElementById('priority-filter').value;
+            const typeFilter = document.getElementById('type-filter').value;
+            const subjectFilter = document.getElementById('subject-filter').value;
+            
+            const recommendations = document.querySelectorAll('.recommendation-card');
+            
+            recommendations.forEach(recommendation => {
+                const priority = recommendation.dataset.priority;
+                const type = recommendation.dataset.type;
+                const subject = recommendation.dataset.subject;
+                
+                const priorityMatch = priorityFilter === 'all' || priority === priorityFilter;
+                const typeMatch = typeFilter === 'all' || type === typeFilter;
+                const subjectMatch = subjectFilter === 'all' || subject === subjectFilter;
+                
+                if (priorityMatch && typeMatch && subjectMatch) {
+                    recommendation.style.display = 'block';
+                } else {
+                    recommendation.style.display = 'none';
+                }
+            });
+            
+            // Hiển thị thông báo nếu không có đề xuất nào phù hợp
+            const visibleRecommendations = document.querySelectorAll('.recommendation-card[style="display: block"]');
+            const recommendationsContainer = document.getElementById('recommendations-container');
+            
+            if (visibleRecommendations.length === 0 && recommendations.length > 0) {
+                // Kiểm tra xem đã có thông báo chưa
+                if (!document.querySelector('.no-recommendations-message')) {
+                    const noRecommendationsMessage = document.createElement('div');
+                    noRecommendationsMessage.className = 'alert alert-info no-recommendations-message';
+                    noRecommendationsMessage.innerHTML = '<i class="fas fa-info-circle me-2"></i> Không có đề xuất nào phù hợp với bộ lọc đã chọn.';
+                    recommendationsContainer.appendChild(noRecommendationsMessage);
+                }
+            } else {
+                // Xóa thông báo nếu có đề xuất phù hợp
+                const noRecommendationsMessage = document.querySelector('.no-recommendations-message');
+                if (noRecommendationsMessage) {
+                    noRecommendationsMessage.remove();
+                }
+            }
+        }
+        
+        // Đăng ký sự kiện cho các bộ lọc
+        document.getElementById('priority-filter').addEventListener('change', filterRecommendations);
+        document.getElementById('type-filter').addEventListener('change', filterRecommendations);
+        document.getElementById('subject-filter').addEventListener('change', filterRecommendations);
+    });
+</script>
+{% endblock %}

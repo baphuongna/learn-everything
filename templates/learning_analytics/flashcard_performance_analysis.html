@@ -1,0 +1,422 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Phân tích hiệu suất flashcard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chart-container {
+        height: 400px;
+        width: 100%;
+        margin-bottom: 30px;
+    }
+    
+    .metric-card {
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .metric-label {
+        font-size: 1rem;
+        color: #6c757d;
+    }
+    
+    .progress {
+        height: 20px;
+    }
+    
+    .card-distribution {
+        height: 150px;
+        width: 150px;
+        margin: 0 auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                <i class="fas fa-layer-group text-primary"></i> Phân tích hiệu suất flashcard
+            </h1>
+            <p class="lead">Phân tích chi tiết về hiệu suất học flashcard của bạn</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'learning_analytics:dashboard' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Quay lại bảng điều khiển
+            </a>
+        </div>
+    </div>
+
+    <!-- Thông tin tổng quan -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-4">
+            <div class="card metric-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-percentage fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Tỷ lệ ghi nhớ</h5>
+                    <div class="metric-value">{{ flashcard_performance_data.retention_rate|floatformat:1 }}%</div>
+                    <div class="progress mt-2">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ flashcard_performance_data.retention_rate }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card metric-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-clone fa-3x text-success mb-3"></i>
+                    <h5 class="card-title">Tổng số thẻ</h5>
+                    <div class="metric-value">{{ flashcard_performance_data.total_cards }}</div>
+                    <p class="card-text metric-label">thẻ</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card metric-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-check-circle fa-3x text-info mb-3"></i>
+                    <h5 class="card-title">Thẻ đã thành thạo</h5>
+                    <div class="metric-value">{{ flashcard_performance_data.mastered_cards }}</div>
+                    <p class="card-text metric-label">thẻ</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card metric-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-sync-alt fa-3x text-warning mb-3"></i>
+                    <h5 class="card-title">Thẻ đang học</h5>
+                    <div class="metric-value">{{ flashcard_performance_data.learning_cards }}</div>
+                    <p class="card-text metric-label">thẻ</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phân bố thẻ -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Phân bố thẻ</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <div class="card-distribution">
+                                <canvas id="card-distribution-chart"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Trạng thái</th>
+                                            <th>Số lượng</th>
+                                            <th>Phần trăm</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><span class="badge bg-success">Đã thành thạo</span></td>
+                                            <td>{{ flashcard_performance_data.mastered_cards }}</td>
+                                            <td>
+                                                {% if flashcard_performance_data.total_cards > 0 %}
+                                                    {{ flashcard_performance_data.mastered_cards|floatformat:1 }}%
+                                                {% else %}
+                                                    0%
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="badge bg-warning">Đang học</span></td>
+                                            <td>{{ flashcard_performance_data.learning_cards }}</td>
+                                            <td>
+                                                {% if flashcard_performance_data.total_cards > 0 %}
+                                                    {{ flashcard_performance_data.learning_cards|floatformat:1 }}%
+                                                {% else %}
+                                                    0%
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="badge bg-danger">Mới</span></td>
+                                            <td>{{ flashcard_performance_data.new_cards }}</td>
+                                            <td>
+                                                {% if flashcard_performance_data.total_cards > 0 %}
+                                                    {{ flashcard_performance_data.new_cards|floatformat:1 }}%
+                                                {% else %}
+                                                    0%
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Biểu đồ tỷ lệ ghi nhớ theo thời gian -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-line"></i> Tỷ lệ ghi nhớ theo thời gian</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="retention-over-time-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Biểu đồ tỷ lệ ghi nhớ theo chủ đề -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Tỷ lệ ghi nhớ theo chủ đề</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="retention-by-subject-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-list"></i> Chi tiết tỷ lệ ghi nhớ theo chủ đề</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Chủ đề</th>
+                                    <th>Tỷ lệ ghi nhớ</th>
+                                    <th>Thẻ đã thành thạo</th>
+                                    <th>Tổng số thẻ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for subject in flashcard_performance_data.retention_by_subject %}
+                                <tr>
+                                    <td>{{ subject.subject_name }}</td>
+                                    <td>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-primary" role="progressbar" style="width: {{ subject.retention_rate }}%" aria-valuenow="{{ subject.retention_rate }}" aria-valuemin="0" aria-valuemax="100">{{ subject.retention_rate|floatformat:1 }}%</div>
+                                        </div>
+                                    </td>
+                                    <td>{{ subject.mastered_cards }}</td>
+                                    <td>{{ subject.total_cards }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">Chưa có dữ liệu</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Dữ liệu phân bố thẻ
+        const cardDistributionData = {
+            labels: ['Đã thành thạo', 'Đang học', 'Mới'],
+            datasets: [{
+                data: [
+                    {{ flashcard_performance_data.mastered_cards }},
+                    {{ flashcard_performance_data.learning_cards }},
+                    {{ flashcard_performance_data.new_cards }}
+                ],
+                backgroundColor: [
+                    'rgba(40, 167, 69, 0.7)',
+                    'rgba(255, 193, 7, 0.7)',
+                    'rgba(220, 53, 69, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(40, 167, 69, 1)',
+                    'rgba(255, 193, 7, 1)',
+                    'rgba(220, 53, 69, 1)'
+                ],
+                borderWidth: 1
+            }]
+        };
+
+        // Biểu đồ phân bố thẻ
+        const cardDistributionChart = document.getElementById('card-distribution-chart');
+        if (cardDistributionChart) {
+            new Chart(cardDistributionChart, {
+                type: 'pie',
+                data: cardDistributionData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Dữ liệu tỷ lệ ghi nhớ theo thời gian
+        const retentionOverTimeData = {
+            labels: [
+                {% for day in flashcard_performance_data.retention_over_time %}
+                    "{{ day.date }}",
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Tỷ lệ ghi nhớ (%)',
+                data: [
+                    {% for day in flashcard_performance_data.retention_over_time %}
+                        {{ day.retention_rate }},
+                    {% endfor %}
+                ],
+                backgroundColor: 'rgba(0, 123, 255, 0.5)',
+                borderColor: 'rgba(0, 123, 255, 1)',
+                borderWidth: 1,
+                fill: false,
+                tension: 0.1
+            }]
+        };
+
+        // Biểu đồ tỷ lệ ghi nhớ theo thời gian
+        const retentionOverTimeChart = document.getElementById('retention-over-time-chart');
+        if (retentionOverTimeChart) {
+            new Chart(retentionOverTimeChart, {
+                type: 'line',
+                data: retentionOverTimeData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Tỷ lệ ghi nhớ (%)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Ngày'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Dữ liệu tỷ lệ ghi nhớ theo chủ đề
+        const retentionBySubjectData = {
+            labels: [
+                {% for subject in flashcard_performance_data.retention_by_subject %}
+                    "{{ subject.subject_name }}",
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Tỷ lệ ghi nhớ (%)',
+                data: [
+                    {% for subject in flashcard_performance_data.retention_by_subject %}
+                        {{ subject.retention_rate }},
+                    {% endfor %}
+                ],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.7)',
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(255, 206, 86, 0.7)',
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(153, 102, 255, 0.7)',
+                    'rgba(255, 159, 64, 0.7)',
+                    'rgba(199, 199, 199, 0.7)',
+                    'rgba(83, 102, 255, 0.7)',
+                    'rgba(40, 159, 64, 0.7)',
+                    'rgba(210, 199, 199, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)',
+                    'rgba(199, 199, 199, 1)',
+                    'rgba(83, 102, 255, 1)',
+                    'rgba(40, 159, 64, 1)',
+                    'rgba(210, 199, 199, 1)'
+                ],
+                borderWidth: 1
+            }]
+        };
+
+        // Biểu đồ tỷ lệ ghi nhớ theo chủ đề
+        const retentionBySubjectChart = document.getElementById('retention-by-subject-chart');
+        if (retentionBySubjectChart) {
+            new Chart(retentionBySubjectChart, {
+                type: 'bar',
+                data: retentionBySubjectData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Tỷ lệ ghi nhớ (%)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Chủ đề'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -19,7 +19,7 @@ requests==2.31.0
 
 # Biểu đồ và phân tích dữ liệu
 opencv-python-headless==4.9.0.80
-# matplotlib==3.8.2 # Không tương thích với Python 3.13, sử dụng opencv-python-headless thay thế
+matplotlib==3.10.1  # Đã cài đặt để hỗ trợ tạo biểu đồ cho báo cáo PDF
 seaborn==0.13.0
 pandas==2.2.3
 numpy==1.26.2
